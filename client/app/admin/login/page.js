@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
+import { login } from "@/lib/api";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
@@ -15,23 +16,13 @@ export default function AdminLogin() {
         setError("");
 
         try {
-            const res = await fetch("http://localhost:5000/api/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
+            const data = await login({ email, password });
 
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.setItem("adminToken", data.token);
-                localStorage.setItem("adminRole", data.role);
-                router.push("/admin");
-            } else {
-                setError(data.message || "Login failed");
-            }
+            localStorage.setItem("adminToken", data.token);
+            localStorage.setItem("adminRole", data.role);
+            router.push("/admin");
         } catch (err) {
-            setError("Something went wrong. Please try again.");
+            setError(err.message || "Something went wrong.");
         }
     };
 

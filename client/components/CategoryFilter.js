@@ -16,8 +16,8 @@ const categories = [
 
 export default function CategoryFilter({ activeCategory, onCategoryChange }) {
     return (
-        <div className="w-full overflow-x-auto py-4 no-scrollbar">
-            <div className="flex space-x-2 min-w-max px-4 mx-auto max-w-7xl">
+        <div className="w-full overflow-x-auto py-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex space-x-2 min-w-max px-2 md:px-0">
                 {categories.map((category) => (
                     <button
                         key={category}

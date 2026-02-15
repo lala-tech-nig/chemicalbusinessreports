@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdModal from "@/components/AdModal";
 import UserDataModal from "@/components/UserDataModal";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 export default function WebsiteLayout({ children }) {
     return (
@@ -13,6 +14,7 @@ export default function WebsiteLayout({ children }) {
             <Footer />
             <AdModal />
             <UserDataModal />
+            <FloatingWhatsApp />
         </div>
     );
 }

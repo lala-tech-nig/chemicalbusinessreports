@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://chemicalbusinessreports.onrender.com/api";
 
 function getAuthHeaders() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
@@ -213,5 +213,28 @@ export async function deleteComment(id) {
         headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Failed to delete comment");
+    return res.json();
+}
+
+
+// Submissions
+export async function createSubmission(data) {
+    const res = await fetch(`${API_URL}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to submit");
+    }
+    return res.json();
+}
+
+export async function fetchSubmissions() {
+    const res = await fetch(`${API_URL}/submissions`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch submissions");
     return res.json();
 }

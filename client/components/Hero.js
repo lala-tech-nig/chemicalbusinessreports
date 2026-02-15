@@ -57,7 +57,7 @@ export default function Hero({ story }) {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
                         <Link
-                            href={`/post/${activeStory.slug}`}
+                            href={`/posts/${activeStory.slug}`}
                             className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-lg font-medium text-white shadow-lg transition-all hover:bg-primary/90 hover:scale-105"
                         >
                             Read Full Story

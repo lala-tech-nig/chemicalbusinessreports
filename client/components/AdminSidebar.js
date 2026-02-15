@@ -12,6 +12,7 @@ const sidebarLinks = [
     { name: "Create Post", href: "/admin/create-post", icon: PlusCircle },
     { name: "Ads", href: "/admin/ads", icon: Megaphone },
     { name: "Comments", href: "/admin/comments", icon: FileText },
+    { name: "Submissions", href: "/admin/submissions", icon: FileText },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Settings", href: "/admin/settings", icon: Settings },
 ];

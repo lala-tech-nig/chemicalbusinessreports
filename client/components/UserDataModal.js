@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createSubmission } from "@/lib/api";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 export default function UserDataModal() {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,12 +22,28 @@ export default function UserDataModal() {
         }
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate API call
-        localStorage.setItem("userDataSubmitted", "true");
-        setHasSubmitted(true);
-        setTimeout(() => setIsOpen(false), 2000);
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get("name"),
+            email: formData.get("email"),
+            company: formData.get("company")
+        };
+
+        try {
+            await createSubmission(data);
+            localStorage.setItem("userDataSubmitted", "true");
+            setHasSubmitted(true);
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+            setTimeout(() => setIsOpen(false), 3000);
+        } catch (error) {
+            toast.error("Failed to subscribe. Please try again.");
+        }
     };
 
     return (
@@ -60,15 +79,15 @@ export default function UserDataModal() {
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Full Name</label>
-                                        <input required type="text" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="John Doe" />
+                                        <input required name="name" type="text" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="John Doe" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Email Address</label>
-                                        <input required type="email" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="john@example.com" />
+                                        <input required name="email" type="email" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="john@example.com" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Company (Optional)</label>
-                                        <input type="text" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="Acme Corp" />
+                                        <input name="company" type="text" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" placeholder="Acme Corp" />
                                     </div>
                                     <button type="submit" className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-lg hover:bg-primary/90 transition-colors">
                                         Subscribe Now

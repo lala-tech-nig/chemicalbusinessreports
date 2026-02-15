@@ -3,12 +3,17 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Calendar, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Calendar, User, ArrowLeft, Loader2, Share2 } from "lucide-react";
 import Link from "next/link";
 import { fetchSinglePost, fetchApprovedComments, createComment } from "@/lib/api";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 export default function SinglePostPage() {
     const { slug } = useParams();
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [comments, setComments] = useState([]);
     const [commentForm, setCommentForm] = useState({ authorName: "", content: "" });
     const [submitting, setSubmitting] = useState(false);
@@ -36,16 +41,38 @@ export default function SinglePostPage() {
         loadPost();
     }, [slug]);
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: post.title,
+                    text: "Check out this article on Chemical Business Reports",
+                    url: window.location.href,
+                });
+            } catch (err) {
+                console.log("Error sharing:", err);
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success("Link copied to clipboard!");
+        }
+    };
+
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!post || !post._id) return;
         setSubmitting(true);
         try {
             await createComment({ ...commentForm, postId: post._id });
-            alert("Comment submitted for moderation. It will appear after approval.");
+            toast.success("Comment submitted for moderation. It will appear after approval.");
             setCommentForm({ authorName: "", content: "" });
+            confetti({
+                particleCount: 50,
+                spread: 50,
+                origin: { y: 0.7 }
+            });
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         } finally {
             setSubmitting(false);
         }
@@ -95,18 +122,34 @@ export default function SinglePostPage() {
                             <Calendar className="w-4 h-4 mr-2" />
                             {new Date(post.createdAt || post.date).toLocaleDateString()}
                         </div>
+                        <button onClick={handleShare} className="flex items-center hover:text-primary transition-colors">
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                        </button>
                     </div>
                 </header>
 
                 <div className="relative aspect-video w-full rounded-2xl overflow-hidden mb-12 shadow-lg">
                     {post.image ? (
-                        <Image
-                            src={post.image}
-                            alt={post.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
+                        post.image.match(/\.(mp4|webm|mov)$/i) ? (
+                            <video
+                                src={post.image}
+                                className="w-full h-full object-cover"
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                controls
+                            />
+                        ) : (
+                            <Image
+                                src={post.image}
+                                alt={post.title}
+                                fill
+                                className="object-cover"
+                                priority
+                            />
+                        )
                     ) : (
                         <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
                             No Image Available

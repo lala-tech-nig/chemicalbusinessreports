@@ -22,12 +22,23 @@ export default function InFeedAd({ ad, className }) {
 
             <a href={targetLink} target="_blank" rel="noopener noreferrer" className="relative block w-full aspect-[4/3] md:aspect-[16/10]">
                 {ad.image ? (
-                    <Image
-                        src={ad.image}
-                        alt={ad.title || "Advertisement"}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    ad.image.match(/\.(mp4|webm|mov)$/i) ? (
+                        <video
+                            src={ad.image}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                        />
+                    ) : (
+                        <Image
+                            src={ad.image}
+                            alt={ad.title || "Advertisement"}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                    )
                 ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
                         <span className="text-sm">Advertisement</span>
