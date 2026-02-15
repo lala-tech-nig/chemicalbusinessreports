@@ -63,11 +63,15 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
             slug = slugify(title, { lower: true, strict: true });
+        } else if (!slug && (companyName || productName || researchTopic || topic)) {
+            // Fallback for slug if title is missing
+            const source = companyName || productName || researchTopic || topic;
+            slug = slugify(source, { lower: true, strict: true });
         }
 
         const newPost = new Post({
@@ -76,7 +80,8 @@ exports.createPost = async (req, res) => {
             content,
             category,
             image,
-            isStoryOfTheDay
+            isStoryOfTheDay,
+            companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic
         });
         const savedPost = await newPost.save();
 
@@ -99,7 +104,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -114,6 +119,20 @@ exports.updatePost = async (req, res) => {
         post.category = category || post.category;
         post.image = image || post.image;
         if (isStoryOfTheDay !== undefined) post.isStoryOfTheDay = isStoryOfTheDay;
+
+        // Dynamic fields update
+        if (companyName) post.companyName = companyName;
+        if (productName) post.productName = productName;
+        if (contactNumber) post.contactNumber = contactNumber;
+        if (researchTopic) post.researchTopic = researchTopic;
+        if (video) post.video = video;
+        if (ceoDetails) post.ceoDetails = ceoDetails;
+        if (companyServices) post.companyServices = companyServices;
+        if (earlyBeginning) post.earlyBeginning = earlyBeginning;
+        if (fails) post.fails = fails;
+        if (success) post.success = success;
+        if (awards) post.awards = awards;
+        if (topic) post.topic = topic;
 
         // If this post is set to Story of the Day, unset others
         if (post.isStoryOfTheDay) {

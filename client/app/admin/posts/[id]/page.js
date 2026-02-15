@@ -5,6 +5,7 @@ import { Upload, Loader2, X, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchPostById, updatePost, uploadFile } from "@/lib/api";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function EditPost({ params }) {
     const router = useRouter();
@@ -35,7 +36,7 @@ export default function EditPost({ params }) {
                     image: post.image
                 });
             } catch (error) {
-                alert("Failed to load post");
+                toast.error("Failed to load post");
                 router.push("/admin/posts");
             } finally {
                 setFetching(false);
@@ -60,8 +61,9 @@ export default function EditPost({ params }) {
         try {
             const data = await uploadFile(file);
             setFormData(prev => ({ ...prev, image: data.filePath }));
+            toast.success("Image uploaded successfully");
         } catch (error) {
-            alert("Failed to upload image");
+            toast.error("Failed to upload image");
         } finally {
             setUploading(false);
         }
@@ -73,10 +75,10 @@ export default function EditPost({ params }) {
 
         try {
             await updatePost(id, formData);
-            alert("Post updated successfully!");
+            toast.success("Post updated successfully!");
             router.push("/admin/posts");
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         } finally {
             setLoading(false);
         }

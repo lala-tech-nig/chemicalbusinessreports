@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Check, Trash2, Loader2, MessageSquare } from "lucide-react";
 import { fetchPendingComments, approveComment, deleteComment } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function CommentsManagement() {
     const [comments, setComments] = useState([]);
@@ -18,6 +19,7 @@ export default function CommentsManagement() {
             setComments(data);
         } catch (error) {
             console.error("Failed to load comments", error);
+            toast.error("Failed to load comments");
         } finally {
             setLoading(false);
         }
@@ -27,9 +29,9 @@ export default function CommentsManagement() {
         try {
             await approveComment(id);
             setComments(comments.filter(c => c._id !== id));
-            // Optional: Show toast
+            toast.success("Comment approved");
         } catch (error) {
-            alert("Failed to approve comment");
+            toast.error("Failed to approve comment");
         }
     };
 
@@ -38,8 +40,9 @@ export default function CommentsManagement() {
         try {
             await deleteComment(id);
             setComments(comments.filter(c => c._id !== id));
+            toast.success("Comment deleted");
         } catch (error) {
-            alert("Failed to delete comment");
+            toast.error("Failed to delete comment");
         }
     };
 

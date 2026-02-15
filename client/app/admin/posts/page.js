@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Edit, Trash2, Eye, Star, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { fetchPosts, deletePost, setStoryOfTheDay } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function PostsList() {
     const [posts, setPosts] = useState([]);
@@ -22,6 +23,7 @@ export default function PostsList() {
             setPosts(data);
         } catch (error) {
             console.error("Failed to load posts", error);
+            toast.error("Failed to load posts");
         } finally {
             setLoading(false);
         }
@@ -32,8 +34,9 @@ export default function PostsList() {
         try {
             await deletePost(id);
             setPosts(posts.filter(p => p._id !== id));
+            toast.success("Post deleted successfully");
         } catch (error) {
-            alert("Failed to delete post");
+            toast.error("Failed to delete post");
         }
     };
 
@@ -42,8 +45,9 @@ export default function PostsList() {
             await setStoryOfTheDay(id);
             // Refresh posts to show updated status (or update local state optimally)
             loadPosts();
+            toast.success("Story of the Day updated");
         } catch (error) {
-            alert("Failed to update story setting");
+            toast.error("Failed to update story setting");
         }
     };
 

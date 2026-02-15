@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, X, ShieldAlert } from "lucide-react"; // ShieldAlert or similar icon
 import { login } from "@/lib/api";
 
 export default function AdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [showSuspendedModal, setShowSuspendedModal] = useState(false);
     const router = useRouter();
 
     const handleLogin = async (e) => {
@@ -22,12 +23,16 @@ export default function AdminLogin() {
             localStorage.setItem("adminRole", data.role);
             router.push("/admin");
         } catch (err) {
-            setError(err.message || "Something went wrong.");
+            if (err.message === "Account suspended" || err.response?.status === 403) {
+                setShowSuspendedModal(true);
+            } else {
+                setError(err.message || "Something went wrong.");
+            }
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 relative">
             <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
                 <div className="text-center">
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
@@ -77,6 +82,32 @@ export default function AdminLogin() {
                     </div>
                 </form>
             </div>
+
+            {/* Suspended User Modal */}
+            {showSuspendedModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                <ShieldAlert className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">Account Suspended</h3>
+                            <p className="text-gray-500">
+                                There is an issue with your account status. For security reasons, your access has been temporarily restricted.
+                            </p>
+                            <p className="text-sm font-medium text-gray-900 bg-gray-100 px-4 py-2 rounded-lg w-full">
+                                Please contact the Super Admin to resolve this issue.
+                            </p>
+                            <button
+                                onClick={() => setShowSuspendedModal(false)}
+                                className="w-full py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                            >
+                                Close & Return to Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

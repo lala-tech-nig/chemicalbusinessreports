@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Users, UserPlus, Shield, Ban, Loader2, Trash2 } from "lucide-react";
 import { fetchUsers, registerUser, updateUserStatus, deleteUser } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
@@ -26,6 +27,7 @@ export default function UserManagement() {
             setUsers(data);
         } catch (error) {
             console.error("Failed to load users", error);
+            toast.error("Failed to load users");
         } finally {
             setLoading(false);
         }
@@ -35,12 +37,12 @@ export default function UserManagement() {
         e.preventDefault();
         try {
             await registerUser(formData);
-            alert("User created successfully!");
+            toast.success("User created successfully!");
             setIsFormOpen(false);
             setFormData({ username: "", email: "", password: "", role: "admin" });
             loadUsers();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -50,8 +52,9 @@ export default function UserManagement() {
             setUsers(users.map(user =>
                 user._id === id ? { ...user, isActive: !user.isActive } : user
             ));
+            toast.success("User status updated");
         } catch (error) {
-            alert(error.message || "Failed to update user status");
+            toast.error(error.message || "Failed to update user status");
         }
     };
 
@@ -60,8 +63,9 @@ export default function UserManagement() {
         try {
             await deleteUser(id);
             setUsers(users.filter(u => u._id !== id));
+            toast.success("User deleted successfully");
         } catch (error) {
-            alert("Failed to delete user");
+            toast.error("Failed to delete user");
         }
     };
 

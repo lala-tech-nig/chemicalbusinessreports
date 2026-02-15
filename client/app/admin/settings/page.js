@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
@@ -33,7 +34,7 @@ export default function SettingsPage() {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         localStorage.setItem("siteSettings", JSON.stringify(formData));
-        alert("Settings saved successfully!");
+        toast.success("Settings saved successfully!");
         setLoading(false);
     };
 

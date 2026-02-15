@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Calendar, X, Trash2, Eye, Loader2 } from "lucide-react";
 import { fetchActiveAds, createAd, deleteAd, uploadFile } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function AdManagement() {
     const [ads, setAds] = useState([]);
@@ -31,6 +32,7 @@ export default function AdManagement() {
             setAds(data);
         } catch (error) {
             console.error("Failed to load ads", error);
+            toast.error("Failed to load ads");
         } finally {
             setLoading(false);
         }
@@ -40,12 +42,12 @@ export default function AdManagement() {
         e.preventDefault();
         try {
             await createAd(formData);
-            alert("Ad campaign launched successfully!");
+            toast.success("Ad campaign launched successfully!");
             setIsFormOpen(false);
             setFormData({ title: "", type: "popup", durationDays: 7, link: "", actionType: "link", whatsappNumber: "", image: "" });
             loadAds(); // Refresh list
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -57,8 +59,9 @@ export default function AdManagement() {
         try {
             const data = await uploadFile(file);
             setFormData(prev => ({ ...prev, image: data.filePath }));
+            toast.success("Media uploaded successfully");
         } catch (error) {
-            alert("Failed to upload file");
+            toast.error("Failed to upload file");
         } finally {
             setFileUploading(false);
         }
@@ -69,8 +72,9 @@ export default function AdManagement() {
         try {
             await deleteAd(id);
             setAds(ads.filter(a => a._id !== id));
+            toast.success("Ad campaign deleted");
         } catch (error) {
-            alert("Failed to delete ad");
+            toast.error("Failed to delete ad");
         }
     };
 

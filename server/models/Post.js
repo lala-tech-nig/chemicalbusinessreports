@@ -40,6 +40,19 @@ const PostSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    // Dynamic Fields for specific categories
+    companyName: { type: String },
+    productName: { type: String },
+    contactNumber: { type: String },
+    researchTopic: { type: String },
+    video: { type: String }, // URL or path to video
+    ceoDetails: { type: String },
+    companyServices: { type: String },
+    earlyBeginning: { type: String },
+    fails: { type: String },
+    success: { type: String },
+    awards: { type: String },
+    topic: { type: String }, // For Startup type
 });
 
 module.exports = mongoose.model("Post", PostSchema);
