@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import Hero from "@/components/Hero";
 import CategoryFilter from "@/components/CategoryFilter";
 import PostCard from "@/components/PostCard";
@@ -116,6 +117,15 @@ export default function Home() {
             No posts found in this category.
           </div>
         )}
+
+        <div className="flex justify-center w-full">
+          <Link
+            href="/posts"
+            className="mt-8 inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-lg font-medium text-white shadow-lg transition-all hover:bg-primary/90 hover:scale-105"
+          >
+            View all Posts
+          </Link>
+        </div>
 
       </main>
 

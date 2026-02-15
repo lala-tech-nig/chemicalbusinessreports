@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Facebook, Twitter, Instagram, Linkedin, Mail } from "lucide-react";
 
 export default function Footer() {
@@ -8,7 +9,14 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                     {/* Brand & Description */}
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold">Chemical Reports</h3>
+                        <div className="relative w-12 h-12 mb-4">
+                            <Image
+                                src="/main-logo.png"
+                                alt="Chemical Business Reports"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             Your trusted source for the latest chemical industry news, market reports, and corporate insights.
                         </p>

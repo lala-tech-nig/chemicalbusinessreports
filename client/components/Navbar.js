@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,13 +41,16 @@ export default function Navbar() {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
-                        {/* Placeholder Logo */}
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl group-hover:scale-105 transition-transform">
-                            C
+                        {/* Logo Image */}
+                        <div className="relative w-12 h-12 group-hover:scale-105 transition-transform">
+                            <Image
+                                src="/main-logo.png"
+                                alt="Chemical Business Reports"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
                         </div>
-                        <span className="font-bold text-lg tracking-tight hidden sm:block group-hover:text-primary transition-colors">
-                            Chemical Reports
-                        </span>
                     </Link>
 
                     {/* Desktop Menu */}
