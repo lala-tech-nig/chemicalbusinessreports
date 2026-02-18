@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Calendar, User, ArrowLeft, Loader2, Share2 } from "lucide-react";
+import { Calendar, User, ArrowLeft, Loader2, Share2, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { fetchSinglePost, fetchApprovedComments, createComment } from "@/lib/api";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export default function SinglePostPage() {
     const [comments, setComments] = useState([]);
     const [commentForm, setCommentForm] = useState({ authorName: "", content: "" });
     const [submitting, setSubmitting] = useState(false);
+    const [showFullContent, setShowFullContent] = useState(false);
 
     useEffect(() => {
         if (!slug) return;
@@ -25,7 +26,10 @@ export default function SinglePostPage() {
             try {
                 const data = await fetchSinglePost(slug);
                 setPost(data);
-                // Load comments for this post
+                // For non-News Roundup posts, show full content immediately
+                if (data && data.category !== "News Roundup") {
+                    setShowFullContent(true);
+                }
                 if (data && data._id) {
                     const commentsData = await fetchApprovedComments(data._id);
                     setComments(commentsData);
@@ -97,6 +101,8 @@ export default function SinglePostPage() {
         );
     }
 
+    const isNewsRoundup = post.category === "News Roundup";
+
     return (
         <div className="min-h-screen pt-24 pb-20 bg-background">
             <article className="max-w-3xl mx-auto px-4 sm:px-6">
@@ -129,12 +135,13 @@ export default function SinglePostPage() {
                     </div>
                 </header>
 
-                <div className="relative aspect-video w-full rounded-2xl overflow-hidden mb-12 shadow-lg">
+                {/* Featured Image — object-contain so full image is visible */}
+                <div className="relative w-full rounded-2xl overflow-hidden mb-12 shadow-lg bg-muted" style={{ minHeight: "300px", maxHeight: "500px" }}>
                     {post.image ? (
                         post.image.match(/\.(mp4|webm|mov)$/i) ? (
                             <video
                                 src={post.image}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                                 autoPlay
                                 muted
                                 loop
@@ -146,21 +153,67 @@ export default function SinglePostPage() {
                                 src={post.image}
                                 alt={post.title}
                                 fill
-                                className="object-cover"
+                                className="object-contain"
                                 priority
                             />
                         )
                     ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground min-h-[300px]">
                             No Image Available
                         </div>
                     )}
                 </div>
 
-                <div
-                    className="prose prose-lg prose-gray max-w-none dark:prose-invert mb-16"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
-                />
+                {/* News Roundup: Summary section + Read More toggle */}
+                {isNewsRoundup && post.excerpt && (
+                    <div className="mb-8">
+                        {/* Summary card */}
+                        <div
+                            className="rounded-xl p-6 border border-border shadow-sm mb-4"
+                            style={{
+                                backgroundColor: post.excerptColor && post.excerptColor !== '#FFFF00' ? post.excerptColor : '#fefce8',
+                            }}
+                        >
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                    Summary
+                                </span>
+                            </div>
+                            <p className="text-gray-800 text-base leading-relaxed font-medium">
+                                {post.excerpt}
+                            </p>
+                        </div>
+
+                        {/* Read More button */}
+                        {!showFullContent && (
+                            <button
+                                onClick={() => setShowFullContent(true)}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-md"
+                            >
+                                Read Full Story
+                                <ChevronDown className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Excerpt highlight for non-News Roundup posts */}
+                {!isNewsRoundup && post.excerpt && post.excerptColor && post.excerptColor !== '#FFFF00' && (
+                    <div
+                        className="rounded-xl p-4 mb-8 border border-border"
+                        style={{ backgroundColor: post.excerptColor }}
+                    >
+                        <p className="text-sm font-medium text-gray-800">{post.excerpt}</p>
+                    </div>
+                )}
+
+                {/* Full article content */}
+                {showFullContent && (
+                    <div
+                        className="prose prose-lg prose-gray max-w-none dark:prose-invert mb-16"
+                        dangerouslySetInnerHTML={{ __html: post.content }}
+                    />
+                )}
 
                 {/* Comments Section */}
                 <div className="border-t border-border pt-12">

@@ -3,17 +3,16 @@ import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function PostCard({ title, excerpt, image, category, date, author, slug, className }) {
+export default function PostCard({ title, excerpt, image, category, date, author, slug, excerptColor, className }) {
     return (
         <div className={cn("group relative flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow", className)}>
-            <div className="relative h-48 w-full overflow-hidden">
-                {/* Placeholder for image if none provided */}
+            <div className="relative h-48 w-full overflow-hidden bg-muted">
                 {image ? (
                     <Image
                         src={image}
                         alt={title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain transition-transform duration-500 group-hover:scale-102"
                     />
                 ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
@@ -43,12 +42,23 @@ export default function PostCard({ title, excerpt, image, category, date, author
                         {title}
                     </Link>
                 </h3>
-                <p className="text-muted-foreground text-sm line-clamp-3 mb-4 flex-1">
-                    {excerpt}
-                </p>
+
+                {excerpt && (
+                    <p
+                        className="text-sm line-clamp-3 mb-4 flex-1 px-2 py-1 rounded-md"
+                        style={{
+                            backgroundColor: excerptColor || 'transparent',
+                            color: excerptColor ? '#1a1a1a' : undefined,
+                        }}
+                    >
+                        {excerpt}
+                    </p>
+                )}
 
                 <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-                    <span className="text-primary text-sm font-medium group-hover:underline">Read Article</span>
+                    <span className="text-primary text-sm font-medium group-hover:underline">
+                        {category === "News Roundup" ? "Read Summary →" : "Read Article →"}
+                    </span>
                 </div>
             </div>
         </div>

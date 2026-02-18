@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Upload, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createPost, uploadFile } from "@/lib/api";
 import Image from "next/image";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export default function CreatePost() {
     const router = useRouter();
@@ -16,6 +17,7 @@ export default function CreatePost() {
         title: "",
         category: "",
         excerpt: "",
+        excerptColor: "#FFFF00",
         content: "",
         isStoryOfTheDay: false,
         image: "",
@@ -23,6 +25,8 @@ export default function CreatePost() {
         companyName: "",
         productName: "",
         contactNumber: "",
+        website: "",
+        email: "",
         researchTopic: "",
         ceoDetails: "",
         companyServices: "",
@@ -42,6 +46,10 @@ export default function CreatePost() {
             ...prev,
             [name]: type === "checkbox" ? checked : value
         }));
+    };
+
+    const handleContentChange = (value) => {
+        setFormData((prev) => ({ ...prev, content: value }));
     };
 
     const handleFileChange = async (e, field = "image") => {
@@ -69,13 +77,12 @@ export default function CreatePost() {
 
         const payload = { ...formData };
 
-        // Auto-populate Title and Content for specific categories if missing
         if (payload.category === "Chemical Mart") {
             if (!payload.title) payload.title = `${payload.companyName || ""} ${payload.productName ? "- " + payload.productName : ""}`.trim();
             if (!payload.content) payload.content = `Chemical Mart listing for ${payload.companyName}`;
         } else if (payload.category === "Research & Reports") {
             if (!payload.title && payload.researchTopic) payload.title = payload.researchTopic;
-            if (!payload.content) payload.content = "Research Report"; // User fills this in UI usually
+            if (!payload.content) payload.content = "Research Report";
         } else if (payload.category === "Corporate Profile") {
             if (!payload.title && payload.companyName) payload.title = payload.companyName;
             if (!payload.content) payload.content = `Corporate Profile: ${payload.companyName}`;
@@ -84,7 +91,6 @@ export default function CreatePost() {
             if (!payload.content) payload.content = "Startup Feature";
         }
 
-        // Final fallback
         if (!payload.title) payload.title = "Untitled Post";
         if (!payload.content) payload.content = "No content description";
 
@@ -134,6 +140,14 @@ export default function CreatePost() {
                             <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 2348012345678" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
                             <p className="text-xs text-muted-foreground">Include country code without '+' (e.g., 234...)</p>
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Website URL</label>
+                            <input type="text" name="website" value={formData.website} onChange={handleChange} placeholder="e.g., https://company.com" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Email Address</label>
+                            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="e.g., contact@company.com" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Ad Space Size *</label>
@@ -145,12 +159,12 @@ export default function CreatePost() {
                                     required
                                 >
                                     <option value="">Select Size</option>
-                                    <option value="1x1">1x1</option>
-                                    <option value="2x2">2x2</option>
-                                    <option value="1x2">1x2</option>
-                                    <option value="2x1">2x1</option>
-                                    <option value="3x1">3x1</option>
-                                    <option value="1x3">1x3</option>
+                                    <option value="1x1">1×1 (Square)</option>
+                                    <option value="2x1">2×1 (Double Width)</option>
+                                    <option value="1x2">1×2 (Double Height)</option>
+                                    <option value="2x2">2×2 (Large Square)</option>
+                                    <option value="3x1">3×1 (Full Row)</option>
+                                    <option value="1x3">1×3 (Tall)</option>
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -175,9 +189,8 @@ export default function CreatePost() {
                             <label className="text-sm font-medium">Research Topic</label>
                             <input type="text" name="researchTopic" value={formData.researchTopic} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
                         </div>
-                        {/* Video Upload Field */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium block mb-1">Upload Documentry Video (Optional) or Image below</label>
+                            <label className="text-sm font-medium block mb-1">Upload Documentary Video (Optional) or Image below</label>
                             <div className="border-2 border-dashed border-input rounded-lg p-6 flex flex-col items-center justify-center relative">
                                 {videoUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : formData.video ? (
                                     <div className="relative w-full">
@@ -320,12 +333,7 @@ export default function CreatePost() {
                             {/* Dynamic Fields */}
                             {renderDynamicFields()}
 
-                            {/* Common Fields */}
-
-                            {/* "Chemical Mart" does NOT need Title/Excerpt/Content? 
-                                User: "on click on chemical mart, it will only need an image upload, company name, product name, and contact number."
-                                So I should HIDE standard fields for Chemical Mart.
-                            */}
+                            {/* Common Fields (hidden for Chemical Mart) */}
                             {formData.category !== "Chemical Mart" && (
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Post Title</label>
@@ -343,31 +351,56 @@ export default function CreatePost() {
 
                             {formData.category !== "Chemical Mart" && (
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Excerpt</label>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-sm font-medium">
+                                            Excerpt / Keywords
+                                            <span className="ml-2 text-xs text-muted-foreground font-normal">(highlighted keywords visible on post card)</span>
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-xs text-muted-foreground">Highlight Color:</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="color"
+                                                    name="excerptColor"
+                                                    value={formData.excerptColor}
+                                                    onChange={handleChange}
+                                                    className="w-8 h-8 rounded cursor-pointer border border-input"
+                                                    title="Pick highlight color for excerpt/keywords"
+                                                />
+                                            </div>
+                                            <div
+                                                className="w-6 h-6 rounded border border-border"
+                                                style={{ backgroundColor: formData.excerptColor }}
+                                            />
+                                        </div>
+                                    </div>
                                     <textarea
                                         name="excerpt"
                                         value={formData.excerpt}
                                         onChange={handleChange}
                                         rows={3}
-                                        placeholder="Short description for preview..."
+                                        placeholder="Short description or keywords to highlight on preview cards..."
                                         className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none resize-none"
+                                        style={{ borderLeft: `4px solid ${formData.excerptColor}` }}
                                         required
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        This text will appear highlighted in the chosen color on post cards and as a summary on News Roundup articles.
+                                    </p>
                                 </div>
                             )}
 
                             {formData.category !== "Chemical Mart" && (
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Article Content (HTML or Text)</label>
-                                    <textarea
-                                        name="content"
+                                    <label className="text-sm font-medium">Article Content</label>
+                                    <RichTextEditor
                                         value={formData.content}
-                                        onChange={handleChange}
-                                        rows={12}
-                                        placeholder="<p>Write your post content here...</p>"
-                                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none resize-y font-mono text-sm"
-                                        required
+                                        onChange={handleContentChange}
+                                        placeholder="Write your post content here... Use the toolbar to format text, add links, change fonts and sizes."
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        Use the toolbar to bold text, change fonts, add links, adjust sizes, and more.
+                                    </p>
                                 </div>
                             )}
                         </>
@@ -394,7 +427,7 @@ export default function CreatePost() {
                                         <img
                                             src={formData.image}
                                             alt="Preview"
-                                            className="w-full h-full object-cover rounded-md"
+                                            className="w-full h-full object-contain rounded-md bg-muted"
                                         />
                                         <button
                                             onClick={() => setFormData(prev => ({ ...prev, image: "" }))}

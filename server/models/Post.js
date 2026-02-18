@@ -69,6 +69,9 @@ const PostSchema = new mongoose.Schema({
     success: { type: String },
     awards: { type: String },
     topic: { type: String }, // For Startup type
+    excerptColor: { type: String, default: '#FFFF00' },
+    website: { type: String, default: '' },
+    email: { type: String, default: '' },
 });
 
 // Middleware to calculate expiryDate for Chemical Mart posts

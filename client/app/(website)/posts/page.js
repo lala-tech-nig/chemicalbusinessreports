@@ -2,10 +2,23 @@
 
 import { useState, useEffect } from "react";
 import PostCard from "@/components/PostCard";
+import ChemicalMartCard from "@/components/ChemicalMartCard";
 import InFeedAd from "@/components/InFeedAd";
 import { Search, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
+
+function getAdSizeClasses(adSize) {
+    switch (adSize) {
+        case "2x1": return "md:col-span-2 row-span-1";
+        case "1x2": return "col-span-1 md:row-span-2";
+        case "2x2": return "md:col-span-2 md:row-span-2";
+        case "3x1": return "md:col-span-3 row-span-1";
+        case "1x3": return "col-span-1 md:row-span-3";
+        case "1x1":
+        default: return "col-span-1 row-span-1";
+    }
+}
 
 const CATEGORIES = [
     "All",
@@ -127,21 +140,30 @@ export default function AllPostsPage() {
                             {error}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {combinedItems.map((item, index) => (
-                                <motion.div
-                                    key={`${item.type}-${item.data._id}-${index}`}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    {item.type === 'post' ? (
-                                        <PostCard {...item.data} />
-                                    ) : (
-                                        <InFeedAd ad={item.data} className="h-full" />
-                                    )}
-                                </motion.div>
-                            ))}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-auto">
+                            {combinedItems.map((item, index) => {
+                                const adSize = item.type === 'post' && item.data.category === 'Chemical Mart' ? item.data.adSize : null;
+                                const spanClass = getAdSizeClasses(adSize);
+                                return (
+                                    <motion.div
+                                        key={`${item.type}-${item.data._id}-${index}`}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className={spanClass}
+                                    >
+                                        {item.type === 'post' ? (
+                                            item.data.category === 'Chemical Mart' ? (
+                                                <ChemicalMartCard post={item.data} className="h-full" />
+                                            ) : (
+                                                <PostCard {...item.data} />
+                                            )
+                                        ) : (
+                                            <InFeedAd ad={item.data} className="h-full" />
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
                         </div>
                     )}
 
