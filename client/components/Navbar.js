@@ -12,14 +12,14 @@ const CATEGORIES = [
     "Chemical Mart",
     "Research & Reports",
     "Corporate Profile",
-    "START UP",
+    "Start Up",
     "Services",
     "Executive Brief",
 ];
 
 const navLinks = [
     { name: "Home", href: "/" },
-    { name: "All Posts", href: "/posts" },
+    { name: "Posts", href: "/posts" },
     { name: "About Us", href: "/about" },
 ];
 
