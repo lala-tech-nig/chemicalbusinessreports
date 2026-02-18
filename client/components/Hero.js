@@ -26,7 +26,7 @@ export default function Hero({ story }) {
                         src={activeStory.image}
                         alt={activeStory.title}
                         fill
-                        className="object-cover opacity-60"
+                        className="object-contain opacity-60"
                         priority
                     />
                 ) : (

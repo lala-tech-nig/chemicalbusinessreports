@@ -17,8 +17,7 @@ export default function SinglePostPage() {
     const [comments, setComments] = useState([]);
     const [commentForm, setCommentForm] = useState({ authorName: "", content: "" });
     const [submitting, setSubmitting] = useState(false);
-    const [showFullContent, setShowFullContent] = useState(false);
-
+    const [expanded, setExpanded] = useState(false);
     useEffect(() => {
         if (!slug) return;
 
@@ -26,10 +25,6 @@ export default function SinglePostPage() {
             try {
                 const data = await fetchSinglePost(slug);
                 setPost(data);
-                // For non-News Roundup posts, show full content immediately
-                if (data && data.category !== "News Roundup") {
-                    setShowFullContent(true);
-                }
                 if (data && data._id) {
                     const commentsData = await fetchApprovedComments(data._id);
                     setComments(commentsData);
@@ -164,36 +159,22 @@ export default function SinglePostPage() {
                     )}
                 </div>
 
-                {/* News Roundup: Summary section + Read More toggle */}
+                {/* News Roundup: Summary card shown above the full content */}
                 {isNewsRoundup && post.excerpt && (
-                    <div className="mb-8">
-                        {/* Summary card */}
-                        <div
-                            className="rounded-xl p-6 border border-border shadow-sm mb-4"
-                            style={{
-                                backgroundColor: post.excerptColor && post.excerptColor !== '#FFFF00' ? post.excerptColor : '#fefce8',
-                            }}
-                        >
-                            <div className="flex items-center gap-2 mb-3">
-                                <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                                    Summary
-                                </span>
-                            </div>
-                            <p className="text-gray-800 text-base leading-relaxed font-medium">
-                                {post.excerpt}
-                            </p>
+                    <div
+                        className="rounded-xl p-6 border border-border shadow-sm mb-8"
+                        style={{
+                            backgroundColor: post.excerptColor && post.excerptColor !== '#FFFF00' ? post.excerptColor : '#fefce8',
+                        }}
+                    >
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                Summary
+                            </span>
                         </div>
-
-                        {/* Read More button */}
-                        {!showFullContent && (
-                            <button
-                                onClick={() => setShowFullContent(true)}
-                                className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-md"
-                            >
-                                Read Full Story
-                                <ChevronDown className="w-4 h-4" />
-                            </button>
-                        )}
+                        <p className="text-gray-800 text-base leading-relaxed font-medium">
+                            {post.excerpt}
+                        </p>
                     </div>
                 )}
 
@@ -207,12 +188,31 @@ export default function SinglePostPage() {
                     </div>
                 )}
 
-                {/* Full article content */}
-                {showFullContent && (
-                    <div
-                        className="prose prose-lg prose-gray max-w-none dark:prose-invert mb-16"
-                        dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
+                {/* Full article content with read-more toggle */}
+                {post.content && (
+                    <div className="mb-16">
+                        <div className={`relative overflow-hidden transition-all duration-500 ${!expanded ? "max-h-64" : "max-h-none"}`}>
+                            <div
+                                className="prose prose-lg prose-gray max-w-none dark:prose-invert"
+                                dangerouslySetInnerHTML={{ __html: post.content }}
+                            />
+                            {!expanded && (
+                                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                            )}
+                        </div>
+
+                        {!expanded && (
+                            <div className="flex justify-center mt-4">
+                                <button
+                                    onClick={() => setExpanded(true)}
+                                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold shadow-lg hover:bg-primary/90 hover:scale-105 transition-all duration-200"
+                                >
+                                    Read Full Article
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* Comments Section */}

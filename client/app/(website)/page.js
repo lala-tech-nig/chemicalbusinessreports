@@ -81,11 +81,11 @@ export default function Home() {
 
   function getAdSizeClasses(adSize) {
     switch (adSize) {
-      case "2x1": return "md:col-span-2 row-span-1";
-      case "1x2": return "col-span-1 md:row-span-2";
-      case "2x2": return "md:col-span-2 md:row-span-2";
-      case "3x1": return "md:col-span-3 row-span-1";
-      case "1x3": return "col-span-1 md:row-span-3";
+      case "2x1": return "col-span-2 row-span-1";
+      case "1x2": return "col-span-1 row-span-2";
+      case "2x2": return "col-span-2 row-span-2";
+      case "3x1": return "col-span-2 md:col-span-3 row-span-1";
+      case "1x3": return "col-span-1 row-span-3";
       case "1x1":
       default: return "col-span-1 row-span-1";
     }
@@ -107,7 +107,7 @@ export default function Home() {
           <span className="text-sm text-muted-foreground">{filteredPosts.length} Articles</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-auto">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 auto-rows-auto">
           {combinedItems.map((item, index) => {
             const adSize = item.type === 'post' && item.data.category === 'Chemical Mart' ? item.data.adSize : null;
             const spanClass = getAdSizeClasses(adSize);

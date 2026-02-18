@@ -30,7 +30,7 @@ export default function ChemicalMartCard({ post, className }) {
                         src={post.image}
                         alt={post.companyName || post.title}
                         fill
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground min-h-[180px]">
@@ -74,7 +74,7 @@ export default function ChemicalMartCard({ post, className }) {
                                     src={post.image}
                                     alt={post.companyName || post.title}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                 <div className="absolute bottom-4 left-4 text-white">

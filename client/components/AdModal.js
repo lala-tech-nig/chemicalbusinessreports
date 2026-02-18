@@ -46,11 +46,11 @@ export default function AdModal() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="relative rounded-lg shadow-2xl max-w-lg w-full overflow-hidden bg-transparent"
+                        className="relative rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden bg-black"
                     >
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="absolute top-2 right-2 p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors z-20 backdrop-blur-md"
+                            className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors z-20 backdrop-blur-md"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -59,12 +59,12 @@ export default function AdModal() {
                             href={ad.link || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block relative w-full aspect-[4/5] sm:aspect-square"
+                            className="block relative w-full aspect-[4/5] sm:aspect-square bg-black"
                         >
                             {isVideo(ad.image) ? (
                                 <video
                                     src={ad.image}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain"
                                     autoPlay
                                     loop
                                     muted
@@ -75,9 +75,9 @@ export default function AdModal() {
                                     src={ad.image}
                                     alt={ad.title}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     priority
-                                    unoptimized={ad.image?.includes('.gif')} // GIFs might need unoptimized
+                                    unoptimized={ad.image?.includes('.gif')}
                                 />
                             )}
                         </a>
