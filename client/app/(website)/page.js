@@ -5,6 +5,7 @@ import Link from "next/link";
 import Hero from "@/components/Hero";
 import CategoryFilter from "@/components/CategoryFilter";
 import PostCard from "@/components/PostCard";
+import ChemicalMartCard from "@/components/ChemicalMartCard";
 import InFeedAd from "@/components/InFeedAd";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { motion, AnimatePresence } from "framer-motion";
@@ -104,7 +105,11 @@ export default function Home() {
               transition={{ duration: 0.3 }}
             >
               {item.type === 'post' ? (
-                <PostCard {...item.data} />
+                item.data.category === 'Chemical Mart' ? (
+                  <ChemicalMartCard post={item.data} />
+                ) : (
+                  <PostCard {...item.data} />
+                )
               ) : (
                 <InFeedAd ad={item.data} className="h-full" />
               )}

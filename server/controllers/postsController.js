@@ -63,7 +63,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -81,7 +81,8 @@ exports.createPost = async (req, res) => {
             category,
             image,
             isStoryOfTheDay,
-            companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic
+            companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
+            subcategory, adSize, adDuration
         });
         const savedPost = await newPost.save();
 
@@ -104,7 +105,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -133,6 +134,9 @@ exports.updatePost = async (req, res) => {
         if (success) post.success = success;
         if (awards) post.awards = awards;
         if (topic) post.topic = topic;
+        if (subcategory) post.subcategory = subcategory;
+        if (adSize) post.adSize = adSize;
+        if (adDuration) post.adDuration = adDuration;
 
         // If this post is set to Story of the Day, unset others
         if (post.isStoryOfTheDay) {

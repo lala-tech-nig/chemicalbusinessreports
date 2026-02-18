@@ -7,7 +7,8 @@ export default function InFeedAd({ ad, className }) {
 
     const getAdLink = () => {
         if (ad.actionType === 'whatsapp' && ad.whatsappNumber) {
-            return `https://wa.me/${ad.whatsappNumber}`;
+            const message = encodeURIComponent("hey, i saw your ad on chemicalbusinessreports website");
+            return `https://wa.me/${ad.whatsappNumber}?text=${message}`;
         }
         return ad.link || "#";
     };

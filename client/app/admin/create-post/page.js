@@ -30,7 +30,10 @@ export default function CreatePost() {
         fails: "",
         success: "",
         awards: "",
-        topic: ""
+        topic: "",
+        subcategory: "",
+        adSize: "",
+        adDuration: 30
     });
 
     const handleChange = (e) => {
@@ -102,16 +105,66 @@ export default function CreatePost() {
                 return (
                     <>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Company Name</label>
+                            <label className="text-sm font-medium">Subcategory *</label>
+                            <select
+                                name="subcategory"
+                                value={formData.subcategory}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                                required
+                            >
+                                <option value="">Select Subcategory</option>
+                                <option value="Cosmetics">Cosmetics</option>
+                                <option value="Pharmaceutical">Pharmaceutical</option>
+                                <option value="Industrial Chemicals">Industrial Chemicals</option>
+                                <option value="Laboratory Equipment">Laboratory Equipment</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Company Name *</label>
                             <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Product Name</label>
+                            <label className="text-sm font-medium">Product Name *</label>
                             <input type="text" name="productName" value={formData.productName} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Contact Number</label>
-                            <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
+                            <label className="text-sm font-medium">Contact Number (WhatsApp) *</label>
+                            <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 2348012345678" className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
+                            <p className="text-xs text-muted-foreground">Include country code without '+' (e.g., 234...)</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Ad Space Size *</label>
+                                <select
+                                    name="adSize"
+                                    value={formData.adSize}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                                    required
+                                >
+                                    <option value="">Select Size</option>
+                                    <option value="1x1">1x1</option>
+                                    <option value="2x2">2x2</option>
+                                    <option value="1x2">1x2</option>
+                                    <option value="2x1">2x1</option>
+                                    <option value="3x1">3x1</option>
+                                    <option value="1x3">1x3</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Duration (Days) *</label>
+                                <input
+                                    type="number"
+                                    name="adDuration"
+                                    value={formData.adDuration}
+                                    onChange={handleChange}
+                                    min="1"
+                                    className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                                    required
+                                />
+                            </div>
                         </div>
                     </>
                 );
@@ -257,6 +310,8 @@ export default function CreatePost() {
                             <option value="Research & Reports">Research & Reports</option>
                             <option value="Corporate Profile">Corporate Profile</option>
                             <option value="START UP">START UP</option>
+                            <option value="Services">Services</option>
+                            <option value="Executive Brief">Executive Brief</option>
                         </select>
                     </div>
 

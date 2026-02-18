@@ -11,7 +11,9 @@ const categories = [
     "Chemical Mart",
     "Research & Reports",
     "Corporate Profile",
-    "START UP"
+    "START UP",
+    "Services",
+    "Executive Brief"
 ];
 
 export default function CategoryFilter({ activeCategory, onCategoryChange }) {

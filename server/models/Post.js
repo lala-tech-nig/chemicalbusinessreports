@@ -17,7 +17,23 @@ const PostSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ["News Roundup", "Chemical Mart", "Research & Reports", "Corporate Profile", "START UP"],
+        enum: ["News Roundup", "Chemical Mart", "Research & Reports", "Corporate Profile", "START UP", "Services", "Executive Brief"],
+    },
+    // Chemical Mart specific fields
+    subcategory: {
+        type: String,
+        enum: ["Cosmetics", "Pharmaceutical", "Industrial Chemicals", "Laboratory Equipment", "Others", ""],
+    },
+    adSize: {
+        type: String,
+        enum: ["1x1", "2x2", "1x2", "2x1", "3x1", "1x3", ""],
+    },
+    adDuration: {
+        type: Number, // Duration in days
+        min: 1,
+    },
+    expiryDate: {
+        type: Date,
     },
     author: {
         type: String,
@@ -53,6 +69,19 @@ const PostSchema = new mongoose.Schema({
     success: { type: String },
     awards: { type: String },
     topic: { type: String }, // For Startup type
+});
+
+// Middleware to calculate expiryDate for Chemical Mart posts
+PostSchema.pre("save", function (next) {
+    if (this.category === "Chemical Mart" && this.adDuration) {
+        if (this.isNew || this.isModified("adDuration") || this.isModified("createdAt")) {
+            const start = this.createdAt || new Date();
+            const expiry = new Date(start);
+            expiry.setDate(start.getDate() + this.adDuration);
+            this.expiryDate = expiry;
+        }
+    }
+    next();
 });
 
 module.exports = mongoose.model("Post", PostSchema);
