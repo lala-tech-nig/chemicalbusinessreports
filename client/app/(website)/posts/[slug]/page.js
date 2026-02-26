@@ -9,6 +9,19 @@ import { fetchSinglePost, fetchApprovedComments, createComment } from "@/lib/api
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
+const CATEGORY_ROUTES = {
+    "News Roundup": "/posts/news-roundup",
+    "Chemical Mart": "/posts/chemical-mart",
+    "Research & Reports": "/posts/research-reports",
+    "Corporate Profile": "/posts/corporate-profile",
+    "Start Up": "/posts/startup",
+    "Executive Brief": "/posts/executive-brief",
+};
+
+function getCategoryRoute(category) {
+    return CATEGORY_ROUTES[category] || "/posts";
+}
+
 export default function SinglePostPage() {
     const { slug } = useParams();
     const [post, setPost] = useState(null);
@@ -90,7 +103,7 @@ export default function SinglePostPage() {
             <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
                 <h1 className="text-2xl font-bold">Post not found</h1>
                 <Link href="/posts" className="text-primary hover:underline flex items-center">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to all posts
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Posts
                 </Link>
             </div>
         );
@@ -101,9 +114,9 @@ export default function SinglePostPage() {
     return (
         <div className="min-h-screen pt-24 pb-20 bg-background">
             <article className="max-w-3xl mx-auto px-4 sm:px-6">
-                <Link href="/posts" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-8 group">
+                <Link href={getCategoryRoute(post.category)} className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-8 group">
                     <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                    Back to Posts
+                    Back to {post.category || "Posts"}
                 </Link>
 
                 <header className="mb-10 text-center">

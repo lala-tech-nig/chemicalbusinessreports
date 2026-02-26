@@ -1,76 +1,115 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function Hero({ story }) {
-    // Fallback if no story is provided
-    const defaultStory = {
-        title: "Global Chemical Market Surges Amidst New Innovation Trends",
-        excerpt: "Discover how sustainable practices and digital transformation are reshaping the future of the chemical industry in our exclusive report.",
-        image: null,
-        date: "Oct 14, 2025",
-        slug: "#"
-    };
-
-    const activeStory = story || defaultStory;
-
+export default function Hero() {
     return (
-        <section className="relative w-full h-[90vh] md:min-h-screen flex items-center justify-center overflow-hidden bg-black">
-            {/* Background Image */}
+        <section className="relative w-full h-[85vh] md:h-[90vh] flex items-center justify-center overflow-hidden bg-slate-900">
             <div className="absolute inset-0 z-0">
-                {activeStory.image ? (
-                    <Image
-                        src={activeStory.image}
-                        alt={activeStory.title}
-                        fill
-                        className="object-contain opacity-60"
-                        priority
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-900 via-blue-900 to-black opacity-80" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+                <Image
+                    src="https://images.unsplash.com/photo-1581093577421-f561a654a353?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    alt="Chemical Industry Background"
+                    fill
+                    className="object-cover opacity-50 contrast-125 grayscale-[20%]"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-950/90 via-blue-900/60 to-transparent" />
             </div>
 
-            <div className="container relative z-10 px-4 md:px-6 mx-auto text-center text-white">
+            <div className="container relative z-10 px-4 md:px-8 mx-auto text-left text-white mt-16">
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="max-w-4xl mx-auto space-y-6"
+                    className="max-w-4xl space-y-6"
                 >
-                    <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm backdrop-blur-md shadow-lg">
-                        <span className="flex h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse" />
-                        Story of the Day
+                    <div className="space-y-2">
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white"
+                        >
+                            Coslab Media <br />
+                            <span className="text-blue-400">Concepts (Ltd)</span>
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.6 }}
+                            className="text-xl md:text-2xl font-semibold text-blue-100 max-w-2xl"
+                        >
+                            An innovative media, public relations and marketing company.
+                        </motion.p>
                     </div>
 
-                    <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl leading-tight">
-                        {activeStory.title}
-                    </h1>
-
-                    <p className="max-w-2xl mx-auto text-lg md:text-xl text-gray-200 leading-relaxed">
-                        {activeStory.excerpt}
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-                        <Link
-                            href={`/posts/${activeStory.slug}`}
-                            className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-lg font-medium text-white shadow-lg transition-all hover:bg-primary/90 hover:scale-105"
+                    <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-white/10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6, duration: 0.6 }}
+                            className="space-y-3"
                         >
-                            Read Full Story
+                            <h3 className="text-lg font-bold uppercase tracking-wider text-blue-400">Our Publication</h3>
+                            <p className="text-gray-200 leading-relaxed font-medium">
+                                We are the publishers of <span className="text-white font-bold italic">Chemical Business Reports</span>, your trusted source for the latest chemical &amp; allied industries news, market reports, and corporate insights.
+                            </p>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8, duration: 0.6 }}
+                            className="space-y-3"
+                        >
+                            <h3 className="text-lg font-bold uppercase tracking-wider text-blue-400">Public Relations</h3>
+                            <p className="text-gray-200 leading-relaxed font-medium">
+                                As a public relations company, we highlight the industry&apos;s corporate players and individuals who have contributed to its growth and development.
+                            </p>
+                        </motion.div>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1, duration: 0.6 }}
+                        className="flex flex-wrap gap-4 pt-4"
+                    >
+                        <Link
+                            href="/posts/news-roundup"
+                            className="inline-flex h-14 items-center justify-center rounded-lg bg-blue-600 px-8 text-lg font-bold text-white shadow-xl transition-all hover:bg-blue-500 hover:scale-105 active:scale-95"
+                        >
+                            Explore Reports
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2 pt-4 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        <span>Published on {activeStory.date}</span>
-                    </div>
+                        <Link
+                            href="/about"
+                            className="inline-flex h-14 items-center justify-center rounded-lg bg-white/10 border border-white/20 px-8 text-lg font-bold text-white backdrop-blur-md transition-all hover:bg-white/20"
+                        >
+                            About Us
+                        </Link>
+                    </motion.div>
                 </motion.div>
             </div>
+
+            {/* Scroll Indicator */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 1 }}
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:block"
+            >
+                <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center p-1">
+                    <motion.div
+                        animate={{ y: [0, 12, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-1.5 h-1.5 bg-white rounded-full"
+                    />
+                </div>
+            </motion.div>
         </section>
     );
 }

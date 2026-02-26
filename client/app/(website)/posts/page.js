@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import PostCard from "@/components/PostCard";
 import ChemicalMartCard from "@/components/ChemicalMartCard";
 import InFeedAd from "@/components/InFeedAd";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Clock, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
 
@@ -27,7 +27,7 @@ const CATEGORIES = [
     "Chemical Mart",
     "Research & Reports",
     "Corporate Profile",
-    "START UP",
+    "Start up",
     "Services",
     "Executive Brief",
 ];
@@ -134,6 +134,57 @@ function AllPostsContent() {
 
                 {/* Post Grid */}
                 <main className="flex-1">
+                    {/* Story of the Day - ONLY on News Roundup */}
+                    {activeCategory === "News Roundup" && !searchTerm && posts.length > 0 && (
+                        <div className="mb-12">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                                <span className="text-sm font-bold uppercase tracking-wider text-red-500">Story of the Day</span>
+                            </div>
+                            {(() => {
+                                const story = posts.find(p => p.isStoryOfTheDay) || posts[0];
+                                return (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="relative group overflow-hidden rounded-3xl bg-slate-900 aspect-[16/9] md:aspect-[21/9]"
+                                    >
+                                        {story.image && (
+                                            <img
+                                                src={story.image}
+                                                alt={story.title}
+                                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-4">
+                                            <h2 className="text-2xl md:text-4xl font-bold text-white max-w-3xl leading-tight">
+                                                {story.title}
+                                            </h2>
+                                            <p className="text-slate-200 line-clamp-2 max-w-2xl text-lg">
+                                                {story.excerpt}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-6 pt-2">
+                                                <a
+                                                    href={`/posts/${story.slug}`}
+                                                    className="inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-blue-50 transition-colors"
+                                                >
+                                                    Read Full Story
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </a>
+                                                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                                                    <Clock className="w-4 h-4" />
+                                                    <span>{new Date(story.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })()}
+                            <div className="mt-12 mb-6 border-b border-slate-100" />
+                        </div>
+                    )}
+
                     <div className="mb-6 flex justify-between items-end">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">All Posts</h1>

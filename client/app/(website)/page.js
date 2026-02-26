@@ -2,18 +2,17 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Hero from "@/components/Hero";
-import CategoryFilter from "@/components/CategoryFilter";
 import PostCard from "@/components/PostCard";
 import ChemicalMartCard from "@/components/ChemicalMartCard";
 import InFeedAd from "@/components/InFeedAd";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, ArrowRight } from "lucide-react";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState("All");
   const [posts, setPosts] = useState([]);
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,11 +37,7 @@ export default function Home() {
     loadData();
   }, []);
 
-  // Filter posts based on active category
-  const filteredPosts = useMemo(() => {
-    if (activeCategory === "All") return posts;
-    return posts.filter(post => post.category === activeCategory);
-  }, [activeCategory, posts]);
+  const filteredPosts = posts;
 
   // Find Story of the Day
   const storyOfTheDay = posts.find(post => post.isStoryOfTheDay) || posts[0];
@@ -93,17 +88,68 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pb-20 bg-background">
-      <Hero story={storyOfTheDay} />
+      <Hero />
 
-      <div className="sticky top-16 z-40 bg-white/90 backdrop-blur-md border-b border-border py-2 shadow-sm transition-all">
-        <CategoryFilter activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
-      </div>
+      {/* OUR SERVICES Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-blue-600 font-bold uppercase tracking-widest text-sm mb-3">Professional Solutions</h2>
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight">
+                  OUR SERVICES
+                </h1>
+              </div>
+
+              <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
+                <p>
+                  As a strategic media, public relations, and marketing company, we strive to promote the products and services of the various players in the chemical industry.
+                </p>
+                <p>
+                  Ours is a credible platform for corporate organisations, manufacturers, and service providers in the chemical & allied industries to showcase their products and services.
+                </p>
+                <p>
+                  We also offer training for individuals and groups in the production and manufacturing of a wide variety of household and personal care products.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
+                <p className="text-blue-900 font-semibold">
+                  You can contact our advertising department for details of how to advertise on any of our platforms.
+                </p>
+              </div>
+
+              <Link
+                href="/about"
+                className="inline-flex items-center text-blue-600 font-bold hover:text-blue-700 transition-colors group"
+              >
+                Learn more about our expertise
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&q=80&w=1000"
+                  alt="Our Services"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-blue-600 rounded-2xl -z-10" />
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-slate-200 rounded-full -z-10" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-            {activeCategory === "All" ? "Latest Posts" : activeCategory}
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">Latest Posts</h2>
           <span className="text-sm text-muted-foreground">{filteredPosts.length} Articles</span>
         </div>
 
@@ -142,10 +188,10 @@ export default function Home() {
 
         <div className="flex justify-center w-full">
           <Link
-            href="/posts"
+            href="/posts/news-roundup"
             className="mt-8 inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-lg font-medium text-white shadow-lg transition-all hover:bg-primary/90 hover:scale-105"
           >
-            View all Posts
+            Read more News
           </Link>
         </div>
 
