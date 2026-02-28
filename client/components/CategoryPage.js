@@ -117,13 +117,15 @@ export default function CategoryPage({ categoryName, description }) {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 relative group overflow-hidden rounded-3xl bg-slate-900 aspect-[16/7] md:aspect-[21/8]"
+                        className="mb-12 relative group overflow-hidden rounded-3xl bg-slate-950"
+                        style={{ minHeight: "340px" }}
                     >
                         {featuredPost.image && (
                             <img
                                 src={featuredPost.image}
                                 alt={featuredPost.title}
-                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
+                                style={{ maxHeight: "420px", width: "100%", display: "block" }}
                             />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />

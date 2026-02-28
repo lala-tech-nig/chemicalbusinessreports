@@ -147,13 +147,15 @@ function AllPostsContent() {
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="relative group overflow-hidden rounded-3xl bg-slate-900 aspect-[16/9] md:aspect-[21/9]"
+                                        className="relative group overflow-hidden rounded-3xl bg-slate-950"
+                                        style={{ minHeight: "340px" }}
                                     >
                                         {story.image && (
                                             <img
                                                 src={story.image}
                                                 alt={story.title}
-                                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+                                                className="w-full object-contain group-hover:scale-105 transition-transform duration-700"
+                                                style={{ maxHeight: "420px", display: "block" }}
                                             />
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
