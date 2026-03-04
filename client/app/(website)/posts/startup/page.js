@@ -8,7 +8,7 @@ export const metadata = {
 export default function StartupPage() {
     return (
         <CategoryPage
-            categoryName="Start Up"
+            categoryName="START UP"
             description="Celebrating emerging businesses and entrepreneurs driving innovation in the chemical sector."
         />
     );

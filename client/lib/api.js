@@ -1,4 +1,4 @@
-const API_URL = "https://chemicalbusinessreports.onrender.com/api";
+const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports.onrender.com/api";
 
 function getAuthHeaders() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
@@ -36,9 +36,10 @@ export async function uploadFile(file) {
     return res.json();
 }
 
-export async function fetchPosts(category = "All", search = "") {
+export async function fetchPosts(category = "All", search = "", subcategory = "") {
     const params = new URLSearchParams();
     if (category && category !== "All") params.append("category", category);
+    if (subcategory) params.append("subcategory", subcategory);
     if (search) params.append("search", search);
 
     const res = await fetch(`${API_URL}/posts?${params.toString()}`);

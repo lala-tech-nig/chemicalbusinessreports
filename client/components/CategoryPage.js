@@ -20,7 +20,7 @@ function getAdSizeClasses(adSize) {
     }
 }
 
-export default function CategoryPage({ categoryName, description }) {
+export default function CategoryPage({ categoryName, description, subcategoryName }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [posts, setPosts] = useState([]);
     const [ads, setAds] = useState([]);
@@ -30,14 +30,14 @@ export default function CategoryPage({ categoryName, description }) {
     useEffect(() => {
         const timer = setTimeout(() => loadData(), 400);
         return () => clearTimeout(timer);
-    }, [searchTerm, categoryName]);
+    }, [searchTerm, categoryName, subcategoryName]);
 
     const loadData = async () => {
         setLoading(true);
         setError(null);
         try {
             const [postsData, adsData] = await Promise.all([
-                fetchPosts(categoryName, searchTerm),
+                fetchPosts(categoryName, searchTerm, subcategoryName || ""),
                 fetchActiveAds()
             ]);
             setPosts(postsData);

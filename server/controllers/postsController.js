@@ -6,11 +6,15 @@ const slugify = require("slugify");
 // @access  Public
 exports.getPosts = async (req, res) => {
     try {
-        const { category, search } = req.query;
+        const { category, subcategory, search } = req.query;
         let query = {};
 
         if (category && category !== "All") {
             query.category = category;
+        }
+
+        if (subcategory) {
+            query.subcategory = subcategory;
         }
 
         if (search) {
@@ -63,7 +67,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -82,7 +86,7 @@ exports.createPost = async (req, res) => {
             image,
             isStoryOfTheDay,
             companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
-            subcategory, adSize, adDuration
+            subcategory, adSize, adDuration, excerpt, excerptColor
         });
         const savedPost = await newPost.save();
 
@@ -105,7 +109,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -137,6 +141,8 @@ exports.updatePost = async (req, res) => {
         if (subcategory) post.subcategory = subcategory;
         if (adSize) post.adSize = adSize;
         if (adDuration) post.adDuration = adDuration;
+        if (excerpt !== undefined) post.excerpt = excerpt;
+        if (excerptColor) post.excerptColor = excerptColor;
 
         // If this post is set to Story of the Day, unset others
         if (post.isStoryOfTheDay) {

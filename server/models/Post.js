@@ -19,10 +19,16 @@ const PostSchema = new mongoose.Schema({
         required: true,
         enum: ["News Roundup", "Chemical Mart", "Research & Reports", "Corporate Profile", "START UP", "Services", "Executive Brief"],
     },
-    // Chemical Mart specific fields
+    // Chemical Mart & News Roundup specific fields
     subcategory: {
         type: String,
-        enum: ["Cosmetics", "Pharmaceutical", "Industrial Chemicals", "Laboratory Equipment", "Others", ""],
+        enum: [
+            // Chemical Mart subcategories
+            "Cosmetics", "Pharmaceutical", "Industrial Chemicals", "Laboratory Equipment", "Others",
+            // News Roundup subcategories
+            "Pharma", "Cosmetics & Personal Care", "Paints & Chemicals", "Brewing, Foods & Drinks", "Beverages", "Industries Chemical",
+            ""
+        ],
     },
     adSize: {
         type: String,
@@ -69,6 +75,7 @@ const PostSchema = new mongoose.Schema({
     success: { type: String },
     awards: { type: String },
     topic: { type: String }, // For Startup type
+    excerpt: { type: String },
     excerptColor: { type: String, default: '#FFFF00' },
     website: { type: String, default: '' },
     email: { type: String, default: '' },

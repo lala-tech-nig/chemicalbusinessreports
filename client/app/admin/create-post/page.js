@@ -89,6 +89,8 @@ export default function CreatePost() {
         } else if (payload.category === "START UP") {
             if (!payload.title && payload.topic) payload.title = payload.topic;
             if (!payload.content) payload.content = "Startup Feature";
+        } else if (payload.category === "News Roundup") {
+            if (!payload.content) payload.content = "News Roundup article";
         }
 
         if (!payload.title) payload.title = "Untitled Post";
@@ -107,6 +109,27 @@ export default function CreatePost() {
 
     const renderDynamicFields = () => {
         switch (formData.category) {
+            case "News Roundup":
+                return (
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Subcategory *</label>
+                        <select
+                            name="subcategory"
+                            value={formData.subcategory}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                            required
+                        >
+                            <option value="">Select Subcategory</option>
+                            <option value="Pharma">Pharma</option>
+                            <option value="Cosmetics & Personal Care">Cosmetics &amp; Personal Care</option>
+                            <option value="Paints & Chemicals">Paints &amp; Chemicals</option>
+                            <option value="Brewing, Foods & Drinks">Brewing, Foods &amp; Drinks</option>
+                            <option value="Beverages">Beverages</option>
+                            <option value="Industries Chemical">Industries Chemical</option>
+                        </select>
+                    </div>
+                );
             case "Chemical Mart":
                 return (
                     <>
@@ -335,58 +358,42 @@ export default function CreatePost() {
 
                             {/* Common Fields (hidden for Chemical Mart) */}
                             {formData.category !== "Chemical Mart" && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Post Title</label>
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        value={formData.title}
-                                        onChange={handleChange}
-                                        placeholder="Enter post title"
-                                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
-                                        required
-                                    />
-                                </div>
-                            )}
-
-                            {formData.category !== "Chemical Mart" && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <label className="text-sm font-medium">
-                                            Excerpt / Keywords
-                                            <span className="ml-2 text-xs text-muted-foreground font-normal">(highlighted keywords visible on post card)</span>
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <label className="text-xs text-muted-foreground">Highlight Color:</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="color"
-                                                    name="excerptColor"
-                                                    value={formData.excerptColor}
-                                                    onChange={handleChange}
-                                                    className="w-8 h-8 rounded cursor-pointer border border-input"
-                                                    title="Pick highlight color for excerpt/keywords"
-                                                />
-                                            </div>
-                                            <div
-                                                className="w-6 h-6 rounded border border-border"
-                                                style={{ backgroundColor: formData.excerptColor }}
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Post Title</label>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleChange}
+                                            placeholder="Enter post title"
+                                            className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="space-y-2 md:col-span-3">
+                                            <label className="text-sm font-medium">Excerpt / Summary (Recommended)</label>
+                                            <textarea
+                                                name="excerpt"
+                                                value={formData.excerpt}
+                                                onChange={handleChange}
+                                                rows={2}
+                                                placeholder="Brief summary snippet for cards and highlights"
+                                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Excerpt Background Color</label>
+                                            <input
+                                                type="color"
+                                                name="excerptColor"
+                                                value={formData.excerptColor}
+                                                onChange={handleChange}
+                                                className="w-full h-11 p-1 rounded-lg border border-input bg-background cursor-pointer"
                                             />
                                         </div>
                                     </div>
-                                    <textarea
-                                        name="excerpt"
-                                        value={formData.excerpt}
-                                        onChange={handleChange}
-                                        rows={3}
-                                        placeholder="Short description or keywords to highlight on preview cards..."
-                                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none resize-none"
-                                        style={{ borderLeft: `4px solid ${formData.excerptColor}` }}
-                                        required
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        This text will appear highlighted in the chosen color on post cards and as a summary on News Roundup articles.
-                                    </p>
                                 </div>
                             )}
 
