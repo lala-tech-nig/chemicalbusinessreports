@@ -132,7 +132,7 @@ export default function Home() {
             <div className="relative">
               <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="https://plus.unsplash.com/premium_photo-1661371836399-737ebcbef80e?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/lab.jpeg"
                   alt="Our Services"
                   fill
                   className="object-cover"
