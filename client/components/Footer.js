@@ -10,9 +10,9 @@ export default function Footer() {
                     {/* Brand & Description */}
                     <div className="space-y-4 md:col-span-2">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="relative w-11 h-11">
+                            <div className="relative w-11 h-11 bg-white rounded-lg p-1 overflow-hidden">
                                 <Image
-                                    src="/main-logo.png"
+                                    src="/coslab.png"
                                     alt="Chemical Business Reports"
                                     fill
                                     className="object-contain"

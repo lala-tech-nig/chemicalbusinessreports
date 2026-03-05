@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function PostCard({ title, excerpt, image, category, date, author, slug, excerptColor, className }) {
+export default function PostCard({ title, excerpt, image, category, date, author, slug, excerptColor, className, subcategory }) {
     return (
         <div className={cn("group relative flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow", className)}>
             <div className="relative h-28 sm:h-40 md:h-48 w-full overflow-hidden bg-muted">
@@ -20,7 +20,7 @@ export default function PostCard({ title, excerpt, image, category, date, author
                     </div>
                 )}
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-primary/90 text-primary-foreground text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
-                    {category}
+                    {category === "News Roundup" && subcategory ? `${category} / ${subcategory}` : category}
                 </div>
             </div>
 

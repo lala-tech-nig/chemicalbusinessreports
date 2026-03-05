@@ -55,12 +55,12 @@ export default function AboutPage() {
                             className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-primary/20 to-black/80 flex items-center justify-center p-12">
-                                <div className="relative w-full h-full">
+                                <div className="relative w-48 h-48 bg-white rounded-2xl p-4 shadow-2xl flex items-center justify-center overflow-hidden">
                                     <Image
-                                        src="/newlogo.png"
+                                        src="/coslab.png"
                                         alt="Chemical Business Reports"
                                         fill
-                                        className="object-contain drop-shadow-2xl"
+                                        className="object-contain p-4"
                                         priority
                                     />
                                 </div>

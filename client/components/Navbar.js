@@ -76,9 +76,9 @@ export default function Navbar() {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center gap-3 group">
-                        <div className="relative w-11 h-11 group-hover:scale-105 transition-transform">
+                        <div className="relative w-11 h-11 bg-white rounded-lg p-1 overflow-hidden group-hover:scale-105 transition-transform">
                             <Image
-                                src="/newlogo.png"
+                                src="/coslab.png"
                                 alt="Chemical Business Reports"
                                 fill
                                 className="object-contain"
@@ -86,8 +86,8 @@ export default function Navbar() {
                             />
                         </div>
                         <div className="hidden sm:block">
-                            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest leading-none">Chemical Business</p>
-                            <p className="text-xs text-gray-500 tracking-widest leading-none mt-0.5">Reports</p>
+                            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest leading-none">Coslab Media</p>
+                            <p className="text-xs text-gray-500 tracking-widest leading-none mt-0.5">Concepts</p>
                         </div>
                     </Link>
 
@@ -212,17 +212,8 @@ export default function Navbar() {
                         })}
                     </div>
 
-                    {/* Right side: Admin Dashboard link + Mobile burger */}
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href="/admin"
-                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
-                            title="Admin Posting Dashboard"
-                        >
-                            <LayoutDashboard className="w-4 h-4" />
-                            <span className="hidden md:inline">Admin</span>
-                        </Link>
-
+                    {/* Right side: Mobile burger */}
+                    <div className="flex items-center">
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
@@ -345,7 +336,7 @@ export default function Navbar() {
                             })}
 
                             {/* Admin link in mobile */}
-                            
+
                         </div>
                     </motion.div>
                 )}
