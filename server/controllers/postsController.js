@@ -78,6 +78,8 @@ exports.createPost = async (req, res) => {
             slug = slugify(source, { lower: true, strict: true });
         }
 
+        const authorName = req.user.username === "SuperAdmin" ? "Foluso Olorunfemi" : req.user.username;
+
         const newPost = new Post({
             title,
             slug,
@@ -86,7 +88,8 @@ exports.createPost = async (req, res) => {
             image,
             isStoryOfTheDay,
             companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
-            subcategory, adSize, adDuration, excerpt, excerptColor
+            subcategory, adSize, adDuration, excerpt, excerptColor,
+            author: authorName
         });
         const savedPost = await newPost.save();
 
@@ -150,6 +153,11 @@ exports.updatePost = async (req, res) => {
                 { _id: { $ne: post._id } },
                 { $set: { isStoryOfTheDay: false } }
             );
+        }
+
+        // Update author if it was previously Admin or SuperAdmin to match the user who is editing (optional, but requested for display consistency)
+        if (post.author === "Admin" || post.author === "SuperAdmin") {
+            post.author = req.user.username === "SuperAdmin" ? "Foluso Olorunfemi" : req.user.username;
         }
 
         const updatedPost = await post.save();

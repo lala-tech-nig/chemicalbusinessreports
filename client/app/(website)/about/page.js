@@ -57,7 +57,7 @@ export default function AboutPage() {
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-primary/20 to-black/80 flex items-center justify-center p-12">
                                 <div className="relative w-full h-full">
                                     <Image
-                                        src="/main-logo.png"
+                                        src="/newlogo.png"
                                         alt="Chemical Business Reports"
                                         fill
                                         className="object-contain drop-shadow-2xl"

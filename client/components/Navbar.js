@@ -78,7 +78,7 @@ export default function Navbar() {
                     <Link href="/" className="flex-shrink-0 flex items-center gap-3 group">
                         <div className="relative w-11 h-11 group-hover:scale-105 transition-transform">
                             <Image
-                                src="/main-logo.png"
+                                src="/newlogo.png"
                                 alt="Chemical Business Reports"
                                 fill
                                 className="object-contain"
@@ -345,14 +345,7 @@ export default function Navbar() {
                             })}
 
                             {/* Admin link in mobile */}
-                            <Link
-                                href="/admin"
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors mt-2"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                <LayoutDashboard className="w-4 h-4" />
-                                Admin Posting Dashboard
-                            </Link>
+                            
                         </div>
                     </motion.div>
                 )}
