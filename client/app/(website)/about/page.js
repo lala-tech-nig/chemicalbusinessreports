@@ -215,15 +215,15 @@ export default function AboutPage() {
                                 initials: "FO"
                             },
                             {
-                                name: "Seun Oluwanya",
+                                name: "Seun Oluwasanya",
                                 role: "Business Development Manager",
-                                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
+                                image: "/seun.jpeg",
                                 initials: "SO"
                             },
                             {
                                 name: "Princess Adeola Shittu",
-                                role: "Marketing Consultant",
-                                image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop",
+                                role: "Editor",
+                                image: "/adeola.jpeg",
                                 initials: "PS"
                             },
                             {
@@ -235,7 +235,7 @@ export default function AboutPage() {
                             {
                                 name: "LALA TECH",
                                 role: "IT Consultant",
-                                image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=800&auto=format&fit=crop",
+                                image: "/lala.png",
                                 initials: "LT"
                             },
                             {
