@@ -19,8 +19,8 @@ export default function Footer() {
                                 />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-blue-400 uppercase tracking-widest leading-none">Chemical Business</p>
-                                <p className="text-xs text-slate-400 tracking-widest leading-none mt-0.5">Reports</p>
+                                <p className="text-xs font-bold text-blue-400 uppercase tracking-widest leading-none">Coslab Media</p>
+                                <p className="text-xs text-slate-400 tracking-widest leading-none mt-0.5">Concepts</p>
                             </div>
                         </div>
                         <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
