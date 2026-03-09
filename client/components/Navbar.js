@@ -23,7 +23,7 @@ const roundupSubLinks = [
 ];
 
 const categoryLinks = [
-    { name: "News Roundup", href: "/posts/news-roundup", hasDropdown: true },
+    { name: "News Roundup", href: "/posts/news-roundup" },
     { name: "Chemical Mart", href: "/posts/chemical-mart" },
     { name: "Research & Reports", href: "/posts/research-reports" },
     { name: "Corporate Profile", href: "/posts/corporate-profile" },
@@ -35,11 +35,8 @@ const allLinks = [...navLinks, ...categoryLinks];
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
-    const [roundupOpen, setRoundupOpen] = useState(false);
-    const [mobileRoundupOpen, setMobileRoundupOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
-    const dropdownRef = useRef(null);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -49,21 +46,7 @@ export default function Navbar() {
 
     useEffect(() => {
         setIsOpen(false);
-        setRoundupOpen(false);
     }, [pathname]);
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setRoundupOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const isRoundupActive = pathname.startsWith("/posts/news-roundup");
 
     return (
         <nav
@@ -86,109 +69,16 @@ export default function Navbar() {
                             />
                         </div>
                         <div className="hidden sm:block">
-                            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest leading-none">Coslab Media</p>
-                            <p className="text-xs text-gray-500 tracking-widest leading-none mt-0.5">Concepts</p>
+                            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest leading-none">Chemical Business</p>
+                            <p className="text-xs text-gray-500 tracking-widest leading-none mt-0.5">Reports</p>
                         </div>
                     </Link>
 
                     {/* Desktop Nav */}
                     <div className="hidden lg:flex items-center gap-1">
-                        {/* Static nav links */}
-                        {navLinks.map((link) => {
-                            const isActive = pathname === link.href;
-                            return (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className={cn(
-                                        "px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap relative",
-                                        isActive
-                                            ? "text-blue-700 bg-blue-50"
-                                            : "text-gray-700 hover:text-blue-700 hover:bg-blue-50/60"
-                                    )}
-                                >
-                                    {link.name}
-                                    {isActive && (
-                                        <motion.span
-                                            layoutId="nav-indicator"
-                                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-blue-600 rounded-full"
-                                        />
-                                    )}
-                                </Link>
-                            );
-                        })}
-
-                        {/* News Roundup with dropdown */}
-                        <div className="relative" ref={dropdownRef}>
-                            <button
-                                onClick={() => setRoundupOpen((prev) => !prev)}
-                                onMouseEnter={() => setRoundupOpen(true)}
-                                className={cn(
-                                    "flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap relative",
-                                    isRoundupActive
-                                        ? "text-blue-700 bg-blue-50"
-                                        : "text-gray-700 hover:text-blue-700 hover:bg-blue-50/60"
-                                )}
-                            >
-                                News Roundup
-                                <ChevronDown
-                                    className={cn(
-                                        "w-3.5 h-3.5 transition-transform duration-200",
-                                        roundupOpen ? "rotate-180" : ""
-                                    )}
-                                />
-                                {isRoundupActive && pathname === "/posts/news-roundup" && (
-                                    <motion.span
-                                        layoutId="nav-indicator"
-                                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-blue-600 rounded-full"
-                                    />
-                                )}
-                            </button>
-
-                            <AnimatePresence>
-                                {roundupOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                                        transition={{ duration: 0.15 }}
-                                        onMouseLeave={() => setRoundupOpen(false)}
-                                        className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                                    >
-                                        {/* All News Roundup link */}
-                                        <Link
-                                            href="/posts/news-roundup"
-                                            className={cn(
-                                                "block px-4 py-2.5 text-sm font-semibold border-b border-gray-100 transition-colors",
-                                                pathname === "/posts/news-roundup"
-                                                    ? "text-blue-700 bg-blue-50"
-                                                    : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                                            )}
-                                        >
-                                            All News Roundup
-                                        </Link>
-                                        {roundupSubLinks.map((sub) => (
-                                            <Link
-                                                key={sub.name}
-                                                href={sub.href}
-                                                className={cn(
-                                                    "block px-4 py-2.5 text-sm transition-colors",
-                                                    pathname === sub.href
-                                                        ? "text-blue-700 bg-blue-50 font-medium"
-                                                        : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
-                                                )}
-                                            >
-                                                {sub.name}
-                                            </Link>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Remaining category links (excluding News Roundup) */}
-                        {categoryLinks.filter(l => !l.hasDropdown).map((link) => {
-                            const isActive = pathname === link.href;
+                        {/* nav links (Home, About, News Roundup, etc) */}
+                        {[...navLinks, ...categoryLinks].map((link) => {
+                            const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup"));
                             return (
                                 <Link
                                     key={link.name}
@@ -237,9 +127,8 @@ export default function Navbar() {
                         className="lg:hidden bg-white border-t border-gray-100 overflow-hidden"
                     >
                         <div className="px-4 py-4 space-y-1">
-                            {/* Static nav links */}
-                            {navLinks.map((link) => {
-                                const isActive = pathname === link.href;
+                            {[...navLinks, ...categoryLinks].map((link) => {
+                                const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup"));
                                 return (
                                     <Link
                                         key={link.name}
@@ -254,89 +143,6 @@ export default function Navbar() {
                                     </Link>
                                 );
                             })}
-
-                            {/* News Roundup toggle */}
-                            <div>
-                                <button
-                                    onClick={() => setMobileRoundupOpen((prev) => !prev)}
-                                    className={cn(
-                                        "w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                                        isRoundupActive
-                                            ? "bg-blue-600 text-white"
-                                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                                    )}
-                                >
-                                    News Roundup
-                                    <ChevronDown
-                                        className={cn(
-                                            "w-4 h-4 transition-transform duration-200",
-                                            mobileRoundupOpen ? "rotate-180" : ""
-                                        )}
-                                    />
-                                </button>
-                                <AnimatePresence>
-                                    {mobileRoundupOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: "auto" }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="mt-1 ml-4 space-y-0.5 border-l-2 border-blue-200 pl-3">
-                                                <Link
-                                                    href="/posts/news-roundup"
-                                                    className={cn(
-                                                        "block px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-                                                        pathname === "/posts/news-roundup"
-                                                            ? "text-blue-700 bg-blue-50"
-                                                            : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
-                                                    )}
-                                                    onClick={() => setIsOpen(false)}
-                                                >
-                                                    All News Roundup
-                                                </Link>
-                                                {roundupSubLinks.map((sub) => (
-                                                    <Link
-                                                        key={sub.name}
-                                                        href={sub.href}
-                                                        className={cn(
-                                                            "block px-3 py-2 rounded-lg text-sm transition-colors",
-                                                            pathname === sub.href
-                                                                ? "text-blue-700 bg-blue-50 font-medium"
-                                                                : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
-                                                        )}
-                                                        onClick={() => setIsOpen(false)}
-                                                    >
-                                                        {sub.name}
-                                                    </Link>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Remaining category links */}
-                            {categoryLinks.filter(l => !l.hasDropdown).map((link) => {
-                                const isActive = pathname === link.href;
-                                return (
-                                    <Link
-                                        key={link.name}
-                                        href={link.href}
-                                        className={cn(
-                                            "block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                                            isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                                        )}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        {link.name}
-                                    </Link>
-                                );
-                            })}
-
-                            {/* Admin link in mobile */}
-
                         </div>
                     </motion.div>
                 )}
