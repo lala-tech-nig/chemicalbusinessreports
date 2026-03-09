@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function PostCard({ title, excerpt, image, category, date, author, slug, excerptColor, className, subcategory }) {
+export default function PostCard({ title, excerpt, image, category, date, author, authorPhoto, slug, excerptColor, className, subcategory }) {
     return (
         <div className={cn("group relative flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow", className)}>
             <div className="relative h-28 sm:h-40 md:h-48 w-full overflow-hidden bg-muted">
@@ -31,8 +31,20 @@ export default function PostCard({ title, excerpt, image, category, date, author
                         {date}
                     </div>
                     <div className="flex items-center">
-                        <User className="w-3 h-3 mr-1" />
-                        {author}
+                        {authorPhoto ? (
+                            <div className="relative w-8 h-8 mr-2 shadow-sm border border-border rounded-full overflow-hidden">
+                                <img
+                                    src={authorPhoto}
+                                    alt={author}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-8 h-8 mr-2 rounded-full bg-muted flex items-center justify-center border border-border">
+                                <User className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                        )}
+                        <span className="font-medium">{author}</span>
                     </div>
                 </div>
 

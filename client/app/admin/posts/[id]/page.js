@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { Upload, Loader2, X, ArrowLeft } from "lucide-react";
+import { Upload, Loader2, X, ArrowLeft, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchPostById, updatePost, uploadFile } from "@/lib/api";
 import Link from "next/link";
@@ -40,7 +40,9 @@ export default function EditPost({ params }) {
         topic: "",
         subcategory: "",
         adSize: "",
-        adDuration: 30
+        adDuration: 30,
+        author: "",
+        authorPhoto: ""
     });
 
     useEffect(() => {
@@ -71,7 +73,9 @@ export default function EditPost({ params }) {
                     topic: post.topic || "",
                     subcategory: post.subcategory || "",
                     adSize: post.adSize || "",
-                    adDuration: post.adDuration || 30
+                    adDuration: post.adDuration || 30,
+                    author: post.author || "",
+                    authorPhoto: post.authorPhoto || ""
                 });
             } catch (error) {
                 toast.error("Failed to load post");
@@ -469,6 +473,30 @@ export default function EditPost({ params }) {
                                 <label htmlFor="storyDay" className="text-sm font-medium">
                                     Story of the Day
                                 </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+                        <h3 className="font-semibold mb-4 text-sm flex items-center gap-2 text-muted-foreground">
+                            <User className="w-4 h-4" />
+                            Post Attribution
+                        </h3>
+                        <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
+                            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm bg-muted flex items-center justify-center">
+                                {formData.authorPhoto ? (
+                                    <img
+                                        src={formData.authorPhoto}
+                                        alt={formData.author}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <User className="w-6 h-6 text-muted-foreground" />
+                                )}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Author</span>
+                                <span className="font-bold text-sm text-gray-900">{formData.author || "Admin"}</span>
                             </div>
                         </div>
                     </div>

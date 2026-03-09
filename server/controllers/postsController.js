@@ -1,6 +1,21 @@
 const Post = require("../models/Post");
 const slugify = require("slugify");
 
+// Helper function to format post with populated author data
+const formatPostWithAuthor = (post) => {
+    const postObj = post.toObject ? post.toObject() : post;
+
+    // If we have a populated authorId, use it for the latest data
+    if (postObj.authorId && typeof postObj.authorId === 'object') {
+        const user = postObj.authorId;
+        // Brand name logic for admins
+        postObj.author = user.role === 'admin' ? "Foluso Olorunfemi" : user.username;
+        postObj.authorPhoto = user.profilePhoto || "";
+    }
+
+    return postObj;
+};
+
 // @desc    Get all posts
 // @route   GET /api/posts
 // @access  Public
@@ -21,8 +36,12 @@ exports.getPosts = async (req, res) => {
             query.title = { $regex: search, $options: "i" };
         }
 
-        const posts = await Post.find(query).sort({ createdAt: -1 });
-        res.json(posts);
+        const posts = await Post.find(query)
+            .populate('authorId', 'username profilePhoto role')
+            .sort({ createdAt: -1 });
+
+        const formattedPosts = posts.map(formatPostWithAuthor);
+        res.json(formattedPosts);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -33,7 +52,9 @@ exports.getPosts = async (req, res) => {
 // @access  Public
 exports.getPostBySlug = async (req, res) => {
     try {
-        const post = await Post.findOne({ slug: req.params.slug });
+        const post = await Post.findOne({ slug: req.params.slug })
+            .populate('authorId', 'username profilePhoto role');
+
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
@@ -41,7 +62,7 @@ exports.getPostBySlug = async (req, res) => {
         post.views += 1;
         await post.save();
 
-        res.json(post);
+        res.json(formatPostWithAuthor(post));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -52,11 +73,13 @@ exports.getPostBySlug = async (req, res) => {
 // @access  Public
 exports.getPostById = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id)
+            .populate('authorId', 'username profilePhoto role');
+
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-        res.json(post);
+        res.json(formatPostWithAuthor(post));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -78,7 +101,9 @@ exports.createPost = async (req, res) => {
             slug = slugify(source, { lower: true, strict: true });
         }
 
-        const authorName = req.user.username === "SuperAdmin" ? "Foluso Olorunfemi" : req.user.username;
+        // Strictly use logged-in user's details for attribution
+        const authorName = req.user.role === "admin" ? "Foluso Olorunfemi" : req.user.username;
+        const photo = req.user.profilePhoto || "";
 
         const newPost = new Post({
             title,
@@ -89,7 +114,9 @@ exports.createPost = async (req, res) => {
             isStoryOfTheDay,
             companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
             subcategory, adSize, adDuration, excerpt, excerptColor,
-            author: authorName
+            author: authorName,
+            authorPhoto: photo,
+            authorId: req.user._id // Store reference for robust linking
         });
         const savedPost = await newPost.save();
 
@@ -155,9 +182,16 @@ exports.updatePost = async (req, res) => {
             );
         }
 
-        // Update author if it was previously Admin or SuperAdmin to match the user who is editing (optional, but requested for display consistency)
-        if (post.author === "Admin" || post.author === "SuperAdmin") {
-            post.author = req.user.username === "SuperAdmin" ? "Foluso Olorunfemi" : req.user.username;
+        // Update attribution details
+        // Ensure authorId is set if missing (legacy posts being edited)
+        if (!post.authorId) {
+            post.authorId = req.user._id;
+        }
+
+        const currentDisplayName = req.user.role === "admin" ? "Foluso Olorunfemi" : req.user.username;
+        if (post.author === currentDisplayName || post.author === "Admin" || post.author === "SuperAdmin" || !post.author) {
+            post.author = currentDisplayName;
+            post.authorPhoto = req.user.profilePhoto || "";
         }
 
         const updatedPost = await post.save();

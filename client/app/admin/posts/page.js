@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit, Trash2, Eye, Star, Loader2 } from "lucide-react";
+import { Edit, Trash2, Eye, Star, Loader2, User } from "lucide-react";
 import Link from "next/link";
 import { fetchPosts, deletePost, setStoryOfTheDay } from "@/lib/api";
 import { toast } from "sonner";
@@ -72,6 +72,7 @@ export default function PostsList() {
                             <tr>
                                 <th className="px-6 py-3">Title</th>
                                 <th className="px-6 py-3">Category</th>
+                                <th className="px-6 py-3">Author</th>
                                 <th className="px-6 py-3">Date</th>
                                 <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
@@ -83,7 +84,19 @@ export default function PostsList() {
                                         {post.isStoryOfTheDay && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                                         {post.title}
                                     </td>
-                                    <td className="px-6 py-4">{post.category}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{post.category}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border shrink-0">
+                                                {post.authorPhoto ? (
+                                                    <img src={post.authorPhoto} alt={post.author} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-3 h-3 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                            <span className="text-xs font-medium truncate max-w-[100px]">{post.author}</span>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-muted-foreground">
                                         {new Date(post.createdAt).toLocaleDateString()}
                                     </td>

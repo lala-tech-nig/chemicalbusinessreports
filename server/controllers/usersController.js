@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -46,6 +47,42 @@ exports.toggleUserStatus = async (req, res) => {
         user.isActive = !user.isActive;
         await user.save();
         res.json({ message: `User ${user.isActive ? 'activated' : 'suspended'}`, isActive: user.isActive });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update user
+// @route   PUT /api/users/:id
+// @access  Private (Admin)
+exports.updateUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const { username, email, role, profilePhoto, password } = req.body;
+
+        user.username = username || user.username;
+        user.email = email || user.email;
+        user.role = role || user.role;
+        user.profilePhoto = profilePhoto !== undefined ? profilePhoto : user.profilePhoto;
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            profilePhoto: updatedUser.profilePhoto
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

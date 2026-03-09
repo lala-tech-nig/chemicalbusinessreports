@@ -14,7 +14,7 @@ const generateToken = (id) => {
 // @access  Public (Should be private in prod or removed after seeding)
 exports.registerUser = async (req, res) => {
     try {
-        const { username, email, password, role } = req.body;
+        const { username, email, password, role, profilePhoto } = req.body;
 
         if (!username || !email || !password) {
             return res.status(400).json({ message: "Please add all fields" });
@@ -35,7 +35,8 @@ exports.registerUser = async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            role: role || "admin"
+            role: role || "admin",
+            profilePhoto: profilePhoto || ""
         });
 
         if (user) {
@@ -43,6 +44,8 @@ exports.registerUser = async (req, res) => {
                 _id: user.id,
                 username: user.username,
                 email: user.email,
+                role: user.role,
+                profilePhoto: user.profilePhoto,
                 token: generateToken(user._id),
             });
         } else {
@@ -73,6 +76,7 @@ exports.loginUser = async (req, res) => {
                 username: user.username,
                 email: user.email,
                 role: user.role,
+                profilePhoto: user.profilePhoto,
                 token: generateToken(user._id),
             });
         } else {

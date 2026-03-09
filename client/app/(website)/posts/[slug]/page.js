@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Calendar, User, ArrowLeft, Loader2, Share2, ChevronDown } from "lucide-react";
@@ -101,25 +101,32 @@ export default function SinglePostPage() {
 
     // Helper to inject ads into content
     const contentWithAds = useMemo(() => {
-        if (!post?.content || ads.length === 0) return post?.content;
+        if (!post?.content) return [];
+        if (!ads || ads.length === 0) return [{ type: 'content', data: post.content }];
 
-        const ad = ads[0]; // Use first ad for in-content
-        const paragraphs = post.content.split(/<\/p>/);
+        // Split by </p> but preserve the content
+        const paragraphs = post.content.split('</p>').filter(p => p.trim() !== '').map(p => p + '</p>');
+        const result = [];
+        let currentChunk = [];
+        let adIndex = 0;
 
-        if (paragraphs.length > 3) {
-            // Insert ad after 2nd paragraph
-            const firstPart = paragraphs.slice(0, 2).join('</p>') + '</p>';
-            const secondPart = paragraphs.slice(2).join('</p>');
+        paragraphs.forEach((p, index) => {
+            currentChunk.push(p);
 
-            // Create ad HTML (using a placeholder that we'll replace or just render directly if possible)
-            // Since we use dangerouslySetInnerHTML, we can't easily inject a React component directly into the string.
-            // Instead, we split the rendering.
-            return {
-                parts: [firstPart, secondPart],
-                ad: ad
-            };
-        }
-        return { parts: [post.content], ad: null };
+            // Every 2 paragraphs, or if it's the very last paragraph
+            if (currentChunk.length === 2 || index === paragraphs.length - 1) {
+                result.push({ type: 'content', data: currentChunk.join('') });
+                currentChunk = [];
+
+                // Add an ad if we're not at the very end of the content
+                if (index < paragraphs.length - 1) {
+                    result.push({ type: 'ad', data: ads[adIndex % ads.length] });
+                    adIndex++;
+                }
+            }
+        });
+
+        return result;
     }, [post?.content, ads]);
 
     if (loading) {
@@ -142,7 +149,6 @@ export default function SinglePostPage() {
     }
 
     const isNewsRoundup = post.category === "News Roundup";
-    const sidebarAd = ads.length > 1 ? ads[1] : (ads.length > 0 ? ads[0] : null);
 
     return (
         <div className="min-h-screen pt-24 pb-20 bg-[#fafafa]">
@@ -165,8 +171,23 @@ export default function SinglePostPage() {
 
                             <div className="flex flex-wrap items-center text-muted-foreground gap-6 text-sm">
                                 <div className="flex items-center">
-                                    <User className="w-4 h-4 mr-2" />
-                                    {post.author || "Admin"}
+                                    {post.authorPhoto ? (
+                                        <div className="relative w-10 h-10 mr-3 border-2 border-white shadow-sm rounded-full overflow-hidden">
+                                            <img
+                                                src={post.authorPhoto}
+                                                alt={post.author}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 mr-3 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white shadow-sm">
+                                            <User className="w-5 h-5 text-primary" />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-900 font-bold leading-tight">{post.author || "Admin"}</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Author</span>
+                                    </div>
                                 </div>
                                 <div className="flex items-center">
                                     <Calendar className="w-4 h-4 mr-2" />
@@ -232,25 +253,22 @@ export default function SinglePostPage() {
                         {post.content && (
                             <div className="mb-16 bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100">
                                 <div className={`relative overflow-hidden transition-all duration-500 ${!expanded ? "max-h-[800px]" : "max-h-none"}`}>
-                                    {typeof contentWithAds === 'object' && contentWithAds.parts ? (
-                                        <>
-                                            <div
-                                                className="prose prose-lg prose-gray max-w-none dark:prose-invert"
-                                                dangerouslySetInnerHTML={{ __html: contentWithAds.parts[0] }}
-                                            />
-                                            {contentWithAds.ad && (
-                                                <div className="my-10 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Sponsored Content</p>
-                                                    <InFeedAd ad={contentWithAds.ad} className="max-w-2xl mx-auto shadow-none" />
-                                                </div>
-                                            )}
-                                            {contentWithAds.parts[1] && (
-                                                <div
-                                                    className="prose prose-lg prose-gray max-w-none dark:prose-invert"
-                                                    dangerouslySetInnerHTML={{ __html: contentWithAds.parts[1] }}
-                                                />
-                                            )}
-                                        </>
+                                    {Array.isArray(contentWithAds) ? (
+                                        contentWithAds.map((item, index) => (
+                                            <Fragment key={index}>
+                                                {item.type === 'content' ? (
+                                                    <div
+                                                        className="prose prose-lg prose-gray max-w-none dark:prose-invert mb-6"
+                                                        dangerouslySetInnerHTML={{ __html: item.data }}
+                                                    />
+                                                ) : (
+                                                    <div className="my-10 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Sponsored Content</p>
+                                                        <InFeedAd ad={item.data} className="max-w-2xl mx-auto shadow-none" />
+                                                    </div>
+                                                )}
+                                            </Fragment>
+                                        ))
                                     ) : (
                                         <div
                                             className="prose prose-lg prose-gray max-w-none dark:prose-invert"
@@ -345,21 +363,23 @@ export default function SinglePostPage() {
                     </article>
 
                     {/* Sidebar Column */}
-                    <aside className="lg:col-span-4 space-y-8">
-                        {/* Sidebar Ad 1 */}
-                        <div className="sticky top-24">
-                            <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Advertisement</p>
-                                {sidebarAd ? (
-                                    <InFeedAd ad={sidebarAd} className="shadow-none border-0" />
-                                ) : (
+                    <aside className="lg:col-span-4">
+                        <div className="sticky top-24 space-y-8">
+                            {ads.length > 0 ? (
+                                ads.slice(0, 3).map((ad, idx) => (
+                                    <div key={ad._id || idx} className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Advertisement</p>
+                                        <InFeedAd ad={ad} className="shadow-none border-0" />
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Advertisement</p>
                                     <div className="bg-gray-50 aspect-square rounded-2xl flex items-center justify-center border border-dashed border-gray-200 p-8 text-center">
                                         <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Space available for <br />Advertisement</p>
                                     </div>
-                                )}
-                            </div>
-
-
+                                </div>
+                            )}
                         </div>
                     </aside>
                 </div>

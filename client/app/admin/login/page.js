@@ -21,6 +21,9 @@ export default function AdminLogin() {
 
             localStorage.setItem("adminToken", data.token);
             localStorage.setItem("adminRole", data.role);
+            localStorage.setItem("adminId", data._id);
+            localStorage.setItem("adminUsername", data.username);
+            localStorage.setItem("adminPhoto", data.profilePhoto || "");
             router.push("/admin");
         } catch (err) {
             if (err.message === "Account suspended" || err.response?.status === 403) {

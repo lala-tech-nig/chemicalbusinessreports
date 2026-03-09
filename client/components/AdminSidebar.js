@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
@@ -17,14 +17,13 @@ const sidebarLinks = [
     { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
+import { UserProvider, useUser } from "@/context/UserContext";
+
 export default function AdminSidebar() {
     const pathname = usePathname();
-    const [role, setRole] = useState("admin");
+    const { user } = useUser();
+    const role = user.role || "admin";
 
-    useEffect(() => {
-        const storedRole = localStorage.getItem("adminRole");
-        if (storedRole) setRole(storedRole);
-    }, []);
 
     const handleLogout = () => {
         if (typeof window !== "undefined") {
@@ -70,7 +69,21 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border space-y-4">
+                <div className="flex items-center space-x-3 px-4 py-2 bg-muted/50 rounded-xl border border-border/50">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                        {user.photo ? (
+                            <img src={user.photo} alt={user.username} className="w-full h-full object-cover" />
+                        ) : (
+                            <User className="w-4 h-4 text-primary" />
+                        )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold truncate leading-none mb-1">{user.username}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">{role}</span>
+                    </div>
+                </div>
+
                 <button
                     onClick={handleLogout}
                     className="flex items-center space-x-3 px-4 py-3 w-full rounded-lg text-destructive hover:bg-destructive/10 transition-colors"

@@ -45,6 +45,14 @@ const PostSchema = new mongoose.Schema({
         type: String,
         default: "Admin",
     },
+    authorPhoto: {
+        type: String, // URL or path to author's profile image
+        default: "",
+    },
+    authorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     isStoryOfTheDay: {
         type: Boolean,
         default: false,

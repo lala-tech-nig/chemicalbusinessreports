@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { Users, FileText, Eye, TrendingUp, Loader2 } from "lucide-react";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
 import Link from "next/link";
+import { useUser } from "@/context/UserContext";
 
 export default function AdminDashboard() {
+    const { user } = useUser();
     const [stats, setStats] = useState({
         posts: 0,
         ads: 0,
-        views: 0 // Mock for now or would need analytics API
+        views: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -23,7 +25,7 @@ export default function AdminDashboard() {
                 setStats({
                     posts: postsData.length,
                     ads: adsData.length,
-                    views: "1.2K" // Placeholder
+                    views: "1.2K"
                 });
             } catch (error) {
                 console.error("Failed to load admin stats", error);
@@ -47,7 +49,26 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+                    <p className="text-muted-foreground mt-1">Manage your publications and monitor performance.</p>
+                </div>
+
+                <div className="flex items-center gap-4 bg-card p-3 rounded-xl border border-border shadow-sm">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 bg-muted flex items-center justify-center shrink-0">
+                        {user.photo ? (
+                            <img src={user.photo} alt={user.username} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="text-xl font-bold text-primary">{(user.username || "A")[0]?.toUpperCase()}</div>
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Logged in as</p>
+                        <p className="font-bold text-foreground">{user.username || "Admin"}</p>
+                    </div>
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat) => {
                     const Icon = stat.icon;

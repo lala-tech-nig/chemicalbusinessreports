@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Upload, Loader2, X } from "lucide-react";
+import { Upload, Loader2, X, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createPost, uploadFile } from "@/lib/api";
 import Image from "next/image";
@@ -37,8 +37,24 @@ export default function CreatePost() {
         topic: "",
         subcategory: "",
         adSize: "",
-        adDuration: 30
+        adDuration: 30,
+        author: "Admin",
+        authorPhoto: ""
     });
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const storedUsername = localStorage.getItem("adminUsername");
+            const storedPhoto = localStorage.getItem("adminPhoto");
+            if (storedUsername) {
+                setFormData(prev => ({
+                    ...prev,
+                    author: storedUsername,
+                    authorPhoto: storedPhoto || ""
+                }));
+            }
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -57,6 +73,7 @@ export default function CreatePost() {
         if (!file) return;
 
         if (field === "image") setUploading(true);
+        else if (field === "authorPhoto") setUploading(true);
         else setVideoUploading(true);
 
         try {
@@ -66,7 +83,7 @@ export default function CreatePost() {
         } catch (error) {
             toast.error(`Failed to upload ${field}`);
         } finally {
-            if (field === "image") setUploading(false);
+            if (field === "image" || field === "authorPhoto") setUploading(false);
             else setVideoUploading(false);
         }
     };
@@ -470,6 +487,35 @@ export default function CreatePost() {
                             <label htmlFor="storyDay" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 Set as Story of the Day
                             </label>
+                        </div>
+
+                        <div className="pt-6 border-t border-border mt-6">
+                            <h3 className="font-semibold mb-4 text-sm flex items-center gap-2">
+                                <User className="w-4 h-4 text-primary" />
+                                Post attribution
+                            </h3>
+                            <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/50">
+                                <div className="flex items-center gap-4">
+                                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm bg-muted flex items-center justify-center">
+                                        {formData.authorPhoto ? (
+                                            <img
+                                                src={formData.authorPhoto}
+                                                alt={formData.author}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <User className="w-6 h-6 text-muted-foreground" />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Author</span>
+                                        <span className="font-semibold text-sm">{formData.author || "Admin"}</span>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground italic">
+                                    * This post will be automatically attributed to your profile name and photo.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
