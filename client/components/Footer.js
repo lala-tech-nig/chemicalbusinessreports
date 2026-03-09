@@ -36,7 +36,7 @@ export default function Footer() {
                             <a href="https://www.instagram.com/coslabmedia" className="text-slate-400 hover:text-blue-400 transition-colors">
                                 <Instagram className="w-5 h-5" />
                             </a>
-                            <a href="#" className="text-slate-400 hover:text-blue-400 transition-colors">
+                            <a href="https://www.linkedin.com/in/coslab-media-concepts-a564551ab/" className="text-slate-400 hover:text-blue-400 transition-colors">
                                 <Linkedin className="w-5 h-5" />
                             </a>
                         </div>
