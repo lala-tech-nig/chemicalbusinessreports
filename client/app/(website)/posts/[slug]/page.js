@@ -219,7 +219,7 @@ export default function SinglePostPage() {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:scale-150 transition-transform duration-700" />
                                 <div className="flex items-center gap-2 mb-4">
                                     <span className="text-xs font-black uppercase tracking-[0.2em] text-amber-800/60 bg-white/40 px-3 py-1 rounded-full backdrop-blur-sm">
-                                        Executive Brief
+                                        Excerpt / Summary
                                     </span>
                                 </div>
                                 <p className="text-gray-900 text-lg md:text-xl leading-relaxed font-semibold italic relative z-10">

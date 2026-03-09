@@ -186,7 +186,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                                     >
                                         {item.type === "post" ? (
                                             item.data.category === "Chemical Mart" ? (
-                                                <ChemicalMartCard post={item.data} className="h-full" />
+                                                <ChemicalMartCard post={item.data} />
                                             ) : (
                                                 <PostCard {...item.data} />
                                             )

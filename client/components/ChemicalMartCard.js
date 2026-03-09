@@ -15,7 +15,7 @@ export default function ChemicalMartCard({ post, className }) {
             {/* Image-only banner — click opens modal */}
             <div
                 className={cn(
-                    "group relative w-full h-full min-h-[160px] overflow-hidden rounded-xl cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-white border border-gray-100",
+                    "group relative w-full overflow-hidden rounded-xl cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-white border border-gray-100",
                     className
                 )}
                 onClick={() => setModalOpen(true)}
@@ -25,14 +25,13 @@ export default function ChemicalMartCard({ post, className }) {
                 aria-label={`View details for ${post.companyName || post.title}`}
             >
                 {post.image ? (
-                    <Image
+                    <img
                         src={post.image}
                         alt={post.companyName || post.title}
-                        fill
-                        className="object-contain w-full h-full p-2 transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground min-h-[160px]">
+                    <div className="w-full h-40 flex items-center justify-center text-muted-foreground">
                         <Building2 className="w-10 h-10 opacity-30" />
                     </div>
                 )}

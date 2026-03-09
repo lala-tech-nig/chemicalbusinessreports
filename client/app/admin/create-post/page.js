@@ -17,7 +17,7 @@ export default function CreatePost() {
         title: "",
         category: "",
         excerpt: "",
-        excerptColor: "#FFFF00",
+        excerptColor: "#3972ed",
         content: "",
         isStoryOfTheDay: false,
         image: "",
