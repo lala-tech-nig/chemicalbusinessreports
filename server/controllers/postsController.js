@@ -21,7 +21,7 @@ const formatPostWithAuthor = (post) => {
 // @access  Public
 exports.getPosts = async (req, res) => {
     try {
-        const { category, subcategory, search } = req.query;
+        const { category, subcategory, search, status } = req.query;
         let query = {};
 
         if (category && category !== "All") {
@@ -34,6 +34,19 @@ exports.getPosts = async (req, res) => {
 
         if (search) {
             query.title = { $regex: search, $options: "i" };
+        }
+
+        // Filter by status (default to 'published' to hide drafts from public site)
+        if (status === 'all') {
+            // no status filter
+        } else if (status) {
+            query.status = status;
+        } else {
+            // Treat posts without a status field as published for backwards compatibility
+            query.$or = [
+                { status: 'published' },
+                { status: { $exists: false } }
+            ];
         }
 
         const posts = await Post.find(query)

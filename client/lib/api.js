@@ -44,11 +44,12 @@ export async function uploadFile(file) {
     return res.json();
 }
 
-export async function fetchPosts(category = "All", search = "", subcategory = "") {
+export async function fetchPosts(category = "All", search = "", subcategory = "", status = "") {
     const params = new URLSearchParams();
     if (category && category !== "All") params.append("category", category);
     if (subcategory) params.append("subcategory", subcategory);
     if (search) params.append("search", search);
+    if (status) params.append("status", status);
 
     const res = await fetch(`${API_URL}/posts?${params.toString()}`);
     if (!res.ok) throw new Error("Failed to fetch posts");
@@ -258,5 +259,41 @@ export async function fetchSubmissions() {
         headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Failed to fetch submissions");
+    return res.json();
+}
+
+// Auto Scraper
+export async function getScraperConfig() {
+    const res = await fetch(`${API_URL}/scraper/config`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch scraper config");
+    return res.json();
+}
+
+export async function updateScraperConfig(configData) {
+    const res = await fetch(`${API_URL}/scraper/config`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(configData),
+    });
+    if (!res.ok) throw new Error("Failed to update scraper config");
+    return res.json();
+}
+
+export async function runScraper() {
+    const res = await fetch(`${API_URL}/scraper/run`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to run scraper");
+    return res.json();
+}
+
+export async function fetchScraperDrafts() {
+    const res = await fetch(`${API_URL}/posts?status=draft`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch drafts");
     return res.json();
 }

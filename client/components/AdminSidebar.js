@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "All Posts", href: "/admin/posts", icon: FileText },
     { name: "Create Post", href: "/admin/create-post", icon: PlusCircle },
+    { name: "Auto Scraper", href: "/admin/scraper", icon: Globe },
     { name: "Ads", href: "/admin/ads", icon: Megaphone },
     { name: "Comments", href: "/admin/comments", icon: FileText },
     { name: "Submissions", href: "/admin/submissions", icon: FileText },

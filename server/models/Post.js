@@ -85,9 +85,22 @@ const PostSchema = new mongoose.Schema({
     topic: { type: String }, // For Startup type
     excerpt: { type: String },
     excerptColor: { type: String, default: '#FFFF00' },
+    adViews: [{
+        adId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ad' },
+        viewedAt: { type: Date, default: Date.now }
+    }],
+    status: {
+        type: String,
+        enum: ['draft', 'published'],
+        default: 'published'
+    },
+    sourceUrl: {
+        type: String,
+        default: ""
+    },
     website: { type: String, default: '' },
     email: { type: String, default: '' },
-});
+}, { timestamps: true });
 
 // Middleware to calculate expiryDate for Chemical Mart posts
 PostSchema.pre("save", function (next) {

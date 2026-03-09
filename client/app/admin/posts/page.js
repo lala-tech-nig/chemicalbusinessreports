@@ -19,7 +19,8 @@ export default function PostsList() {
 
     const loadPosts = async () => {
         try {
-            const data = await fetchPosts();
+            // Pass explicitly "All" categories, "" search, "" subcategory, and "all" for status
+            const data = await fetchPosts("All", "", "", "all");
             setPosts(data);
         } catch (error) {
             console.error("Failed to load posts", error);

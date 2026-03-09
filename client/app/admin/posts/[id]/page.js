@@ -75,7 +75,8 @@ export default function EditPost({ params }) {
                     adSize: post.adSize || "",
                     adDuration: post.adDuration || 30,
                     author: post.author || "",
-                    authorPhoto: post.authorPhoto || ""
+                    authorPhoto: post.authorPhoto || "",
+                    status: post.status || "published"
                 });
             } catch (error) {
                 toast.error("Failed to load post");
@@ -430,7 +431,23 @@ export default function EditPost({ params }) {
 
                 <div className="space-y-6">
                     <div className="bg-card p-6 rounded-xl border border-border">
-                        <h3 className="font-semibold mb-4">Media & Visibility</h3>
+                        <h3 className="font-semibold mb-4">Post Settings</h3>
+
+                        <div className="space-y-4 mb-6 pb-6 border-b border-border">
+                            <label className="text-sm font-medium block mb-1">Visibility Status</label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none font-medium"
+                            >
+                                <option value="published">🟢 Published (Live)</option>
+                                <option value="draft">🟡 Draft (Hidden)</option>
+                            </select>
+                            <p className="text-xs text-muted-foreground mt-1">Drafts are only visible in the admin panel. Published posts are live on the website.</p>
+                        </div>
+
+                        <h3 className="font-semibold mb-4 mt-2">Media</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="text-sm font-medium block mb-1">Featured Image</label>
