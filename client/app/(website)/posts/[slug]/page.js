@@ -359,16 +359,7 @@ export default function SinglePostPage() {
                                 )}
                             </div>
 
-                            {/* More content for sidebar could go here (Trending, Newsletter etc) */}
-                            <div className="mt-8 bg-blue-600 rounded-3xl p-8 text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                                <h3 className="text-xl font-black mb-4 relative z-10">Stay Updated</h3>
-                                <p className="text-blue-100 mb-6 text-sm leading-relaxed relative z-10">Get the latest chemical business insights delivered directly to your inbox.</p>
-                                <Link href="/about" className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-full font-bold text-sm hover:bg-blue-50 transition-colors relative z-10">
-                                    Subscribe Now
-                                    <ArrowLeft className="w-4 h-4 rotate-180" />
-                                </Link>
-                            </div>
+
                         </div>
                     </aside>
                 </div>

@@ -54,13 +54,13 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-primary/20 to-black/80 flex items-center justify-center p-12">
+                            <div className="absolute inset-0 bg-white border-2 border-black flex items-center justify-center p-12">
                                 <div className="relative w-full h-full">
                                     <Image
                                         src="/newlogo.png"
                                         alt="Chemical Business Reports"
                                         fill
-                                        className="object-contain drop-shadow-2xl"
+                                        className="object-contain"
                                         priority
                                     />
                                 </div>
@@ -133,18 +133,18 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="flex-1"
                         >
-                            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-bold tracking-widest text-primary uppercase bg-primary/10 rounded-full">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs tracking-widest text-primary uppercase bg-primary/10 rounded-full">
                                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                                 Meet the Founder/Publisher
                             </div>
 
-                            <h2 className="text-4xl md:text-5xl font-black mb-8 text-gray-900 leading-tight">
+                            <h2 className="text-4xl md:text-5xl font-normal mb-8 text-gray-900 leading-tight">
                                 Foluso Olorunfemi
                             </h2>
 
-                            <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+                            <div className="space-y-6 text-lg text-black leading-relaxed">
                                 <p>
-                                    Foluso Olorunfemi is a seasoned and experienced <span className="text-gray-900 font-semibold">Product Development Chemist</span> who holds a Bachelor of Science (Honours) degree in Biochemistry from Nigeria’s premier university, <span className="text-primary italic">University of Ibadan</span>.
+                                    Foluso Olorunfemi is a seasoned and experienced <span>Product Development Chemist</span> who holds a Bachelor of Science (Honours) degree in Biochemistry from Nigeria’s premier university, <span className="italic">University of Ibadan</span>.
                                 </p>
 
                                 <p className="bg-white p-6 rounded-2xl border-l-4 border-primary shadow-sm text-gray-800 font-medium italic">
@@ -153,12 +153,12 @@ export default function AboutPage() {
 
                                 <div className="space-y-4">
                                     <p>
-                                        Foluso Olorunfemi has been engaged in the cosmetics & personal care sector of the chemical industry for <span className="text-gray-900 font-bold underline decoration-primary lg:decoration-2">over 30 years</span>, specialising in production, product development, and marketing research.
+                                        Foluso Olorunfemi has been engaged in the cosmetics & personal care sector of the chemical industry for <span className="underline lg:decoration-2">over 30 years</span>, specialising in production, product development, and marketing research.
                                     </p>
                                     <p>
                                         Most of his practical knowledge was gained through work experience and business relationships with leading indigenous manufacturers; these experiences have provided him with valuable insights into the industry's potential and challenges.
                                     </p>
-                                    <p className="text-gray-900 font-medium">
+                                    <p>
                                         He is best placed to use his vast knowledge of the industry to promote and advocate for appropriate policy direction for its growth and development.
                                     </p>
                                 </div>

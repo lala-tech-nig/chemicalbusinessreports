@@ -15,10 +15,9 @@ export default function ChemicalMartCard({ post, className }) {
             {/* Image-only banner — click opens modal */}
             <div
                 className={cn(
-                    "group relative w-full overflow-hidden rounded-xl cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-muted",
+                    "group relative w-full h-full min-h-[160px] overflow-hidden rounded-xl cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-white border border-gray-100",
                     className
                 )}
-                style={{ minHeight: "180px" }}
                 onClick={() => setModalOpen(true)}
                 role="button"
                 tabIndex={0}
@@ -30,10 +29,10 @@ export default function ChemicalMartCard({ post, className }) {
                         src={post.image}
                         alt={post.companyName || post.title}
                         fill
-                        className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain w-full h-full p-2 transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground min-h-[180px]">
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground min-h-[160px]">
                         <Building2 className="w-10 h-10 opacity-30" />
                     </div>
                 )}
@@ -52,12 +51,7 @@ export default function ChemicalMartCard({ post, className }) {
                     </div>
                 )}
 
-                {/* Ad size badge */}
-                {post.adSize && (
-                    <div className="absolute top-3 right-3 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
-                        {post.adSize}
-                    </div>
-                )}
+
             </div>
 
             {/* Info Modal */}
@@ -69,12 +63,12 @@ export default function ChemicalMartCard({ post, className }) {
                     <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Modal header image */}
                         {post.image && (
-                            <div className="relative h-48 w-full">
+                            <div className="relative h-48 w-full bg-slate-50">
                                 <Image
                                     src={post.image}
                                     alt={post.companyName || post.title}
                                     fill
-                                    className="object-contain"
+                                    className="object-contain p-4"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                 <div className="absolute bottom-4 left-4 text-white">
