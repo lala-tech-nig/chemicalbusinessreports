@@ -26,16 +26,32 @@ export default function Hero() {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="max-w-4xl space-y-6"
                 >
-                    <div className="space-y-2">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                            className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white"
-                        >
-                            Coslab Media <br />
-                            <span className="text-blue-400">Concepts (Ltd)</span>
-                        </motion.h1>
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4 md:gap-6">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1, duration: 0.6 }}
+                                className="relative w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 shrink-0"
+                            >
+                                <Image
+                                    src="/coslablogo.png"
+                                    alt="Coslab Media Logo"
+                                    fill
+                                    className="object-contain drop-shadow-2xl"
+                                    priority
+                                />
+                            </motion.div>
+                            <motion.h1
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.6 }}
+                                className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white"
+                            >
+                                Coslab Media <br />
+                                <span className="text-blue-400">Concepts (Ltd)</span>
+                            </motion.h1>
+                        </div>
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
