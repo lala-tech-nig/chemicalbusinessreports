@@ -241,7 +241,7 @@ export default function AboutPage() {
                             {
                                 name: "Deji Olabiwonnu",
                                 role: "Legal Adviser",
-                                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=800&auto=format&fit=crop",
+                                image: "/legal.jpeg",
                                 initials: "DO"
                             }
                         ].map((member, idx) => (
