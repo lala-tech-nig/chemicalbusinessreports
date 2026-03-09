@@ -68,9 +68,9 @@ export default function Navbar() {
                                 priority
                             />
                         </div>
-                        <div className="hidden sm:block">
-                            <p className="text-xs font-bold text-blue-700 uppercase tracking-widest leading-none">Chemical Business</p>
-                            <p className="text-xs text-gray-500 tracking-widest leading-none mt-0.5">Reports</p>
+                        <div className="flex flex-col">
+                            <p className="text-[10px] sm:text-xs font-bold text-blue-700 uppercase tracking-wider sm:tracking-widest leading-none">Chemical Business</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 tracking-wider sm:tracking-widest leading-none mt-0.5">Reports</p>
                         </div>
                     </Link>
 
