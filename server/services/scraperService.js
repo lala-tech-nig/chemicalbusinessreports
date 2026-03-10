@@ -5,14 +5,24 @@ const ScraperConfig = require('../models/ScraperConfig');
 const Post = require('../models/Post');
 
 async function scrapeMatches() {
-    console.log("Starting Auto Scraper Event...");
+    console.log(`[PID:${process.pid}] Starting Auto Scraper Event...`);
     try {
         const config = await ScraperConfig.getConfig();
         const urls = config.targetUrls || [];
-        const keywords = (config.keywords || []).map(k => k.toLowerCase());
+        const configKeywords = (config.keywords || []).map(k => k.toLowerCase());
 
-        if (urls.length === 0 || keywords.length === 0) {
-            console.log("Scraper aborted: No URLs or keywords configured.");
+        // Extract individual significant words from the long category phrases for better matching
+        const searchTerms = new Set();
+        configKeywords.forEach(kw => {
+            // Split by any non-word character except maybe hyphens, filter common/short words
+            const words = kw.split(/[^a-z0-9-]+/i).filter(w => w.length >= 3 && !['news', 'industry', 'industries', 'care', 'allied', 'personal', 'including', 'etc'].includes(w));
+            words.forEach(w => searchTerms.add(w));
+        });
+        const termsArray = Array.from(searchTerms);
+        console.log(`Extracted search terms: ${termsArray.join(', ')}`);
+
+        if (urls.length === 0 || termsArray.length === 0) {
+            console.log("Scraper aborted: No URLs or extracted keywords configured.");
             return { message: "No configuration", matches: 0 };
         }
 
@@ -26,27 +36,39 @@ async function scrapeMatches() {
                 const response = await axios.get(target, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
                     },
-                    timeout: 10000
+                    timeout: 30000 // Further increased timeout
                 });
 
                 const html = response.data;
                 const $ = cheerio.load(html);
 
-                // Look for anchor tags within typical article containers or headings
+                // Improved selection: Look for anchors, but also headings that might contain the title
                 const candidates = new Set();
+                let pageLinksChecked = 0;
+                let keywordMatches = 0;
 
-                $('a').each((i, el) => {
-                    const titleText = $(el).text().trim().replace(/\s+/g, ' ');
-                    const href = $(el).attr('href');
+                $('a, h1, h2, h3, h4, h5, h6').each((i, el) => {
+                    let titleText = $(el).text().trim().replace(/\s+/g, ' ');
+                    let href = $(el).attr('href') || $(el).find('a').attr('href');
 
-                    if (!titleText || !href) return;
+                    // If it's a heading without a direct link, check siblings or parents for a link
+                    if (!href && $(el).closest('a').length > 0) {
+                        href = $(el).closest('a').attr('href');
+                    }
 
-                    // Filter by keyword matches
+                    if (!titleText || !href || titleText.length < 12) return;
+                    pageLinksChecked++;
+
+                    // Filter by keyword matches (check against extracted terms)
                     const lowerTitle = titleText.toLowerCase();
-                    const hasMatch = keywords.some(kw => lowerTitle.includes(kw));
+                    const matchedTerm = termsArray.find(term => lowerTitle.includes(term));
 
-                    if (hasMatch && titleText.length > 20) {
+                    if (matchedTerm) {
+                        keywordMatches++;
+                        console.log(`[OK] Match: "${titleText}" (on "${matchedTerm}")`);
                         // resolve relative URLs
                         let fullUrl = href;
                         if (href.startsWith('/')) {
@@ -63,8 +85,11 @@ async function scrapeMatches() {
                     }
                 });
 
+                console.log(`- Checked ${pageLinksChecked} links, found ${keywordMatches} keyword matches.`);
+
                 // Process unique candidates
                 const uniqueItems = Array.from(candidates).map(c => JSON.parse(c));
+                console.log(`- Found ${uniqueItems.length} unique candidates to check against DB.`);
 
                 for (const item of uniqueItems) {
                     // Check if already drafted/published by source URL OR title
@@ -75,10 +100,22 @@ async function scrapeMatches() {
                         ]
                     });
 
-                    if (!exists) {
+                    if (exists) {
+                        console.log(`[SKIPPED] Already exists: ${item.title}`);
+                    } else {
+                        // Map keywords to valid subcategories
+                        let subcat = "Others";
+                        const lowTitle = item.title.toLowerCase();
+
+                        if (lowTitle.includes('pharma') || lowTitle.includes('medic') || lowTitle.includes('health')) subcat = "Pharma";
+                        else if (lowTitle.includes('cosmetic') || lowTitle.includes('personal care')) subcat = "Cosmetics & Personal Care";
+                        else if (lowTitle.includes('food') || lowTitle.includes('drink') || lowTitle.includes('brew') || lowTitle.includes('beverage')) subcat = "Brewing, Foods & Drinks";
+                        else if (lowTitle.includes('chemical') || lowTitle.includes('petro') || lowTitle.includes('oil') || lowTitle.includes('gas') || lowTitle.includes('paint')) subcat = "Industries Chemical";
+
                         const newPost = new Post({
                             title: item.title,
-                            category: "Global Chemical Industry News", // Default category
+                            category: "News Roundup", // Valid category
+                            subcategory: subcat,
                             content: `<p>This article was automatically scraped. Original source: <a href="${item.link}" target="_blank">${item.link}</a></p>`,
                             sourceUrl: item.link,
                             status: "draft", // Saving as draft for review
@@ -88,11 +125,12 @@ async function scrapeMatches() {
 
                         await newPost.save();
                         totalSaved++;
-                        console.log(`Saved draft: ${item.title}`);
+                        console.log(`[SAVED] Draft: ${item.title}`);
                     }
                 }
+                console.log(`[FINISHED] Scraping ${url}. Saved ${totalSaved} so far.`);
             } catch (err) {
-                console.error(`Error scraping ${url}:`, err.message);
+                console.error(`[FATAL ERROR] Scraping ${url}:`, err);
             }
         }
 
@@ -109,9 +147,9 @@ async function scrapeMatches() {
     }
 }
 
-// Scheduled Cron Job: Runs every 6 hours
-// '0 */6 * * *'  -> At minute 0 past every 6th hour.
-cron.schedule('0 */6 * * *', () => {
+// Scheduled Cron Job: Runs every 1 hour
+// '0 * * * *'  -> At minute 0 past every hour.
+cron.schedule('0 * * * *', () => {
     scrapeMatches();
 });
 

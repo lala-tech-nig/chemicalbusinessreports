@@ -4,14 +4,32 @@ const ScraperConfigSchema = new mongoose.Schema({
     targetUrls: {
         type: [String],
         default: [
-            "https://www.chemanager-online.com/en/news",
-            "https://www.icis.com/explore/news/"
+            "https://punchng.com/",
+            "https://vanguardngr.com/",
+            "https://thenationonlineng.net/",
+            "https://guardian.ng/",
+            "https://tribuneonlineng.com/",
+            "https://dailytrust.com/",
+            "https://www.premiumtimesng.com/",
+            "https://saharareporters.com/",
+            "https://thecable.ng/",
+            "https://leadership.ng/",
+            "https://businessday.ng/",
+            "https://nairametrics.com/"
         ]
     },
     keywords: {
         type: [String],
         default: [
-            "BASF", "Dow", "SABIC", "petrochemicals", "merger", "acquisition", "capacity"
+            "Pharmaceutical industry news",
+            "Cosmetics & personal care industry news",
+            "Foods & drinks industry news (including beverages, brewery, distilleries industries etc)",
+            "Industrial Chemicals news",
+            "Medical & health news",
+            "Agribusiness news",
+            "Petrochemical industry news",
+            "Oil & gas industry news",
+            "Chemical & allied industries news"
         ]
     },
     lastRun: {
