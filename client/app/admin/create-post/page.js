@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Upload, Loader2, X, User } from "lucide-react";
+import { Upload, Loader2, X, User, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createPost, uploadFile } from "@/lib/api";
 import Image from "next/image";
@@ -13,6 +13,7 @@ export default function CreatePost() {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [videoUploading, setVideoUploading] = useState(false);
+    const [ads, setAds] = useState([]);
     const [formData, setFormData] = useState({
         title: "",
         category: "",
@@ -39,10 +40,22 @@ export default function CreatePost() {
         adSize: "",
         adDuration: 30,
         author: "",
-        authorPhoto: ""
+        authorPhoto: "",
+        adPlacements: []
     });
 
     useEffect(() => {
+        const fetchAds = async () => {
+            try {
+                const { fetchActiveAds } = await import("@/lib/api");
+                const adsData = await fetchActiveAds();
+                setAds(adsData);
+            } catch (error) {
+                console.error("Failed to fetch ads", error);
+            }
+        };
+        fetchAds();
+
         if (typeof window !== "undefined") {
             const storedUsername = localStorage.getItem("adminUsername");
             const storedPhoto = localStorage.getItem("adminPhoto");
@@ -406,6 +419,74 @@ export default function CreatePost() {
                                     <p className="text-xs text-muted-foreground">
                                         Use the toolbar to bold text, change fonts, add links, adjust sizes, and more.
                                     </p>
+                                </div>
+                            )}
+
+                            {formData.category !== "Chemical Mart" && formData.content && (
+                                <div className="space-y-6 p-8 bg-slate-50/50 rounded-3xl border border-slate-200 shadow-sm mt-8">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="bg-primary/10 p-2 rounded-lg">
+                                            <Share2 className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-xl text-slate-900">Manual Ad Placements</h3>
+                                            <p className="text-sm text-slate-500">Pick specific ads for each paragraph break</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {formData.content.split('</p>').filter(p => p.trim() !== '').map((p, index) => {
+                                            const placement = formData.adPlacements.find(apl => apl.paragraphIndex === index);
+                                            const paragraphText = p.replace(/<[^>]*>/g, '').trim();
+                                            if (!paragraphText) return null;
+
+                                            return (
+                                                <div key={index} className="group relative flex flex-col md:flex-row md:items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-primary/30 hover:shadow-md transition-all duration-200">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">
+                                                                {index + 1}
+                                                            </span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Position After</span>
+                                                        </div>
+                                                        <p className="text-sm text-slate-600 line-clamp-2 italic pl-8 border-l-2 border-slate-100 group-hover:border-primary/20 transition-colors">
+                                                            "{paragraphText}"
+                                                        </p>
+                                                    </div>
+                                                    <div className="w-full md:w-72 shrink-0">
+                                                        <label className="block text-[10px] font-bold text-slate-400 mb-1.5 md:hidden">Select Ad</label>
+                                                        <select
+                                                            value={placement?.adId || ""}
+                                                            onChange={(e) => {
+                                                                const adId = e.target.value;
+                                                                setFormData(prev => {
+                                                                    const newPlacements = prev.adPlacements.filter(apl => apl.paragraphIndex !== index);
+                                                                    if (adId) {
+                                                                        newPlacements.push({ paragraphIndex: index, adId });
+                                                                    }
+                                                                    return { ...prev, adPlacements: newPlacements };
+                                                                });
+                                                            }}
+                                                            className="w-full pl-4 pr-10 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer appearance-none"
+                                                            style={{
+                                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
+                                                                backgroundRepeat: 'no-repeat',
+                                                                backgroundPosition: 'right 1rem center',
+                                                                backgroundSize: '1.25em'
+                                                            }}
+                                                        >
+                                                            <option value="">— No advertisement —</option>
+                                                            {ads.map(ad => (
+                                                                <option key={ad._id} value={ad._id}>
+                                                                    🎯 {ad.title || ad.companyName || "Untitled Ad"}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </>

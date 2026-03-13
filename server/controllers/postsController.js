@@ -103,7 +103,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, adPlacements } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -127,6 +127,7 @@ exports.createPost = async (req, res) => {
             isStoryOfTheDay,
             companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
             subcategory, adSize, adDuration, excerpt, excerptColor,
+            adPlacements,
             author: authorName,
             authorPhoto: photo,
             authorId: req.user._id // Store reference for robust linking
@@ -152,7 +153,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, adPlacements } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -186,6 +187,7 @@ exports.updatePost = async (req, res) => {
         if (adDuration) post.adDuration = adDuration;
         if (excerpt !== undefined) post.excerpt = excerpt;
         if (excerptColor) post.excerptColor = excerptColor;
+        if (adPlacements) post.adPlacements = adPlacements;
 
         // If this post is set to Story of the Day, unset others
         if (post.isStoryOfTheDay) {

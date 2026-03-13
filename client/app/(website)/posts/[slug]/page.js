@@ -102,32 +102,32 @@ export default function SinglePostPage() {
     // Helper to inject ads into content
     const contentWithAds = useMemo(() => {
         if (!post?.content) return [];
-        if (!ads || ads.length === 0) return [{ type: 'content', data: post.content }];
-
+        
         // Split by </p> but preserve the content
         const paragraphs = post.content.split('</p>').filter(p => p.trim() !== '').map(p => p + '</p>');
         const result = [];
-        let currentChunk = [];
-        let adIndex = 0;
+        
+        // If there are no manual placements, just return the content as one chunk
+        if (!post.adPlacements || post.adPlacements.length === 0) {
+            return [{ type: 'content', data: post.content }];
+        }
 
         paragraphs.forEach((p, index) => {
-            currentChunk.push(p);
-
-            // Every 2 paragraphs, or if it's the very last paragraph
-            if (currentChunk.length === 2 || index === paragraphs.length - 1) {
-                result.push({ type: 'content', data: currentChunk.join('') });
-                currentChunk = [];
-
-                // Add an ad if we're not at the very end of the content
-                if (index < paragraphs.length - 1) {
-                    result.push({ type: 'ad', data: ads[adIndex % ads.length] });
-                    adIndex++;
+            result.push({ type: 'content', data: p });
+            
+            // Check if there's a manual ad placement after this paragraph
+            const placement = post.adPlacements.find(apl => apl.paragraphIndex === index);
+            if (placement) {
+                // Find the ad in the ads array (fetched separately)
+                const ad = ads.find(a => a._id === placement.adId);
+                if (ad) {
+                    result.push({ type: 'ad', data: ad });
                 }
             }
         });
 
         return result;
-    }, [post?.content, ads]);
+    }, [post?.content, post?.adPlacements, ads]);
 
     if (loading) {
         return (
@@ -258,7 +258,7 @@ export default function SinglePostPage() {
                                             <Fragment key={index}>
                                                 {item.type === 'content' ? (
                                                     <div
-                                                        className="prose prose-lg prose-gray max-w-none dark:prose-invert mb-6"
+                                                        className="prose prose-lg prose-slate max-w-none dark:prose-invert mb-6 text-gray-950"
                                                         dangerouslySetInnerHTML={{ __html: item.data }}
                                                     />
                                                 ) : (
