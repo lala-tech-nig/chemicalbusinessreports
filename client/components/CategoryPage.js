@@ -113,48 +113,6 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Featured Post */}
-                {!searchTerm && featuredPost && !loading && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 relative group overflow-hidden rounded-3xl bg-slate-950"
-                        style={{ minHeight: "340px" }}
-                    >
-                        {featuredPost.image && (
-                            <img
-                                src={featuredPost.image}
-                                alt={featuredPost.title}
-                                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
-                                style={{ maxHeight: "420px", width: "100%", display: "block" }}
-                            />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-4">
-                            <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-red-400">
-                                <span className="flex h-2 w-2 rounded-full bg-red-400 animate-pulse" />
-                                Featured
-                            </span>
-                            <h2 className="text-2xl md:text-4xl font-bold text-white max-w-3xl leading-tight">
-                                {featuredPost.title}
-                            </h2>
-                            <p className="text-slate-300 line-clamp-2 max-w-2xl hidden sm:block">
-                                {featuredPost.excerpt}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-4 pt-1">
-                                <a
-                                    href={`/posts/${featuredPost.slug}`}
-                                    className="inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-blue-50 transition-colors text-sm"
-                                >
-                                    Read Full Story <ArrowRight className="w-4 h-4" />
-                                </a>
-                                <span className="flex items-center gap-1.5 text-slate-400 text-sm">
-                                    <Clock className="w-4 h-4" />
-                                    {new Date(featuredPost.createdAt).toLocaleDateString()}
-                                </span>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
 
                 {/* Post Grid */}
                 {loading ? (

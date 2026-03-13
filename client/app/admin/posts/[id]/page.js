@@ -150,26 +150,7 @@ export default function EditPost({ params }) {
     const renderDynamicFields = () => {
         switch (formData.category) {
             case "News Roundup":
-                return (
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Subcategory *</label>
-                        <select
-                            name="subcategory"
-                            value={formData.subcategory}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
-                            required
-                        >
-                            <option value="">Select Subcategory</option>
-                            <option value="Pharma">Pharma</option>
-                            <option value="Cosmetics & Personal Care">Cosmetics &amp; Personal Care</option>
-                            <option value="Paints & Chemicals">Paints &amp; Chemicals</option>
-                            <option value="Brewing, Foods & Drinks">Brewing, Foods &amp; Drinks</option>
-                            <option value="Beverages">Beverages</option>
-                            <option value="Industries Chemical">Industries Chemical</option>
-                        </select>
-                    </div>
-                );
+                return null;
             case "Chemical Mart":
                 return (
                     <>

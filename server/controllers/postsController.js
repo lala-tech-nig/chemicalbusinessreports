@@ -8,8 +8,8 @@ const formatPostWithAuthor = (post) => {
     // If we have a populated authorId, use it for the latest data
     if (postObj.authorId && typeof postObj.authorId === 'object') {
         const user = postObj.authorId;
-        // Brand name logic for admins
-        postObj.author = user.role === 'admin' ? "Foluso Olorunfemi" : user.username;
+        // Use the user's actual username for all roles
+        postObj.author = user.username;
         postObj.authorPhoto = user.profilePhoto || "";
     }
 
@@ -115,7 +115,7 @@ exports.createPost = async (req, res) => {
         }
 
         // Strictly use logged-in user's details for attribution
-        const authorName = req.user.role === "admin" ? "Foluso Olorunfemi" : req.user.username;
+        const authorName = req.user.username;
         const photo = req.user.profilePhoto || "";
 
         const newPost = new Post({
@@ -201,8 +201,8 @@ exports.updatePost = async (req, res) => {
             post.authorId = req.user._id;
         }
 
-        const currentDisplayName = req.user.role === "admin" ? "Foluso Olorunfemi" : req.user.username;
-        if (post.author === currentDisplayName || post.author === "Admin" || post.author === "SuperAdmin" || !post.author) {
+        const currentDisplayName = req.user.username;
+        if (post.author === currentDisplayName || post.author === "Admin" || post.author === "SuperAdmin" || !post.author || post.author === "Foluso Olorunfemi") {
             post.author = currentDisplayName;
             post.authorPhoto = req.user.profilePhoto || "";
         }
