@@ -10,6 +10,7 @@ export default function ChemicalMartPage() {
         <CategoryPage
             categoryName="Chemical Mart"
             description="A curated marketplace showcasing products and services from leading chemical vendors and manufacturers."
+            hideFeatured={true}
         />
     );
 }
