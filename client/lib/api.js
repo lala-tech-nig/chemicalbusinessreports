@@ -262,6 +262,27 @@ export async function fetchSubmissions() {
     return res.json();
 }
 
+export async function createExecutiveProfile(data) {
+    const res = await fetch(`${API_URL}/executive-profiles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to submit profile");
+    }
+    return res.json();
+}
+
+export async function fetchExecutiveProfiles() {
+    const res = await fetch(`${API_URL}/executive-profiles`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch executive profiles");
+    return res.json();
+}
+
 // Auto Scraper
 export async function getScraperConfig() {
     const res = await fetch(`${API_URL}/scraper/config`, {
