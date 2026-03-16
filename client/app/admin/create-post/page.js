@@ -356,7 +356,7 @@ export default function CreatePost() {
                             <option value="Chemical Mart">Chemical Mart</option>
                             <option value="Research & Reports">Research & Reports</option>
                             <option value="Corporate Profile">Corporate Profile</option>
-                            <option value="START UP">START UP</option>
+                            <option value="START UP">Startup</option>
                             <option value="Services">Services</option>
                             <option value="Executive Brief">Executive Brief</option>
                         </select>
