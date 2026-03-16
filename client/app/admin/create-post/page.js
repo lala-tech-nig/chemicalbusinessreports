@@ -29,12 +29,6 @@ export default function CreatePost() {
         website: "",
         email: "",
         researchTopic: "",
-        ceoDetails: "",
-        companyServices: "",
-        earlyBeginning: "",
-        fails: "",
-        success: "",
-        awards: "",
         topic: "",
         subcategory: "",
         adSize: "",
@@ -113,9 +107,6 @@ export default function CreatePost() {
         } else if (payload.category === "Research & Reports") {
             if (!payload.title && payload.researchTopic) payload.title = payload.researchTopic;
             if (!payload.content) payload.content = "Research Report";
-        } else if (payload.category === "Corporate Profile") {
-            if (!payload.title && payload.companyName) payload.title = payload.companyName;
-            if (!payload.content) payload.content = `Corporate Profile: ${payload.companyName}`;
         } else if (payload.category === "START UP") {
             if (!payload.title && payload.topic) payload.title = payload.topic;
             if (!payload.content) payload.content = "Startup Feature";
@@ -139,6 +130,7 @@ export default function CreatePost() {
 
     const renderDynamicFields = () => {
         switch (formData.category) {
+            case "Corporate Profile":
             case "News Roundup":
                 return null;
             case "Chemical Mart":
@@ -225,58 +217,6 @@ export default function CreatePost() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium block mb-1">Upload Documentary Video (Optional) or Image below</label>
-                            <div className="border-2 border-dashed border-input rounded-lg p-6 flex flex-col items-center justify-center relative">
-                                {videoUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : formData.video ? (
-                                    <div className="relative w-full">
-                                        <p className="text-sm text-green-600 truncate">{formData.video}</p>
-                                        <button onClick={() => setFormData(prev => ({ ...prev, video: "" }))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4" /></button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <input type="file" accept="video/*,image/*" onChange={(e) => handleFileChange(e, "video")} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                        <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                                        <span className="text-xs text-muted-foreground">Upload Video</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                );
-            case "Corporate Profile":
-                return (
-                    <>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Company Name</label>
-                            <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">CEO Details</label>
-                            <textarea name="ceoDetails" value={formData.ceoDetails} onChange={handleChange} rows={3} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Company Services</label>
-                            <textarea name="companyServices" value={formData.companyServices} onChange={handleChange} rows={3} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" required />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Early Beginning</label>
-                                <textarea name="earlyBeginning" value={formData.earlyBeginning} onChange={handleChange} rows={2} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Fails</label>
-                                <textarea name="fails" value={formData.fails} onChange={handleChange} rows={2} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Success</label>
-                                <textarea name="success" value={formData.success} onChange={handleChange} rows={2} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Awards</label>
-                                <textarea name="awards" value={formData.awards} onChange={handleChange} rows={2} className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium block mb-1">CEO Comment (Video Optional)</label>
                             <div className="border-2 border-dashed border-input rounded-lg p-6 flex flex-col items-center justify-center relative">
                                 {videoUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : formData.video ? (
                                     <div className="relative w-full">
