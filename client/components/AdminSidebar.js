@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
@@ -16,6 +16,7 @@ const sidebarLinks = [
     { name: "Submissions", href: "/admin/submissions", icon: FileText },
     { name: "Executive Profiles", href: "/admin/executive-profiles", icon: Users },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Detailed Report", href: "/admin/analytics", icon: BarChart2, adminOnly: true },
     { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -37,9 +38,11 @@ export default function AdminSidebar() {
 
     const filteredLinks = sidebarLinks.filter(link => {
         if (role === 'moderator') {
-            // Moderators: No Ads, Users, Settings
+            // Moderators: No Ads, Users, Settings, Analytics
             return ["Dashboard", "All Posts", "Create Post"].includes(link.name);
         }
+        // Admin-only links hidden from non-admins
+        if (link.adminOnly && role !== 'admin') return false;
         return true;
     });
 

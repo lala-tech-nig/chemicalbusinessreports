@@ -3,10 +3,12 @@ import Footer from "@/components/Footer";
 import AdModal from "@/components/AdModal";
 import UserDataModal from "@/components/UserDataModal";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export default function WebsiteLayout({ children }) {
     return (
         <div className="flex flex-col min-h-screen">
+            <AnalyticsTracker />
             <Navbar />
             <main className="flex-grow pt-16">
                 {children}
@@ -18,3 +20,4 @@ export default function WebsiteLayout({ children }) {
         </div>
     );
 }
+

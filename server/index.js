@@ -31,6 +31,7 @@ app.use("/api/comments", require("./routes/comments"));
 app.use("/api/submissions", require("./routes/submissions"));
 app.use("/api/executive-profiles", require("./routes/executiveProfiles"));
 app.use("/api/scraper", require("./routes/scraper"));
+app.use("/api/analytics", require("./routes/analytics"));
 
 // Health Check
 app.get("/", (req, res) => {

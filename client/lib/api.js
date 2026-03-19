@@ -318,3 +318,29 @@ export async function fetchScraperDrafts() {
     if (!res.ok) throw new Error("Failed to fetch drafts");
     return res.json();
 }
+
+// Analytics (Admin only)
+export async function fetchAnalyticsSummary() {
+    const res = await fetch(`${API_URL}/analytics/summary`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch analytics summary");
+    return res.json();
+}
+
+export async function fetchAnalyticsDetailed(page = 1, limit = 20) {
+    const res = await fetch(`${API_URL}/analytics/detailed?page=${page}&limit=${limit}`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch detailed analytics");
+    return res.json();
+}
+
+export async function fetchAnalyticsByIP(ip) {
+    const res = await fetch(`${API_URL}/analytics/ip/${encodeURIComponent(ip)}`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch analytics for IP");
+    return res.json();
+}
+
