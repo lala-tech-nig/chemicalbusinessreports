@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, Fragment } from "react";
-import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Calendar, User, ArrowLeft, Loader2, Share2, ChevronDown } from "lucide-react";
+import { Calendar, User, ArrowLeft, Loader2, Share2, ChevronDown, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { fetchSinglePost, fetchApprovedComments, createComment, fetchActiveAds } from "@/lib/api";
+import { fetchActiveAds } from "@/lib/api";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
 import InFeedAd from "@/components/InFeedAd";
 
 const CATEGORY_ROUTES = {
@@ -23,80 +21,43 @@ function getCategoryRoute(category) {
     return CATEGORY_ROUTES[category] || "/posts";
 }
 
-export default function SinglePostPage() {
-    const { slug } = useParams();
+export default function PreviewPostPage() {
     const [post, setPost] = useState(null);
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [comments, setComments] = useState([]);
-    const [commentForm, setCommentForm] = useState({ authorName: "", content: "" });
-    const [submitting, setSubmitting] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
-        if (!slug) return;
-
         const loadContent = async () => {
             try {
-                const [postData, adsData] = await Promise.all([
-                    fetchSinglePost(slug),
-                    fetchActiveAds()
-                ]);
-
-                setPost(postData);
+                const adsData = await fetchActiveAds();
                 setAds(adsData);
 
-                if (postData && postData._id) {
-                    const commentsData = await fetchApprovedComments(postData._id);
-                    setComments(commentsData);
+                const previewData = localStorage.getItem("postPreviewData");
+                if (previewData) {
+                    setPost(JSON.parse(previewData));
+                } else {
+                    setError("No preview data found.");
                 }
             } catch (err) {
-                console.error("Failed to fetch content:", err);
-                setError("Post not found");
+                console.error("Failed to load preview:", err);
+                setError("Failed to load preview content");
             } finally {
                 setLoading(false);
             }
         };
 
         loadContent();
-    }, [slug]);
+    }, []);
 
-    const handleShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: post.title,
-                    text: "Check out this article on Chemical Business Reports",
-                    url: window.location.href,
-                });
-            } catch (err) {
-                console.log("Error sharing:", err);
-            }
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            toast.success("Link copied to clipboard!");
-        }
+    const handleShare = () => {
+        toast.info("Sharing is disabled in preview mode.");
     };
 
-    const handleCommentSubmit = async (e) => {
+    const handleCommentSubmit = (e) => {
         e.preventDefault();
-        if (!post || !post._id) return;
-        setSubmitting(true);
-        try {
-            await createComment({ ...commentForm, postId: post._id });
-            toast.success("Comment submitted for moderation. It will appear after approval.");
-            setCommentForm({ authorName: "", content: "" });
-            confetti({
-                particleCount: 50,
-                spread: 50,
-                origin: { y: 0.7 }
-            });
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setSubmitting(false);
-        }
+        toast.info("Commenting is disabled in preview mode.");
     };
 
     // Helper to inject ads into content
@@ -140,33 +101,39 @@ export default function SinglePostPage() {
     if (error || !post) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-                <h1 className="text-2xl font-bold">Post not found</h1>
-                <Link href="/posts" className="text-primary hover:underline flex items-center">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Posts
-                </Link>
+                <AlertTriangle className="w-12 h-12 text-yellow-500 mb-2" />
+                <h1 className="text-2xl font-bold">{error || "No preview data found"}</h1>
+                <p className="text-muted-foreground text-center max-w-md">
+                    Please go back to the editor and click the Preview button again to load the preview data.
+                </p>
+                <button onClick={() => window.close()} className="mt-4 px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors">
+                    Close Preview
+                </button>
             </div>
         );
     }
 
-    const isNewsRoundup = post.category === "News Roundup";
-
     return (
         <div className="min-h-screen pt-24 pb-20 bg-[#fafafa]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="fixed top-0 left-0 w-full bg-yellow-400 text-yellow-900 text-center py-2 font-bold z-50 shadow-md flex items-center justify-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                PREVIEW MODE - This post is not published yet
+            </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Main Content Column */}
                     <article className="lg:col-span-8">
-                        <Link href={getCategoryRoute(post.category)} className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-8 group">
+                        <Link href={getCategoryRoute(post.category)} onClick={(e) => e.preventDefault()} className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-8 group cursor-default">
                             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                             Back to {post.category || "Posts"}
                         </Link>
 
                         <header className="mb-10">
                             <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-full mb-4">
-                                {post.category}
+                                {post.category || "Uncategorized"}
                             </div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight">
-                                {post.title}
+                                {post.title || "Untitled Post"}
                             </h1>
 
                             <div className="flex flex-wrap items-center text-muted-foreground gap-6 text-sm">
@@ -191,9 +158,9 @@ export default function SinglePostPage() {
                                 </div>
                                 <div className="flex items-center">
                                     <Calendar className="w-4 h-4 mr-2" />
-                                    {new Date(post.createdAt || post.date).toLocaleDateString()}
+                                    {new Date().toLocaleDateString()}
                                 </div>
-                                <button onClick={handleShare} className="flex items-center hover:text-primary transition-colors">
+                                <button onClick={handleShare} className="flex items-center hover:text-primary transition-colors opacity-50 cursor-not-allowed">
                                     <Share2 className="w-4 h-4 mr-2" />
                                     Share
                                 </button>
@@ -216,7 +183,7 @@ export default function SinglePostPage() {
                                 ) : (
                                     <Image
                                         src={post.image}
-                                        alt={post.title}
+                                        alt={post.title || "Preview"}
                                         fill
                                         className="object-contain"
                                         priority
@@ -261,7 +228,7 @@ export default function SinglePostPage() {
                                             contentWithAds.map((item, index) => (
                                                 <Fragment key={index}>
                                                     {item.type === 'content' ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: item.data }} />
+                                                        <div dangerouslySetInnerHTML={{ __html: item.data }} className="[&>p]:mb-4" />
                                                     ) : (
                                                         <div className="my-10 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 not-prose">
                                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Sponsored Content</p>
@@ -295,9 +262,9 @@ export default function SinglePostPage() {
                         )}
 
                         {/* Comments Section */}
-                        <div className="border-t border-gray-200 pt-16">
+                        <div className="border-t border-gray-200 pt-16 opacity-50 pointer-events-none">
                             <div className="flex items-center justify-between mb-10">
-                                <h2 className="text-3xl font-black text-gray-900">Conversations <span className="text-gray-400 font-normal">({comments.length})</span></h2>
+                                <h2 className="text-3xl font-black text-gray-900">Conversations <span className="text-gray-400 font-normal">(0)</span></h2>
                             </div>
 
                             <form onSubmit={handleCommentSubmit} className="mb-16 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
@@ -307,57 +274,29 @@ export default function SinglePostPage() {
                                         <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Your Name</label>
                                         <input
                                             type="text"
-                                            required
+                                            disabled
                                             placeholder="eg. John Doe"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                            value={commentForm.authorName}
-                                            onChange={(e) => setCommentForm({ ...commentForm, authorName: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none"
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Message</label>
                                         <textarea
-                                            required
+                                            disabled
                                             rows="4"
-                                            placeholder="What are your thoughts?"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
-                                            value={commentForm.content}
-                                            onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
+                                            placeholder="Commenting is disabled in preview mode."
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none resize-none"
                                         />
                                     </div>
                                 </div>
                                 <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="w-full md:w-auto bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold hover:bg-primary/90 transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
+                                    type="button"
+                                    disabled
+                                    className="w-full md:w-auto bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold shadow-lg shadow-primary/20"
                                 >
-                                    {submitting ? "Sharing..." : "Post Comment"}
+                                    Post Comment
                                 </button>
                             </form>
-
-                            <div className="space-y-8">
-                                {comments.map((comment) => (
-                                    <div key={comment._id} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-hover hover:shadow-md">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                                                    {comment.authorName[0]}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900">{comment.authorName}</h4>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(comment.createdAt).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-600 leading-relaxed text-lg">{comment.content}</p>
-                                    </div>
-                                ))}
-                                {comments.length === 0 && (
-                                    <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-gray-200">
-                                        <p className="text-gray-400 font-medium">No comments yet. Be the first to share your thoughts!</p>
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     </article>
 

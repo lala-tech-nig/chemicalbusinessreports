@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Upload, Loader2, X, User, Share2, ImagePlus } from "lucide-react";
+import { Upload, Loader2, X, User, Share2, ImagePlus, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createPost, uploadFile } from "@/lib/api";
 import Image from "next/image";
@@ -115,6 +115,11 @@ export default function CreatePost() {
         } finally {
             setParagraphUploading(prev => ({ ...prev, [paragraphIndex]: false }));
         }
+    };
+
+    const handlePreview = () => {
+        localStorage.setItem("postPreviewData", JSON.stringify(formData));
+        window.open("/preview-post", "_blank");
     };
 
     const handleSubmit = async (e) => {
@@ -291,14 +296,23 @@ export default function CreatePost() {
         <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold">Create New Post</h1>
-                <button
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {loading ? "Publishing..." : "Publish Post"}
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handlePreview}
+                        className="px-6 py-2 bg-white text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 border border-slate-200 shadow-sm"
+                    >
+                        <Eye className="w-4 h-4" />
+                        Preview
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                    >
+                        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {loading ? "Publishing..." : "Publish Post"}
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
