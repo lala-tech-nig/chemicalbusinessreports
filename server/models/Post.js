@@ -85,6 +85,7 @@ const PostSchema = new mongoose.Schema({
     topic: { type: String }, // For Startup type
     excerpt: { type: String },
     excerptColor: { type: String, default: '#FFFF00' },
+    excerptTextColor: { type: String, default: '#000000' },
     adViews: [{
         adId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ad' },
         viewedAt: { type: Date, default: Date.now }
@@ -103,6 +104,10 @@ const PostSchema = new mongoose.Schema({
     adPlacements: [{
         paragraphIndex: { type: Number, required: true },
         adId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ad', required: true }
+    }],
+    paragraphImages: [{
+        paragraphIndex: { type: Number, required: true },
+        imageUrl: { type: String, required: true }
     }],
 }, { timestamps: true });
 

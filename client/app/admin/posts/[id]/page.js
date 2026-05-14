@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { Upload, Loader2, X, ArrowLeft, User, Share2 } from "lucide-react";
+import { Upload, Loader2, X, ArrowLeft, User, Share2, ImagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchPostById, updatePost, uploadFile } from "@/lib/api";
 import Link from "next/link";
@@ -16,12 +16,14 @@ export default function EditPost({ params }) {
     const [fetching, setFetching] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [videoUploading, setVideoUploading] = useState(false);
+    const [paragraphUploading, setParagraphUploading] = useState({});
     const [ads, setAds] = useState([]);
     const [formData, setFormData] = useState({
         title: "",
         category: "",
         excerpt: "",
         excerptColor: "#FFFF00",
+        excerptTextColor: "#000000",
         content: "",
         isStoryOfTheDay: false,
         image: "",
@@ -44,7 +46,8 @@ export default function EditPost({ params }) {
         adDuration: 30,
         author: "",
         authorPhoto: "",
-        adPlacements: []
+        adPlacements: [],
+        paragraphImages: []
     });
 
     useEffect(() => {
@@ -67,6 +70,7 @@ export default function EditPost({ params }) {
                     category: post.category || "",
                     excerpt: post.excerpt || "",
                     excerptColor: post.excerptColor || "#FFFF00",
+                    excerptTextColor: post.excerptTextColor || "#000000",
                     content: post.content || "",
                     isStoryOfTheDay: post.isStoryOfTheDay || false,
                     image: post.image || "",
@@ -90,7 +94,8 @@ export default function EditPost({ params }) {
                     author: post.author || "",
                     authorPhoto: post.authorPhoto || "",
                     status: post.status || "published",
-                    adPlacements: post.adPlacements || []
+                    adPlacements: post.adPlacements || [],
+                    paragraphImages: post.paragraphImages || []
                 });
             } catch (error) {
                 toast.error("Failed to load post");
@@ -130,6 +135,25 @@ export default function EditPost({ params }) {
         } finally {
             if (field === "image") setUploading(false);
             else setVideoUploading(false);
+        }
+    };
+
+    const handleParagraphImageChange = async (e, paragraphIndex) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setParagraphUploading(prev => ({ ...prev, [paragraphIndex]: true }));
+        try {
+            const data = await uploadFile(file);
+            setFormData(prev => {
+                const newImages = (prev.paragraphImages || []).filter(img => img.paragraphIndex !== paragraphIndex);
+                newImages.push({ paragraphIndex, imageUrl: data.filePath });
+                return { ...prev, paragraphImages: newImages };
+            });
+            toast.success("Paragraph image uploaded!");
+        } catch (error) {
+            toast.error("Failed to upload paragraph image");
+        } finally {
+            setParagraphUploading(prev => ({ ...prev, [paragraphIndex]: false }));
         }
     };
 
@@ -388,28 +412,51 @@ export default function EditPost({ params }) {
                                     required
                                 />
                             </div>
+                        <div className="space-y-3">
+                            <label className="text-sm font-medium">Excerpt / Summary</label>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="space-y-2 md:col-span-3">
-                                    <label className="text-sm font-medium">Excerpt / Summary</label>
+                                <div className="space-y-2 md:col-span-2">
                                     <textarea
                                         name="excerpt"
                                         value={formData.excerpt}
                                         onChange={handleChange}
-                                        rows={2}
+                                        rows={3}
                                         className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Summary Color</label>
-                                    <input
-                                        type="color"
-                                        name="excerptColor"
-                                        value={formData.excerptColor}
-                                        onChange={handleChange}
-                                        className="w-full h-11 p-1 rounded-lg border border-input bg-background cursor-pointer"
-                                    />
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Background Color</label>
+                                        <input
+                                            type="color"
+                                            name="excerptColor"
+                                            value={formData.excerptColor}
+                                            onChange={handleChange}
+                                            className="w-full h-10 p-1 rounded-lg border border-input bg-background cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Text Color</label>
+                                        <input
+                                            type="color"
+                                            name="excerptTextColor"
+                                            value={formData.excerptTextColor}
+                                            onChange={handleChange}
+                                            className="w-full h-10 p-1 rounded-lg border border-input bg-background cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Live Preview</label>
+                                    <div
+                                        className="rounded-lg p-3 text-sm font-medium min-h-[80px] flex items-center border border-input"
+                                        style={{ backgroundColor: formData.excerptColor, color: formData.excerptTextColor }}
+                                    >
+                                        {formData.excerpt || <span style={{ opacity: 0.5 }}>Excerpt preview appears here...</span>}
+                                    </div>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     )}
 
@@ -424,6 +471,8 @@ export default function EditPost({ params }) {
                     )}
 
                     {formData.category !== "Chemical Mart" && formData.content && (
+                        <>
+                        {/* ── Ad Placements ── */}
                         <div className="space-y-6 p-8 bg-slate-50/50 rounded-3xl border border-slate-200 shadow-sm mt-8">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="bg-primary/10 p-2 rounded-lg">
@@ -434,53 +483,39 @@ export default function EditPost({ params }) {
                                     <p className="text-sm text-slate-500">Pick specific ads for each paragraph break</p>
                                 </div>
                             </div>
-                            
                             <div className="grid grid-cols-1 gap-4">
                                 {formData.content.split('</p>').filter(p => p.trim() !== '').map((p, index) => {
                                     const placement = formData.adPlacements?.find(apl => apl.paragraphIndex === index);
                                     const paragraphText = p.replace(/<[^>]*>/g, '').trim();
                                     if (!paragraphText) return null;
-
                                     return (
                                         <div key={index} className="group relative flex flex-col md:flex-row md:items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-primary/30 hover:shadow-md transition-all duration-200">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">
-                                                        {index + 1}
-                                                    </span>
+                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">{index + 1}</span>
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Position After</span>
                                                 </div>
                                                 <p className="text-sm text-slate-600 line-clamp-2 italic pl-8 border-l-2 border-slate-100 group-hover:border-primary/20 transition-colors">
-                                                    "{paragraphText}"
+                                                    &ldquo;{paragraphText}&rdquo;
                                                 </p>
                                             </div>
                                             <div className="w-full md:w-72 shrink-0">
-                                                <label className="block text-[10px] font-bold text-slate-400 mb-1.5 md:hidden">Select Ad</label>
                                                 <select
                                                     value={placement?.adId || ""}
                                                     onChange={(e) => {
                                                         const adId = e.target.value;
                                                         setFormData(prev => {
                                                             const newPlacements = (prev.adPlacements || []).filter(apl => apl.paragraphIndex !== index);
-                                                            if (adId) {
-                                                                newPlacements.push({ paragraphIndex: index, adId });
-                                                            }
+                                                            if (adId) newPlacements.push({ paragraphIndex: index, adId });
                                                             return { ...prev, adPlacements: newPlacements };
                                                         });
                                                     }}
                                                     className="w-full pl-4 pr-10 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer appearance-none"
-                                                    style={{
-                                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
-                                                        backgroundRepeat: 'no-repeat',
-                                                        backgroundPosition: 'right 1rem center',
-                                                        backgroundSize: '1.25em'
-                                                    }}
+                                                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.25em' }}
                                                 >
-                                                    <option value="">— No advertisement —</option>
+                                                    <option value="">&mdash; No advertisement &mdash;</option>
                                                     {ads.map(ad => (
-                                                        <option key={ad._id} value={ad._id}>
-                                                            🎯 {ad.title || ad.companyName || "Untitled Ad"}
-                                                        </option>
+                                                        <option key={ad._id} value={ad._id}>🎯 {ad.title || ad.companyName || "Untitled Ad"}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -489,6 +524,65 @@ export default function EditPost({ params }) {
                                 })}
                             </div>
                         </div>
+
+                        {/* ── Paragraph Images ── */}
+                        <div className="space-y-6 p-8 bg-indigo-50/40 rounded-3xl border border-indigo-100 shadow-sm mt-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="bg-indigo-500/10 p-2 rounded-lg">
+                                    <ImagePlus className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-slate-900">Paragraph Images</h3>
+                                    <p className="text-sm text-slate-500">Attach an image to appear after any paragraph</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                {formData.content.split('</p>').filter(p => p.trim() !== '').map((p, index) => {
+                                    const paragraphText = p.replace(/<[^>]*>/g, '').trim();
+                                    if (!paragraphText) return null;
+                                    const existingImage = (formData.paragraphImages || []).find(img => img.paragraphIndex === index);
+                                    const isUploading = paragraphUploading[index];
+                                    return (
+                                        <div key={index} className="group flex flex-col md:flex-row md:items-center gap-4 p-4 bg-white rounded-2xl border border-indigo-100 hover:border-indigo-300 hover:shadow-md transition-all duration-200">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-500">{index + 1}</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">After Paragraph</span>
+                                                </div>
+                                                <p className="text-sm text-slate-600 line-clamp-2 italic pl-8 border-l-2 border-indigo-100 group-hover:border-indigo-300 transition-colors">
+                                                    &ldquo;{paragraphText}&rdquo;
+                                                </p>
+                                            </div>
+                                            <div className="w-full md:w-56 shrink-0">
+                                                {isUploading ? (
+                                                    <div className="h-20 rounded-xl border-2 border-dashed border-indigo-200 flex items-center justify-center">
+                                                        <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                                                    </div>
+                                                ) : existingImage ? (
+                                                    <div className="relative rounded-xl overflow-hidden border border-indigo-200">
+                                                        <img src={existingImage.imageUrl} alt="para" className="w-full h-20 object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({ ...prev, paragraphImages: (prev.paragraphImages || []).filter(img => img.paragraphIndex !== index) }))}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 shadow hover:bg-red-600 transition-colors"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className="flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-all">
+                                                        <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleParagraphImageChange(e, index)} />
+                                                        <ImagePlus className="w-5 h-5 text-indigo-300 mb-1" />
+                                                        <span className="text-[10px] font-semibold text-indigo-400">Upload Image</span>
+                                                    </label>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        </>
                     )}
                 </div>
 
