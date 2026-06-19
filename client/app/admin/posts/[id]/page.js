@@ -8,6 +8,15 @@ import Link from "next/link";
 import { toast } from "sonner";
 import RichTextEditor from "@/components/RichTextEditor";
 
+const toNigeriaLocalString = (dateInput) => {
+    if (!dateInput) return "";
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "";
+    // Offset by +1 hour for Nigeria Time (WAT, UTC+1)
+    const watTime = new Date(d.getTime() + 1 * 60 * 60 * 1000);
+    return watTime.toISOString().slice(0, 16);
+};
+
 export default function EditPost({ params }) {
     const router = useRouter();
     const { id } = use(params);
@@ -46,6 +55,8 @@ export default function EditPost({ params }) {
         adDuration: 30,
         author: "",
         authorPhoto: "",
+        status: "published",
+        scheduledPublishDate: "",
         adPlacements: [],
         paragraphImages: []
     });
@@ -94,6 +105,7 @@ export default function EditPost({ params }) {
                     author: post.author || "",
                     authorPhoto: post.authorPhoto || "",
                     status: post.status || "published",
+                    scheduledPublishDate: post.scheduledPublishDate ? toNigeriaLocalString(post.scheduledPublishDate) : "",
                     adPlacements: post.adPlacements || [],
                     paragraphImages: post.paragraphImages || []
                 });
@@ -179,9 +191,32 @@ export default function EditPost({ params }) {
             if (!payload.title && payload.topic) payload.title = payload.topic;
         }
 
+        if (payload.status === "scheduled") {
+            if (!payload.scheduledPublishDate) {
+                toast.error("Please specify a schedule date and time.");
+                setLoading(false);
+                return;
+            }
+            // Parse local WAT (UTC+1) datetime
+            const scheduledDate = new Date(payload.scheduledPublishDate + "+01:00");
+            if (isNaN(scheduledDate.getTime())) {
+                toast.error("Invalid scheduled date and time.");
+                setLoading(false);
+                return;
+            }
+            if (scheduledDate <= new Date()) {
+                toast.error("Scheduled time must be in the future.");
+                setLoading(false);
+                return;
+            }
+            payload.scheduledPublishDate = scheduledDate.toISOString();
+        } else {
+            payload.scheduledPublishDate = null;
+        }
+
         try {
             await updatePost(id, payload);
-            toast.success("Post updated successfully!");
+            toast.success(payload.status === "scheduled" ? "Post scheduled successfully!" : "Post updated successfully!");
             router.push("/admin/posts");
         } catch (error) {
             toast.error(error.message);
@@ -610,12 +645,33 @@ export default function EditPost({ params }) {
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none font-medium"
+                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none font-medium text-sm transition-all"
                             >
                                 <option value="published">🟢 Published (Live)</option>
                                 <option value="draft">🟡 Draft (Hidden)</option>
+                                <option value="scheduled">⏰ Scheduled (Go Live Later)</option>
                             </select>
-                            <p className="text-xs text-muted-foreground mt-1">Drafts are only visible in the admin panel. Published posts are live on the website.</p>
+                            
+                            {formData.status === "scheduled" && (
+                                <div className="space-y-2 pt-2 transition-all duration-200 ease-in-out">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                                        Publish Date & Time (Nigeria Time) *
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        name="scheduledPublishDate"
+                                        value={formData.scheduledPublishDate || ""}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm font-medium"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground leading-normal">
+                                        The post will automatically go live exactly at the set time (West Africa Time, WAT).
+                                    </p>
+                                </div>
+                            )}
+
+                            <p className="text-xs text-muted-foreground mt-1">Drafts are only visible in the admin panel. Published posts are live on the website. Scheduled posts will go live automatically at the set time.</p>
                         </div>
 
                         <h3 className="font-semibold mb-4 mt-2">Media</h3>

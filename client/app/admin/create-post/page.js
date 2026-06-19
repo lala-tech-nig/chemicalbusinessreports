@@ -37,6 +37,8 @@ export default function CreatePost() {
         adDuration: 30,
         author: "",
         authorPhoto: "",
+        status: "published",
+        scheduledPublishDate: "",
         adPlacements: [],
         paragraphImages: []
     });
@@ -144,9 +146,32 @@ export default function CreatePost() {
         if (!payload.title) payload.title = "Untitled Post";
         if (!payload.content) payload.content = "No content description";
 
+        if (payload.status === "scheduled") {
+            if (!payload.scheduledPublishDate) {
+                toast.error("Please specify a schedule date and time.");
+                setLoading(false);
+                return;
+            }
+            // Parse local WAT (UTC+1) datetime
+            const scheduledDate = new Date(payload.scheduledPublishDate + "+01:00");
+            if (isNaN(scheduledDate.getTime())) {
+                toast.error("Invalid scheduled date and time.");
+                setLoading(false);
+                return;
+            }
+            if (scheduledDate <= new Date()) {
+                toast.error("Scheduled time must be in the future.");
+                setLoading(false);
+                return;
+            }
+            payload.scheduledPublishDate = scheduledDate.toISOString();
+        } else {
+            payload.scheduledPublishDate = null;
+        }
+
         try {
             await createPost(payload);
-            toast.success("Post created successfully!");
+            toast.success(payload.status === "scheduled" ? "Post scheduled successfully!" : "Post created successfully!");
             router.push("/admin/posts");
         } catch (error) {
             toast.error(error.message);
@@ -549,6 +574,40 @@ export default function CreatePost() {
                 <div className="space-y-6">
                     <div className="bg-card p-6 rounded-xl border border-border">
                         <h3 className="font-semibold mb-4">Publishing & Media</h3>
+                        
+                        <div className="space-y-4 mb-6 pb-6 border-b border-border">
+                            <label className="text-sm font-medium block mb-1 text-slate-700">Visibility Status</label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none font-medium text-sm transition-all"
+                            >
+                                <option value="published">🟢 Published (Live)</option>
+                                <option value="draft">🟡 Draft (Hidden)</option>
+                                <option value="scheduled">⏰ Scheduled (Go Live Later)</option>
+                            </select>
+                            
+                            {formData.status === "scheduled" && (
+                                <div className="space-y-2 pt-2 transition-all duration-200 ease-in-out">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                                        Publish Date & Time (Nigeria Time) *
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        name="scheduledPublishDate"
+                                        value={formData.scheduledPublishDate || ""}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm font-medium"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground leading-normal">
+                                        The post will automatically go live exactly at the set time (West Africa Time, WAT).
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         <div>
                             <label className="text-sm font-medium block mb-1">Featured Image (Required for all)</label>
                             <div className={`border-2 border-dashed border-input rounded-lg p-6 flex flex-col items-center justify-center transition-colors ${!formData.image ? 'hover:bg-accent/50 cursor-pointer' : ''} relative`}>

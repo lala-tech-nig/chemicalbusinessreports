@@ -92,8 +92,11 @@ const PostSchema = new mongoose.Schema({
     }],
     status: {
         type: String,
-        enum: ['draft', 'published'],
+        enum: ['draft', 'published', 'scheduled'],
         default: 'published'
+    },
+    scheduledPublishDate: {
+        type: Date,
     },
     sourceUrl: {
         type: String,

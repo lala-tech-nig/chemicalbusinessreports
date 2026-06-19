@@ -71,6 +71,31 @@ exports.getPostBySlug = async (req, res) => {
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
+
+        // If post is not published, verify user is admin/moderator
+        if (post.status && post.status !== "published") {
+            const jwt = require("jsonwebtoken");
+            const User = require("../models/User");
+            let authorized = false;
+
+            if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+                try {
+                    const token = req.headers.authorization.split(" ")[1];
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_dev_key_123");
+                    const user = await User.findById(decoded.id);
+                    if (user && user.isActive && (user.role === "admin" || user.role === "moderator")) {
+                        authorized = true;
+                    }
+                } catch (e) {
+                    // Fail silently
+                }
+            }
+
+            if (!authorized) {
+                return res.status(404).json({ message: "Post not found" });
+            }
+        }
+
         // Increment views
         post.views += 1;
         await post.save();
@@ -103,7 +128,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, adPlacements } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -126,11 +151,13 @@ exports.createPost = async (req, res) => {
             image,
             isStoryOfTheDay,
             companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
-            subcategory, adSize, adDuration, excerpt, excerptColor,
+            subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor,
             adPlacements,
             author: authorName,
             authorPhoto: photo,
-            authorId: req.user._id // Store reference for robust linking
+            authorId: req.user._id, // Store reference for robust linking
+            status: status || 'published',
+            scheduledPublishDate: status === 'scheduled' ? scheduledPublishDate : null
         });
         const savedPost = await newPost.save();
 
@@ -153,7 +180,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, adPlacements } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -187,7 +214,15 @@ exports.updatePost = async (req, res) => {
         if (adDuration) post.adDuration = adDuration;
         if (excerpt !== undefined) post.excerpt = excerpt;
         if (excerptColor) post.excerptColor = excerptColor;
+        if (excerptTextColor) post.excerptTextColor = excerptTextColor;
         if (adPlacements) post.adPlacements = adPlacements;
+
+        if (status) post.status = status;
+        if (status === 'scheduled') {
+            post.scheduledPublishDate = scheduledPublishDate || post.scheduledPublishDate;
+        } else {
+            post.scheduledPublishDate = null;
+        }
 
         // If this post is set to Story of the Day, unset others
         if (post.isStoryOfTheDay) {

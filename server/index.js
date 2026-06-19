@@ -8,6 +8,10 @@ dotenv.config();
 // Connect to Database
 connectDB();
 
+// Start post scheduler background service
+const { startScheduler } = require("./services/postSchedulerService");
+startScheduler();
+
 const app = express();
 
 // Middleware

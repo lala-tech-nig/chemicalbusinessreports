@@ -74,6 +74,7 @@ export default function PostsList() {
                                 <th className="px-6 py-3">Title</th>
                                 <th className="px-6 py-3">Category</th>
                                 <th className="px-6 py-3">Author</th>
+                                <th className="px-6 py-3">Status</th>
                                 <th className="px-6 py-3">Date</th>
                                 <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
@@ -98,8 +99,39 @@ export default function PostsList() {
                                             <span className="text-xs font-medium truncate max-w-[100px]">{post.author}</span>
                                         </div>
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {post.status === 'published' && (
+                                            <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-green-100 text-green-800">
+                                                Published
+                                            </span>
+                                        )}
+                                        {post.status === 'draft' && (
+                                            <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800">
+                                                Draft
+                                            </span>
+                                        )}
+                                        {post.status === 'scheduled' && (
+                                            <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-blue-100 text-blue-800">
+                                                Scheduled
+                                            </span>
+                                        )}
+                                        {(!post.status || post.status === '') && (
+                                            <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-green-100 text-green-800">
+                                                Published
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 text-muted-foreground">
-                                        {new Date(post.createdAt).toLocaleDateString()}
+                                        {post.status === 'scheduled' && post.scheduledPublishDate ? (
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-semibold text-blue-600">Goes live:</span>
+                                                <span className="text-xs">
+                                                    {new Date(post.scheduledPublishDate).toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            new Date(post.createdAt).toLocaleDateString()
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-right space-x-2">
                                         {role === 'admin' && (
