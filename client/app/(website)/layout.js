@@ -4,6 +4,7 @@ import AdModal from "@/components/AdModal";
 import UserDataModal from "@/components/UserDataModal";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 export default function WebsiteLayout({ children }) {
     return (
@@ -17,6 +18,7 @@ export default function WebsiteLayout({ children }) {
             <AdModal />
             <UserDataModal />
             <FloatingWhatsApp />
+            <GlobalAudioPlayer />
         </div>
     );
 }
