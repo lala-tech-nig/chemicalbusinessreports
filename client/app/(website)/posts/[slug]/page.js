@@ -151,8 +151,39 @@ export default function SinglePostPage() {
 
     const isNewsRoundup = post.category === "News Roundup";
 
+    const articleJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": post.title,
+        "description": post.excerpt || post.title,
+        "image": post.image ? [post.image] : [],
+        "datePublished": post.createdAt || post.date,
+        "dateModified": post.updatedAt || post.createdAt || post.date,
+        "author": [{
+            "@type": "Person",
+            "name": post.author || "Admin"
+        }],
+        "publisher": {
+            "@type": "Organization",
+            "name": "Chemical Business Reports",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://chemicalbusinessreports.com/favicon.ico"
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://chemicalbusinessreports.com/posts/${slug}`
+        },
+        "keywords": `${post.category}, chemical business report, chemical business reports, chemical market intelligence, ${post.title}`
+    };
+
     return (
         <div className="min-h-screen pt-24 pb-20 bg-[#fafafa]">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+            />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Main Content Column */}

@@ -12,6 +12,10 @@ connectDB();
 const { startScheduler } = require("./services/postSchedulerService");
 startScheduler();
 
+// Start automated email report scheduler (Daily 6am WAT & Weekly Thursday 8am WAT)
+const { startReportScheduler } = require("./services/reportSchedulerService");
+startReportScheduler();
+
 const app = express();
 
 // Middleware
