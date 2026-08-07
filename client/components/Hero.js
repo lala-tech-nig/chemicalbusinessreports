@@ -13,7 +13,7 @@ export default function Hero() {
                     src="/hero.jpeg"
                     alt="Chemical Industry Background"
                     fill
-                    className="object-cover opacity-50 contrast-125 grayscale-[20%]"
+                    className="object-cover contrast-125 grayscale-[20%]"
                     priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-950/90 via-blue-900/60 to-transparent" />
