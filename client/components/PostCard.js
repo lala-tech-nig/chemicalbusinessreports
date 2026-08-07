@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, User } from "lucide-react";
+import { Calendar, User, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PostCard({ title, excerpt, image, category, date, author, authorPhoto, slug, excerptColor, className, subcategory }) {
@@ -21,6 +21,11 @@ export default function PostCard({ title, excerpt, image, category, date, author
                 )}
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-primary/90 text-primary-foreground text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
                     {category === "News Roundup" && subcategory ? `${category} / ${subcategory}` : category}
+                </div>
+
+                <div title="Audio Narration Available" className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/60 text-white text-[9px] sm:text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
+                    <Headphones className="w-3 h-3 text-emerald-400" />
+                    <span className="hidden sm:inline">Audio</span>
                 </div>
             </div>
 

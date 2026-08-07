@@ -9,6 +9,7 @@ import { fetchSinglePost, fetchApprovedComments, createComment, fetchActiveAds }
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import InFeedAd from "@/components/InFeedAd";
+import VoicePlayer from "@/components/VoicePlayer";
 
 const CATEGORY_ROUTES = {
     "News Roundup": "/posts/news-roundup",
@@ -199,6 +200,14 @@ export default function SinglePostPage() {
                                 </button>
                             </div>
                         </header>
+
+                        {/* Voice Narration Player */}
+                        <VoicePlayer
+                            title={post.title}
+                            excerpt={post.excerpt}
+                            content={post.content}
+                            className="mb-10"
+                        />
 
                         {/* Featured Image */}
                         <div className="relative w-full rounded-2xl overflow-hidden mb-12 shadow-lg bg-white border border-gray-100" style={{ minHeight: "300px", maxHeight: "600px" }}>
