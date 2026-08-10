@@ -1,3 +1,4 @@
+require("dotenv").config(); // Ensure env vars are loaded even if required before dotenv.config() in index.js
 const nodemailer = require("nodemailer");
 const VisitorLog = require("../models/VisitorLog");
 const Post = require("../models/Post");
@@ -5,12 +6,30 @@ const Comment = require("../models/Comment");
 const User = require("../models/User");
 const Submission = require("../models/Submission");
 
-// Configure nodemailer transporter using Gmail
+// Configure nodemailer transporter using Gmail SMTP with App Password
+// IMPORTANT: EMAIL_PASS must be a 16-character Gmail App Password, NOT your regular Gmail password.
+// Generate one at: https://myaccount.google.com/apppasswords (2FA must be enabled first)
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // true for port 465 (SSL)
     auth: {
         user: process.env.EMAIL_USER || "coslab.media@gmail.com",
-        pass: process.env.EMAIL_PASS || "" // Set EMAIL_PASS in server/.env
+        pass: process.env.EMAIL_PASS || "" // Must be a Gmail App Password, not your account password
+    },
+    tls: {
+        rejectUnauthorized: true
+    }
+});
+
+// Verify transporter connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ Email transporter verification failed:", error.message);
+        console.error("   → Make sure EMAIL_PASS in .env is a valid Gmail App Password (16 chars).");
+        console.error("   → Generate one at: https://myaccount.google.com/apppasswords");
+    } else {
+        console.log("✅ Email transporter is ready to send messages (Gmail SMTP connected).");
     }
 });
 
