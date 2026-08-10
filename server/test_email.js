@@ -158,16 +158,15 @@ async function testRecipientResolution() {
 
 // ─── TEST 4: Daily Report Email ────────────────────────────────
 async function testDailyReport() {
-    divider("TEST 4 — Daily Report Email");
+    divider("TEST 4 — Daily Report Email (All DB Recipients)");
     try {
-        info("Gathering metrics and sending daily report...");
+        info("Gathering metrics and sending daily report to all DB users...");
         const { sendDailyReport } = require("./services/emailReportService");
-        // Send only to self for testing (safe mode)
-        const result = await sendDailyReport([process.env.EMAIL_USER]);
+        // No recipient override — uses getAllRecipientEmails() from DB (same as production cron)
+        const result = await sendDailyReport();
         if (result.success) {
-            pass("Daily report email sent successfully");
-            info(`Recipients: ${result.recipientsCount}`);
-            info(`Message ID: ${result.messageId}`);
+            pass(`Daily report sent to ${result.recipientsCount} recipient(s), ${result.failedCount} failed`);
+            info(`Last Message ID: ${result.messageId}`);
         } else {
             fail("Daily report returned failure", new Error(result.error));
         }
@@ -178,16 +177,15 @@ async function testDailyReport() {
 
 // ─── TEST 5: Weekly Report Email ──────────────────────────────
 async function testWeeklyReport() {
-    divider("TEST 5 — Weekly Report Email");
+    divider("TEST 5 — Weekly Report Email (All DB Recipients)");
     try {
-        info("Gathering metrics and sending weekly report...");
+        info("Gathering metrics and sending weekly report to all DB users...");
         const { sendWeeklyReport } = require("./services/emailReportService");
-        // Send only to self for testing (safe mode)
-        const result = await sendWeeklyReport([process.env.EMAIL_USER]);
+        // No recipient override — uses getAllRecipientEmails() from DB (same as production cron)
+        const result = await sendWeeklyReport();
         if (result.success) {
-            pass("Weekly report email sent successfully");
-            info(`Recipients: ${result.recipientsCount}`);
-            info(`Message ID: ${result.messageId}`);
+            pass(`Weekly report sent to ${result.recipientsCount} recipient(s), ${result.failedCount} failed`);
+            info(`Last Message ID: ${result.messageId}`);
         } else {
             fail("Weekly report returned failure", new Error(result.error));
         }

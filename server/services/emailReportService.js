@@ -4,7 +4,7 @@ const VisitorLog = require("../models/VisitorLog");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
-const Submission = require("../models/Submission");
+// Submission emails intentionally excluded from report recipients
 
 // Configure nodemailer transporter using Gmail SMTP with App Password
 // IMPORTANT: EMAIL_PASS must be a 16-character Gmail App Password, NOT your regular Gmail password.
@@ -38,15 +38,12 @@ transporter.verify((error, success) => {
  */
 async function getAllRecipientEmails() {
     try {
+        // Only registered users — submissions are excluded
         const users = await User.find({ isActive: { $ne: false } }, "email");
-        const submissions = await Submission.find({}, "email");
 
         const emailSet = new Set();
         users.forEach(u => {
             if (u.email && u.email.trim()) emailSet.add(u.email.trim().toLowerCase());
-        });
-        submissions.forEach(s => {
-            if (s.email && s.email.trim()) emailSet.add(s.email.trim().toLowerCase());
         });
 
         // Always include main company email as fallback
@@ -541,16 +538,32 @@ async function sendDailyReport(customRecipients = null) {
             </html>
         `;
 
-        const mailOptions = {
-            from: '"Chemical Business Reports" <coslab.media@gmail.com>',
-            to: recipients.join(", "),
-            subject: `📊 Daily Website & Content Metrics Report - ${m.dateString}`,
-            html: htmlContent
-        };
+        // Send individual email to each recipient (Gmail SMTP drops external
+        // addresses when all are placed in a single 'to:' field)
+        const results = await Promise.allSettled(
+            recipients.map(email =>
+                transporter.sendMail({
+                    from: '"Chemical Business Reports" <coslab.media@gmail.com>',
+                    to: email,
+                    subject: `📊 Daily Website & Content Metrics Report - ${m.dateString}`,
+                    html: htmlContent
+                })
+            )
+        );
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Daily report email sent successfully:", info.messageId);
-        return { success: true, recipientsCount: recipients.length, messageId: info.messageId };
+        const succeeded = results.filter(r => r.status === "fulfilled");
+        const failed    = results.filter(r => r.status === "rejected");
+
+        succeeded.forEach((r, i) => {
+            console.log(`Daily report sent to ${recipients[results.indexOf(r)]} — ${r.value.messageId}`);
+        });
+        failed.forEach((r, i) => {
+            console.error(`Daily report FAILED for a recipient:`, r.reason?.message);
+        });
+
+        const lastId = succeeded.length > 0 ? succeeded[succeeded.length - 1].value.messageId : null;
+        console.log(`Daily report: ${succeeded.length}/${recipients.length} delivered successfully.`);
+        return { success: succeeded.length > 0, recipientsCount: succeeded.length, failedCount: failed.length, messageId: lastId };
     } catch (error) {
         console.error("Failed to send daily report email:", error);
         return { success: false, error: error.message };
@@ -670,16 +683,32 @@ async function sendWeeklyReport(customRecipients = null) {
             </html>
         `;
 
-        const mailOptions = {
-            from: '"Chemical Business Reports" <coslab.media@gmail.com>',
-            to: recipients.join(", "),
-            subject: `📈 Weekly Comprehensive Performance & Content Report (${w.startDate} - ${w.endDate})`,
-            html: htmlContent
-        };
+        // Send individual email to each recipient (Gmail SMTP drops external
+        // addresses when all are placed in a single 'to:' field)
+        const results = await Promise.allSettled(
+            recipients.map(email =>
+                transporter.sendMail({
+                    from: '"Chemical Business Reports" <coslab.media@gmail.com>',
+                    to: email,
+                    subject: `📈 Weekly Comprehensive Performance & Content Report (${w.startDate} - ${w.endDate})`,
+                    html: htmlContent
+                })
+            )
+        );
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Weekly report email sent successfully:", info.messageId);
-        return { success: true, recipientsCount: recipients.length, messageId: info.messageId };
+        const succeeded = results.filter(r => r.status === "fulfilled");
+        const failed    = results.filter(r => r.status === "rejected");
+
+        succeeded.forEach((r, i) => {
+            console.log(`Weekly report sent to ${recipients[results.indexOf(r)]} — ${r.value.messageId}`);
+        });
+        failed.forEach((r, i) => {
+            console.error(`Weekly report FAILED for a recipient:`, r.reason?.message);
+        });
+
+        const lastId = succeeded.length > 0 ? succeeded[succeeded.length - 1].value.messageId : null;
+        console.log(`Weekly report: ${succeeded.length}/${recipients.length} delivered successfully.`);
+        return { success: succeeded.length > 0, recipientsCount: succeeded.length, failedCount: failed.length, messageId: lastId };
     } catch (error) {
         console.error("Failed to send weekly report email:", error);
         return { success: false, error: error.message };
