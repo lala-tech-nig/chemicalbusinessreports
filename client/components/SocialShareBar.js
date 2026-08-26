@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Share2, Check, Copy, MessageCircle, Linkedin, Facebook } from "lucide-react";
+import { Share2, Check, Copy, Linkedin, Facebook } from "lucide-react";
 import { toast } from "sonner";
 
 // X (formerly Twitter) Icon SVG
@@ -36,20 +36,22 @@ export default function SocialShareBar({ post, className = "" }) {
 
     const title = post.title || "Chemical Business Reports";
     const excerpt = post.excerpt || (post.content ? post.content.replace(/<[^>]*>?/gm, "").slice(0, 160) : "");
-    const url = articleUrl || `https://chemicalbusinessreports.com/posts/${post.slug}`;
+    const url = articleUrl || `https://www.chemicalbusinessreports.net/posts/${post.slug}`;
 
     // ── 1. Share on X (Twitter) ──────────────────────────────────────────────
-    // Pre-populates the tweet with: Title + Excerpt + Link
+    // Pre-populates the tweet with Title + Excerpt + Canonical Link
     const handleShareX = () => {
-        const tweetText = `${title}\n\n${excerpt ? excerpt.slice(0, 140) + "...\n\n" : ""}Read full article on @ChemicalReports:`;
+        const tweetText = `${title}\n\n${excerpt ? excerpt.slice(0, 140) + "...\n\n" : ""}Read full story:`;
         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(url)}`;
         window.open(twitterUrl, "_blank", "noopener,noreferrer,width=600,height=520");
     };
 
-    // ── 2. Share on WhatsApp ─────────────────────────────────────────────────
+    // ── 2. Share on WhatsApp (Punch-style Big Card Preview) ───────────────────
+    // Sharing ONLY the direct article URL allows WhatsApp to render the
+    // full-width large preview image card with title & excerpt where clicking
+    // the image or card navigates directly to the story!
     const handleShareWhatsApp = () => {
-        const text = `*${title}*\n\n${excerpt ? excerpt.slice(0, 120) + "...\n\n" : ""}Read more: ${url}`;
-        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(url)}`;
         window.open(waUrl, "_blank", "noopener,noreferrer");
     };
 
@@ -70,29 +72,10 @@ export default function SocialShareBar({ post, className = "" }) {
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
-            toast.success("Article link copied to clipboard!");
+            toast.success("Story link copied to clipboard!");
             setTimeout(() => setCopied(false), 2500);
         } catch (err) {
             toast.error("Failed to copy link");
-        }
-    };
-
-    // ── 6. Native Share API (Mobile fallback) ────────────────────────────────
-    const handleNativeShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: post.title,
-                    text: excerpt || "Chemical Business Reports",
-                    url: url,
-                });
-            } catch (err) {
-                if (err.name !== "AbortError") {
-                    console.log("Share error:", err);
-                }
-            }
-        } else {
-            handleCopyLink();
         }
     };
 
@@ -101,6 +84,17 @@ export default function SocialShareBar({ post, className = "" }) {
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500 mr-1 flex items-center gap-1.5">
                 <Share2 className="w-3.5 h-3.5 text-primary" /> Share:
             </span>
+
+            {/* Share on WhatsApp (Big Image Preview Card) */}
+            <button
+                onClick={handleShareWhatsApp}
+                aria-label="Share on WhatsApp"
+                title="Share on WhatsApp (Clickable Story Card)"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
+            >
+                <WhatsAppIcon className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+            </button>
 
             {/* Share on X (Twitter) */}
             <button
@@ -113,23 +107,12 @@ export default function SocialShareBar({ post, className = "" }) {
                 <span>Share on X</span>
             </button>
 
-            {/* Share on WhatsApp */}
-            <button
-                onClick={handleShareWhatsApp}
-                aria-label="Share on WhatsApp"
-                title="Share on WhatsApp"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
-            >
-                <WhatsAppIcon className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
-            </button>
-
             {/* Share on LinkedIn */}
             <button
                 onClick={handleShareLinkedIn}
                 aria-label="Share on LinkedIn"
                 title="Share on LinkedIn"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
             >
                 <Linkedin className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">LinkedIn</span>
@@ -140,7 +123,7 @@ export default function SocialShareBar({ post, className = "" }) {
                 onClick={handleShareFacebook}
                 aria-label="Share on Facebook"
                 title="Share on Facebook"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#1877F2] hover:bg-[#1567d3] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#1877F2] hover:bg-[#1567d3] text-white text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
             >
                 <Facebook className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Facebook</span>
@@ -149,8 +132,8 @@ export default function SocialShareBar({ post, className = "" }) {
             {/* Copy Link */}
             <button
                 onClick={handleCopyLink}
-                aria-label="Copy Article Link"
-                title="Copy Article Link"
+                aria-label="Copy Story Link"
+                title="Copy Story Link"
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 text-xs font-bold transition-transform hover:scale-105 shadow-sm active:scale-95"
             >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-gray-600" />}

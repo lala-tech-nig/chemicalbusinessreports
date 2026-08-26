@@ -6,12 +6,16 @@ const API_URL =
         ? "http://localhost:5000/api"
         : "https://chemicalbusinessreports-f078.onrender.com/api");
 
+const SITE_URL =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.chemicalbusinessreports.net";
+
 function getAbsoluteImageUrl(imgUrl) {
-    if (!imgUrl) return "https://chemicalbusinessreports.com/favicon.ico";
-    if (imgUrl.startsWith("http://") || imgUrl.startsWith("https://")) return imgUrl;
-    const origin = process.env.NODE_ENV === "development"
-        ? "http://localhost:5000"
-        : "https://chemicalbusinessreports-f078.onrender.com";
+    if (!imgUrl) return `${SITE_URL}/favicon.ico`;
+    if (imgUrl.startsWith("http://") || imgUrl.startsWith("https://")) {
+        // Enforce HTTPS for social crawlers (WhatsApp, Facebook, Twitter)
+        return imgUrl.replace(/^http:\/\//i, "https://");
+    }
+    const origin = process.env.NEXT_PUBLIC_SERVER_URL || "https://chemicalbusinessreports-f078.onrender.com";
     return `${origin}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`;
 }
 
@@ -28,13 +32,13 @@ async function getPost(slug) {
     }
 }
 
-// ── Server-Side Metadata Generation for Social Share (X, WhatsApp, LinkedIn, Facebook) ──
+// ── Server-Side Metadata Generation for Social Share (WhatsApp, X, LinkedIn, Facebook) ──
 export async function generateMetadata({ params }) {
     const resolvedParams = await params;
     const slug = resolvedParams?.slug;
     if (!slug) {
         return {
-            title: "Article | Chemical Business Reports"
+            title: "Story | Chemical Business Reports"
         };
     }
 
@@ -42,7 +46,7 @@ export async function generateMetadata({ params }) {
 
     if (!post) {
         return {
-            title: "Article Not Found | Chemical Business Reports",
+            title: "Story Not Found | Chemical Business Reports",
             description: "The requested chemical business report could not be found."
         };
     }
@@ -51,7 +55,8 @@ export async function generateMetadata({ params }) {
     const rawDescription = post.excerpt || post.content?.replace(/<[^>]*>?/gm, "").slice(0, 180) || "Authoritative chemical market news, business reports, and industrial analysis.";
     const description = rawDescription.trim();
     const imageUrl = getAbsoluteImageUrl(post.image);
-    const postUrl = `https://chemicalbusinessreports.com/posts/${slug}`;
+    const postUrl = `${SITE_URL}/posts/${slug}`;
+    const imageType = imageUrl.match(/\.png$/i) ? "image/png" : imageUrl.match(/\.webp$/i) ? "image/webp" : "image/jpeg";
 
     return {
         title: `${title} | Chemical Business Reports`,
@@ -64,19 +69,22 @@ export async function generateMetadata({ params }) {
             description,
             url: postUrl,
             siteName: "Chemical Business Reports",
-            images: [
-                {
-                    url: imageUrl,
-                    width: 1200,
-                    height: 630,
-                    alt: title
-                }
-            ],
+            locale: "en_US",
             type: "article",
             publishedTime: post.createdAt,
             modifiedTime: post.updatedAt || post.createdAt,
             authors: [post.author || "Chemical Business Reports Editorial Team"],
-            section: post.category || "News Roundup"
+            section: post.category || "News Roundup",
+            images: [
+                {
+                    url: imageUrl,
+                    secureUrl: imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: title,
+                    type: imageType
+                }
+            ]
         },
         twitter: {
             card: "summary_large_image",
