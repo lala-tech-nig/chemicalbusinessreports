@@ -1,5 +1,6 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
+const { sendNewCommentNotification } = require("../services/emailReportService");
 
 // @desc    Add a comment to a post
 // @route   POST /api/comments
@@ -21,6 +22,15 @@ exports.createComment = async (req, res) => {
         });
 
         const savedComment = await newComment.save();
+
+        // Dispatch email notification asynchronously
+        sendNewCommentNotification({
+            authorName,
+            content,
+            postTitle: post.title,
+            postId
+        }).catch(err => console.error("Comment notification error:", err));
+
         res.status(201).json({ message: "Comment submitted for moderation", comment: savedComment });
     } catch (error) {
         res.status(400).json({ message: error.message });

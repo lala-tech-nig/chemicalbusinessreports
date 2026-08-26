@@ -26,9 +26,30 @@ const VisitorLogSchema = new mongoose.Schema({
     },
     sessionId: {
         type: String,
-        required: true
+        required: true,
+        index: true
     },
     userAgent: {
+        type: String,
+        default: ""
+    },
+    country: {
+        type: String,
+        default: "Unknown"
+    },
+    city: {
+        type: String,
+        default: ""
+    },
+    device: {
+        type: String,
+        default: "Desktop"
+    },
+    browser: {
+        type: String,
+        default: ""
+    },
+    os: {
         type: String,
         default: ""
     },
@@ -45,15 +66,21 @@ const VisitorLogSchema = new mongoose.Schema({
     },
     firstSeen: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: true
     },
     lastSeen: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: true
     }
 });
 
-// Compound index for fast upsert lookups
+// Compound index for fast upsert lookups and date sorting
 VisitorLogSchema.index({ ip: 1, sessionId: 1 });
+VisitorLogSchema.index({ lastSeen: -1 });
+VisitorLogSchema.index({ firstSeen: -1 });
+VisitorLogSchema.index({ "pages.visitedAt": -1 });
 
 module.exports = mongoose.model("VisitorLog", VisitorLogSchema);
+

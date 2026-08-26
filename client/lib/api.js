@@ -320,19 +320,47 @@ export async function fetchScraperDrafts() {
 }
 
 // Analytics (Admin only)
-export async function fetchAnalyticsSummary() {
-    const res = await fetch(`${API_URL}/analytics/summary`, {
+export async function fetchAnalyticsSummary(params = {}) {
+    const query = new URLSearchParams();
+    if (params.dateRange) query.append("dateRange", params.dateRange);
+    if (params.startDate) query.append("startDate", params.startDate);
+    if (params.endDate) query.append("endDate", params.endDate);
+
+    const res = await fetch(`${API_URL}/analytics/summary?${query.toString()}`, {
         headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Failed to fetch analytics summary");
     return res.json();
 }
 
-export async function fetchAnalyticsDetailed(page = 1, limit = 20) {
-    const res = await fetch(`${API_URL}/analytics/detailed?page=${page}&limit=${limit}`, {
+export async function fetchAnalyticsDetailed(params = {}) {
+    const query = new URLSearchParams();
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    query.append("page", page);
+    query.append("limit", limit);
+
+    if (params.dateRange) query.append("dateRange", params.dateRange);
+    if (params.startDate) query.append("startDate", params.startDate);
+    if (params.endDate) query.append("endDate", params.endDate);
+    if (params.ip) query.append("ip", params.ip);
+    if (params.search) query.append("search", params.search);
+    if (params.pagePath) query.append("pagePath", params.pagePath);
+    if (params.sortBy) query.append("sortBy", params.sortBy);
+    if (params.sortOrder) query.append("sortOrder", params.sortOrder);
+
+    const res = await fetch(`${API_URL}/analytics/detailed?${query.toString()}`, {
         headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Failed to fetch detailed analytics");
+    return res.json();
+}
+
+export async function fetchDailyVisitors(days = 14) {
+    const res = await fetch(`${API_URL}/analytics/daily-visitors?days=${days}`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch daily visitors");
     return res.json();
 }
 
@@ -343,4 +371,60 @@ export async function fetchAnalyticsByIP(ip) {
     if (!res.ok) throw new Error("Failed to fetch analytics for IP");
     return res.json();
 }
+
+export async function fetchReportLogs() {
+    const res = await fetch(`${API_URL}/analytics/report-logs`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch report logs");
+    return res.json();
+}
+
+export async function fetchReportStatus() {
+    const res = await fetch(`${API_URL}/analytics/report-status`, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch report status");
+    return res.json();
+}
+
+export async function triggerDailyReport(recipients = null) {
+    const res = await fetch(`${API_URL}/analytics/send-daily-report`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ recipients })
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to trigger daily report");
+    }
+    return res.json();
+}
+
+export async function triggerWeeklyReport(recipients = null) {
+    const res = await fetch(`${API_URL}/analytics/send-weekly-report`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ recipients })
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to trigger weekly report");
+    }
+    return res.json();
+}
+
+export async function triggerTestVisitorAlert(payload = {}) {
+    const res = await fetch(`${API_URL}/analytics/test-visitor-alert`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to send test alert");
+    }
+    return res.json();
+}
+
 

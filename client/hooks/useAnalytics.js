@@ -4,9 +4,10 @@ import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 
 const API_URL =
-    process.env.NODE_ENV === "development"
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === "development"
         ? "http://localhost:5000/api"
-        : "https://chemicalbusinessreports.onrender.com/api";
+        : "https://chemicalbusinessreports-f078.onrender.com/api");
 
 function getOrCreateSessionId() {
     if (typeof window === "undefined") return null;
@@ -24,7 +25,7 @@ async function fetchPublicIP() {
         const data = await res.json();
         return data.ip;
     } catch {
-        return "unknown";
+        return "";
     }
 }
 
@@ -40,18 +41,14 @@ export function useAnalytics() {
         sessionIdRef.current = getOrCreateSessionId();
 
         fetchPublicIP().then((ip) => {
-            ipRef.current = ip;
+            if (ip) ipRef.current = ip;
         });
     }, []);
 
     // Core send function
     const sendEvent = useCallback(async (eventType, payload) => {
-        if (!sessionIdRef.current) return;
-        // Wait until we have an IP (max 3s delay)
-        if (!ipRef.current) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            if (!ipRef.current) return;
-        }
+        if (typeof window === "undefined") return;
+        if (!sessionIdRef.current) sessionIdRef.current = getOrCreateSessionId();
 
         try {
             fetch(`${API_URL}/analytics/track`, {
@@ -59,12 +56,12 @@ export function useAnalytics() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     sessionId: sessionIdRef.current,
-                    ip: ipRef.current,
+                    ip: ipRef.current || undefined,
                     userAgent: navigator.userAgent,
                     event: { type: eventType, payload }
                 }),
                 keepalive: true
-            });
+            }).catch(() => {});
         } catch (err) {
             // Silently fail — never disrupt UX
         }

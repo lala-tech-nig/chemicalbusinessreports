@@ -4,7 +4,11 @@ const VisitorLog = require("../models/VisitorLog");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
-// Submission emails intentionally excluded from report recipients
+const EmailReportLog = require("../models/EmailReportLog");
+
+// In-memory debounce cache to prevent flooding notifications for the same IP/session within a short time window (10 mins)
+const visitorAlertThrottle = new Map();
+const VISITOR_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
 
 // Configure nodemailer transporter using Gmail SMTP with App Password
 // IMPORTANT: EMAIL_PASS must be a 16-character Gmail App Password, NOT your regular Gmail password.
@@ -38,7 +42,7 @@ transporter.verify((error, success) => {
  */
 async function getAllRecipientEmails() {
     try {
-        // Only registered users — submissions are excluded
+        // Only registered active users
         const users = await User.find({ isActive: { $ne: false } }, "email");
 
         const emailSet = new Set();
@@ -52,6 +56,23 @@ async function getAllRecipientEmails() {
         return Array.from(emailSet);
     } catch (err) {
         console.error("Error fetching recipient emails:", err);
+        return ["coslab.media@gmail.com"];
+    }
+}
+
+/**
+ * Fetch primary admin notification emails (for instant alerts).
+ */
+async function getAdminAlertEmails() {
+    try {
+        const admins = await User.find({ role: "admin", isActive: { $ne: false } }, "email");
+        const emailSet = new Set();
+        admins.forEach(a => {
+            if (a.email && a.email.trim()) emailSet.add(a.email.trim().toLowerCase());
+        });
+        emailSet.add("coslab.media@gmail.com");
+        return Array.from(emailSet);
+    } catch (err) {
         return ["coslab.media@gmail.com"];
     }
 }
@@ -79,7 +100,9 @@ async function gatherPostMetrics() {
 
         // 2. Total posts on entire platform & category breakdown
         const totalPlatformPosts = await Post.countDocuments();
-        const publishedPostsCount = await Post.countDocuments({ status: "published" });
+        const publishedPostsCount = await Post.countDocuments({
+            $or: [{ status: "published" }, { status: { $exists: false } }]
+        });
         const draftPostsCount = await Post.countDocuments({ status: "draft" });
 
         const platformCategoriesRaw = await Post.aggregate([
@@ -106,8 +129,8 @@ async function gatherPostMetrics() {
         const yesterdayDateString = startOfYesterday.toLocaleDateString("en-US", { 
             weekday: 'short', 
             month: 'short', 
-            day: 'numeric',
-            year: 'numeric'
+            day: 'numeric', 
+            year: 'numeric' 
         });
 
         return {
@@ -230,7 +253,7 @@ function renderPostMetricsHtml(pm) {
 }
 
 /**
- * Gather daily analytics & post metrics safely.
+ * Gather daily analytics & post metrics accurately.
  */
 async function gatherDailyMetrics() {
     const now = new Date();
@@ -239,7 +262,7 @@ async function gatherDailyMetrics() {
     const startOfMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     let dailyVisits = 0;
-    let dailyUniqueVisitors = 0;
+    const dailyUniqueIPs = new Set();
     let weeklyVisits = 0;
     let monthlyVisits = 0;
     let dailyClicks = 0;
@@ -253,17 +276,25 @@ async function gatherDailyMetrics() {
         const allLogs = await VisitorLog.find();
 
         allLogs.forEach(log => {
-            if (new Date(log.lastSeen) >= startOfToday) {
-                dailyUniqueVisitors += 1;
+            let activeToday = false;
+            if (new Date(log.lastSeen) >= startOfToday || new Date(log.firstSeen) >= startOfToday) {
+                activeToday = true;
             }
 
             if (log.pages && log.pages.length > 0) {
                 log.pages.forEach(p => {
                     const vTime = new Date(p.visitedAt);
-                    if (vTime >= startOfToday) dailyVisits += 1;
+                    if (vTime >= startOfToday) {
+                        dailyVisits += 1;
+                        activeToday = true;
+                    }
                     if (vTime >= startOfWeek) weeklyVisits += 1;
                     if (vTime >= startOfMonth) monthlyVisits += 1;
                 });
+            }
+
+            if (activeToday && log.ip) {
+                dailyUniqueIPs.add(log.ip);
             }
 
             if (log.buttons && log.buttons.length > 0) {
@@ -300,10 +331,12 @@ async function gatherDailyMetrics() {
 
     // 3. Top posts today
     try {
-        const topPostsDB = await Post.find({ isPublished: true })
+        const topPostsDB = await Post.find({
+            $or: [{ status: "published" }, { status: { $exists: false } }]
+        })
             .sort({ views: -1 })
             .limit(5)
-            .select("title views category");
+            .select("title views category slug");
         
         topPostsDB.forEach(p => {
             topPostsToday.push({ title: p.title, count: p.views || 0, category: p.category });
@@ -318,7 +351,7 @@ async function gatherDailyMetrics() {
     return {
         dateString: now.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
         dailyVisits,
-        dailyUniqueVisitors,
+        dailyUniqueVisitors: dailyUniqueIPs.size,
         weeklyVisits,
         monthlyVisits,
         dailyClicks,
@@ -338,7 +371,7 @@ async function gatherWeeklyMetrics() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     let weeklyVisits = 0;
-    let weeklyUniqueVisitors = 0;
+    const weeklyUniqueIPs = new Set();
     let weeklyClicks = 0;
     let weeklyInteractions = 0;
     let weeklyCommentsCount = 0;
@@ -356,8 +389,9 @@ async function gatherWeeklyMetrics() {
         const allLogs = await VisitorLog.find();
 
         allLogs.forEach(log => {
-            if (new Date(log.lastSeen) >= sevenDaysAgo) {
-                weeklyUniqueVisitors += 1;
+            let activeWeekly = false;
+            if (new Date(log.lastSeen) >= sevenDaysAgo || new Date(log.firstSeen) >= sevenDaysAgo) {
+                activeWeekly = true;
             }
 
             if (log.pages && log.pages.length > 0) {
@@ -365,10 +399,15 @@ async function gatherWeeklyMetrics() {
                     const vTime = new Date(p.visitedAt);
                     if (vTime >= sevenDaysAgo) {
                         weeklyVisits += 1;
+                        activeWeekly = true;
                         const dayKey = vTime.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' });
                         if (daysMap[dayKey]) daysMap[dayKey].visits += 1;
                     }
                 });
+            }
+
+            if (activeWeekly && log.ip) {
+                weeklyUniqueIPs.add(log.ip);
             }
 
             if (log.buttons && log.buttons.length > 0) {
@@ -406,7 +445,9 @@ async function gatherWeeklyMetrics() {
     }
 
     try {
-        const posts = await Post.find({ isPublished: true })
+        const posts = await Post.find({
+            $or: [{ status: "published" }, { status: { $exists: false } }]
+        })
             .sort({ views: -1 })
             .limit(5)
             .select("title views category slug");
@@ -422,7 +463,7 @@ async function gatherWeeklyMetrics() {
         startDate: sevenDaysAgo.toLocaleDateString("en-US", { month: 'short', day: 'numeric' }),
         endDate: now.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
         weeklyVisits,
-        weeklyUniqueVisitors,
+        weeklyUniqueVisitors: weeklyUniqueIPs.size,
         weeklyClicks,
         weeklyInteractions,
         weeklyCommentsCount,
@@ -436,6 +477,7 @@ async function gatherWeeklyMetrics() {
  * Send Daily Website Metrics Email Report.
  */
 async function sendDailyReport(customRecipients = null) {
+    const todayKey = new Date().toISOString().split("T")[0];
     try {
         const recipients = customRecipients || await getAllRecipientEmails();
         const m = await gatherDailyMetrics();
@@ -538,8 +580,7 @@ async function sendDailyReport(customRecipients = null) {
             </html>
         `;
 
-        // Send individual email to each recipient (Gmail SMTP drops external
-        // addresses when all are placed in a single 'to:' field)
+        // Send individual email to each recipient
         const results = await Promise.allSettled(
             recipients.map(email =>
                 transporter.sendMail({
@@ -554,18 +595,41 @@ async function sendDailyReport(customRecipients = null) {
         const succeeded = results.filter(r => r.status === "fulfilled");
         const failed    = results.filter(r => r.status === "rejected");
 
-        succeeded.forEach((r, i) => {
-            console.log(`Daily report sent to ${recipients[results.indexOf(r)]} — ${r.value.messageId}`);
+        succeeded.forEach((r) => {
+            console.log(`Daily report sent to recipient — ${r.value.messageId}`);
         });
-        failed.forEach((r, i) => {
+        failed.forEach((r) => {
             console.error(`Daily report FAILED for a recipient:`, r.reason?.message);
         });
 
         const lastId = succeeded.length > 0 ? succeeded[succeeded.length - 1].value.messageId : null;
         console.log(`Daily report: ${succeeded.length}/${recipients.length} delivered successfully.`);
+
+        // Record in DB for persistent tracking
+        await EmailReportLog.create({
+            reportType: "daily",
+            dateKey: todayKey,
+            recipients,
+            recipientsCount: succeeded.length,
+            success: succeeded.length > 0,
+            messageId: lastId || "",
+            error: failed.length > 0 ? failed.map(f => f.reason?.message).join("; ") : "",
+            metadata: {
+                dailyVisits: m.dailyVisits,
+                dailyUniqueVisitors: m.dailyUniqueVisitors,
+                postsYesterday: m.postMetrics?.postsYesterdayCount || 0
+            }
+        });
+
         return { success: succeeded.length > 0, recipientsCount: succeeded.length, failedCount: failed.length, messageId: lastId };
     } catch (error) {
         console.error("Failed to send daily report email:", error);
+        await EmailReportLog.create({
+            reportType: "daily",
+            dateKey: todayKey,
+            success: false,
+            error: error.message
+        }).catch(() => {});
         return { success: false, error: error.message };
     }
 }
@@ -574,6 +638,8 @@ async function sendDailyReport(customRecipients = null) {
  * Send Weekly Thursday Comprehensive Email Report.
  */
 async function sendWeeklyReport(customRecipients = null) {
+    const now = new Date();
+    const weekKey = `${now.getFullYear()}-W${Math.ceil((((now - new Date(now.getFullYear(), 0, 1)) / 86400000) + 1) / 7)}`;
     try {
         const recipients = customRecipients || await getAllRecipientEmails();
         const w = await gatherWeeklyMetrics();
@@ -683,8 +749,7 @@ async function sendWeeklyReport(customRecipients = null) {
             </html>
         `;
 
-        // Send individual email to each recipient (Gmail SMTP drops external
-        // addresses when all are placed in a single 'to:' field)
+        // Send individual email to each recipient
         const results = await Promise.allSettled(
             recipients.map(email =>
                 transporter.sendMail({
@@ -699,27 +764,279 @@ async function sendWeeklyReport(customRecipients = null) {
         const succeeded = results.filter(r => r.status === "fulfilled");
         const failed    = results.filter(r => r.status === "rejected");
 
-        succeeded.forEach((r, i) => {
-            console.log(`Weekly report sent to ${recipients[results.indexOf(r)]} — ${r.value.messageId}`);
+        succeeded.forEach((r) => {
+            console.log(`Weekly report sent to recipient — ${r.value.messageId}`);
         });
-        failed.forEach((r, i) => {
+        failed.forEach((r) => {
             console.error(`Weekly report FAILED for a recipient:`, r.reason?.message);
         });
 
         const lastId = succeeded.length > 0 ? succeeded[succeeded.length - 1].value.messageId : null;
         console.log(`Weekly report: ${succeeded.length}/${recipients.length} delivered successfully.`);
+
+        // Record in DB for persistent tracking
+        await EmailReportLog.create({
+            reportType: "weekly",
+            dateKey: weekKey,
+            recipients,
+            recipientsCount: succeeded.length,
+            success: succeeded.length > 0,
+            messageId: lastId || "",
+            error: failed.length > 0 ? failed.map(f => f.reason?.message).join("; ") : "",
+            metadata: {
+                weeklyVisits: w.weeklyVisits,
+                weeklyUniqueVisitors: w.weeklyUniqueVisitors,
+                weeklyClicks: w.weeklyClicks
+            }
+        });
+
         return { success: succeeded.length > 0, recipientsCount: succeeded.length, failedCount: failed.length, messageId: lastId };
     } catch (error) {
         console.error("Failed to send weekly report email:", error);
+        await EmailReportLog.create({
+            reportType: "weekly",
+            dateKey: weekKey,
+            success: false,
+            error: error.message
+        }).catch(() => {});
         return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Send Instant Real-Time Visitor IP Arrival Alert.
+ * Uses smart throttling per IP / session (10 mins) so email inbox stays pristine while capturing every visitor.
+ */
+async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, city, device }) {
+    if (!ip || ip === "127.0.0.1" || ip === "::1" || ip === "localhost") {
+        // Still allow alert if needed, but throttle
+    }
+
+    const throttleKey = `${ip}_${sessionId || "default"}`;
+    const lastSent = visitorAlertThrottle.get(throttleKey);
+    const now = Date.now();
+
+    if (lastSent && (now - lastSent) < VISITOR_ALERT_THROTTLE_MS) {
+        // Throttled: alert was already sent for this visitor session recently
+        return { throttled: true };
+    }
+
+    visitorAlertThrottle.set(throttleKey, now);
+
+    // Prune old cache entries if map grows large
+    if (visitorAlertThrottle.size > 1000) {
+        for (const [k, ts] of visitorAlertThrottle.entries()) {
+            if (now - ts > VISITOR_ALERT_THROTTLE_MS) visitorAlertThrottle.delete(k);
+        }
+    }
+
+    try {
+        const alertRecipients = await getAdminAlertEmails();
+        const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+                    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+                    .hdr { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 24px; text-align: center; color: #ffffff; }
+                    .hdr h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+                    .hdr p { margin: 4px 0 0 0; font-size: 12px; color: #e0f2fe; }
+                    .body { padding: 24px; }
+                    .tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: uppercase; background: #e0f2fe; color: #0369a1; margin-bottom: 15px; }
+                    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+                    .lbl { color: #64748b; font-weight: 600; }
+                    .val { font-weight: 700; color: #0f172a; font-family: monospace; }
+                    .cta { display: block; text-align: center; background: #0284c7; color: #ffffff !important; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 20px; font-size: 13px; }
+                    .ftr { background: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <h2>⚡ New Visitor IP Arrival Alert</h2>
+                        <p>Chemical Business Reports Real-Time Traffic Tracker</p>
+                    </div>
+                    <div class="body">
+                        <div class="tag">Live Visitor Detected</div>
+                        <div class="row">
+                            <span class="lbl">Visitor IP Address:</span>
+                            <span class="val" style="color: #0284c7; font-size: 15px;">${ip}</span>
+                        </div>
+                        <div class="row">
+                            <span class="lbl">Visited Page:</span>
+                            <span class="val" style="font-family: inherit; color: #0f172a;">${path || "/"}</span>
+                        </div>
+                        <div class="row">
+                            <span class="lbl">Arrival Time (WAT):</span>
+                            <span class="val" style="font-family: inherit;">${watTime}</span>
+                        </div>
+                        ${country ? `
+                        <div class="row">
+                            <span class="lbl">Location:</span>
+                            <span class="val" style="font-family: inherit;">${city ? city + ", " : ""}${country}</span>
+                        </div>` : ""}
+                        ${device ? `
+                        <div class="row">
+                            <span class="lbl">Device Type:</span>
+                            <span class="val" style="font-family: inherit;">${device}</span>
+                        </div>` : ""}
+                        <div class="row" style="border-bottom: none;">
+                            <span class="lbl">User Agent:</span>
+                            <span class="val" style="font-size: 11px; word-break: break-all; font-family: inherit; color: #64748b;">${userAgent ? userAgent.slice(0, 100) + "..." : "Browser"}</span>
+                        </div>
+
+                        <a href="https://chemicalbusinessreports.com/admin/analytics" class="cta">
+                            📊 View Visitor in Admin Detailed Report
+                        </a>
+                    </div>
+                    <div class="ftr">
+                        Sent automatically by Chemical Business Reports Platform • Instant Visitor Security & Traffic Monitor
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await Promise.allSettled(
+            alertRecipients.map(email =>
+                transporter.sendMail({
+                    from: '"CBR Traffic Alert" <coslab.media@gmail.com>',
+                    to: email,
+                    subject: `⚡ New Visitor Arrival: ${ip} on ${path || "/"}`,
+                    html
+                })
+            )
+        );
+
+        return { success: true };
+    } catch (err) {
+        console.error("Error sending visitor alert email:", err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Send Instant Notification for New Comment.
+ */
+async function sendNewCommentNotification({ authorName, content, postTitle, postId }) {
+    try {
+        const recipients = await getAdminAlertEmails();
+        const html = `
+            <div style="font-family: sans-serif; max-width: 580px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
+                <h3 style="color: #0f172a; margin-top: 0;">💬 New Comment Submitted for Moderation</h3>
+                <p><strong>Article:</strong> ${postTitle || "Chemical Business Report"}</p>
+                <p><strong>Author:</strong> ${authorName || "Anonymous"}</p>
+                <div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 16px; margin: 15px 0; font-style: italic; color: #334155;">
+                    "${content}"
+                </div>
+                <a href="https://chemicalbusinessreports.com/admin" style="display: inline-block; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">Review & Approve in Admin</a>
+            </div>
+        `;
+        await Promise.allSettled(
+            recipients.map(email =>
+                transporter.sendMail({
+                    from: '"CBR Notifications" <coslab.media@gmail.com>',
+                    to: email,
+                    subject: `💬 New Comment from ${authorName || "User"} on "${postTitle ? postTitle.slice(0, 35) + "..." : "Article"}"`,
+                    html
+                })
+            )
+        );
+    } catch (e) {
+        console.error("Error sending comment alert:", e);
+    }
+}
+
+/**
+ * Send Instant Notification for New Subscription/Submission.
+ */
+async function sendNewSubmissionNotification({ name, email, company }) {
+    try {
+        const recipients = await getAdminAlertEmails();
+        const html = `
+            <div style="font-family: sans-serif; max-width: 580px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
+                <h3 style="color: #0f172a; margin-top: 0;">📬 New Newsletter / Platform Subscriber</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <tr><td style="padding: 6px 0; color: #64748b; font-weight: bold;">Name:</td><td>${name || "—"}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b; font-weight: bold;">Email:</td><td><strong>${email}</strong></td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b; font-weight: bold;">Company:</td><td>${company || "—"}</td></tr>
+                </table>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">Chemical Business Reports Subscriber Notification</p>
+            </div>
+        `;
+        await Promise.allSettled(
+            recipients.map(to =>
+                transporter.sendMail({
+                    from: '"CBR Notifications" <coslab.media@gmail.com>',
+                    to,
+                    subject: `📬 New Subscription: ${email} (${company || name || "Subscriber"})`,
+                    html
+                })
+            )
+        );
+    } catch (e) {
+        console.error("Error sending submission alert:", e);
+    }
+}
+
+/**
+ * Send Instant Notification for New Executive Profile Submission.
+ */
+async function sendNewExecutiveProfileNotification({ fullName, company, email, position }) {
+    try {
+        const recipients = await getAdminAlertEmails();
+        const html = `
+            <div style="font-family: sans-serif; max-width: 580px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
+                <h3 style="color: #0f172a; margin-top: 0;">👤 New Executive Profile Submitted</h3>
+                <p><strong>Full Name:</strong> ${fullName}</p>
+                <p><strong>Position / Role:</strong> ${position || "Executive"}</p>
+                <p><strong>Company:</strong> ${company || "—"}</p>
+                <p><strong>Email:</strong> ${email || "—"}</p>
+                <a href="https://chemicalbusinessreports.com/admin" style="display: inline-block; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; margin-top: 15px;">View in Admin Dashboard</a>
+            </div>
+        `;
+        await Promise.allSettled(
+            recipients.map(to =>
+                transporter.sendMail({
+                    from: '"CBR Notifications" <coslab.media@gmail.com>',
+                    to,
+                    subject: `👤 New Executive Profile: ${fullName} (${company || "Executive"})`,
+                    html
+                })
+            )
+        );
+    } catch (e) {
+        console.error("Error sending executive profile alert:", e);
+    }
+}
+
+/**
+ * Fetch past report execution logs for Admin Dashboard.
+ */
+async function getRecentReportLogs(limit = 20) {
+    try {
+        return await EmailReportLog.find().sort({ sentAt: -1 }).limit(limit).lean();
+    } catch (err) {
+        console.error("Error fetching report logs:", err);
+        return [];
     }
 }
 
 module.exports = {
     sendDailyReport,
     sendWeeklyReport,
+    sendVisitorAlertEmail,
+    sendNewCommentNotification,
+    sendNewSubmissionNotification,
+    sendNewExecutiveProfileNotification,
+    getRecentReportLogs,
     gatherDailyMetrics,
     gatherWeeklyMetrics,
     gatherPostMetrics,
-    getAllRecipientEmails
+    getAllRecipientEmails,
+    getAdminAlertEmails
 };

@@ -1,4 +1,5 @@
 const ExecutiveProfile = require("../models/ExecutiveProfile");
+const { sendNewExecutiveProfileNotification } = require("../services/emailReportService");
 
 // @desc    Create a new executive profile
 // @route   POST /api/executive-profiles
@@ -8,6 +9,15 @@ exports.createProfile = async (req, res) => {
         const profileData = req.body;
         const newProfile = new ExecutiveProfile(profileData);
         const savedProfile = await newProfile.save();
+
+        // Dispatch email notification asynchronously
+        sendNewExecutiveProfileNotification({
+            fullName: profileData.fullName || profileData.name || "Executive",
+            company: profileData.company || "",
+            email: profileData.email || "",
+            position: profileData.position || profileData.role || ""
+        }).catch(err => console.error("Executive profile alert error:", err));
+
         res.status(201).json({ message: "Profile submitted successfully", profile: savedProfile });
     } catch (error) {
         res.status(400).json({ message: error.message });

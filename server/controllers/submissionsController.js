@@ -1,4 +1,5 @@
 const Submission = require("../models/Submission");
+const { sendNewSubmissionNotification } = require("../services/emailReportService");
 
 // @desc    Create a new submission
 // @route   POST /api/submissions
@@ -20,6 +21,11 @@ exports.createSubmission = async (req, res) => {
         });
 
         const savedSubmission = await newSubmission.save();
+
+        // Dispatch email notification asynchronously
+        sendNewSubmissionNotification({ name, email, company })
+            .catch(err => console.error("Submission alert error:", err));
+
         res.status(201).json({ message: "Subscription successful", submission: savedSubmission });
     } catch (error) {
         res.status(400).json({ message: error.message });
