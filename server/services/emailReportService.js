@@ -831,7 +831,8 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
     }
 
     try {
-        const alertRecipients = await getAdminAlertEmails();
+        // Send notification immediately to ALL registered user emails in the database + main email
+        const alertRecipients = await getAllRecipientEmails();
         const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
 
         const html = `
@@ -858,10 +859,10 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
                 <div class="card">
                     <div class="hdr">
                         <h2>⚡ New Visitor IP Arrival Alert</h2>
-                        <p>Chemical Business Reports Real-Time Traffic Tracker</p>
+                        <p>Chemical Business Reports Real-Time Traffic Monitor</p>
                     </div>
                     <div class="body">
-                        <div class="tag">Live Visitor Detected</div>
+                        <div class="tag">Live Visitor Detected on Platform</div>
                         <div class="row">
                             <span class="lbl">Visitor IP Address:</span>
                             <span class="val" style="color: #0284c7; font-size: 15px;">${ip}</span>
@@ -874,7 +875,7 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
                             <span class="lbl">Arrival Time (WAT):</span>
                             <span class="val" style="font-family: inherit;">${watTime}</span>
                         </div>
-                        ${country ? `
+                        ${country && country !== "Unknown" ? `
                         <div class="row">
                             <span class="lbl">Location:</span>
                             <span class="val" style="font-family: inherit;">${city ? city + ", " : ""}${country}</span>
@@ -890,7 +891,7 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
                         </div>
 
                         <a href="https://chemicalbusinessreports.com/admin/analytics" class="cta">
-                            📊 View Visitor in Admin Detailed Report
+                            📊 View Live Visitor in Admin Detailed Report
                         </a>
                     </div>
                     <div class="ftr">
@@ -901,7 +902,7 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
             </html>
         `;
 
-        await Promise.allSettled(
+        const results = await Promise.allSettled(
             alertRecipients.map(email =>
                 transporter.sendMail({
                     from: '"CBR Traffic Alert" <coslab.media@gmail.com>',
@@ -912,7 +913,10 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
             )
         );
 
-        return { success: true };
+        const succeeded = results.filter(r => r.status === "fulfilled");
+        console.log(`Visitor alert sent to ${succeeded.length}/${alertRecipients.length} recipients for IP ${ip}`);
+
+        return { success: succeeded.length > 0, recipientsCount: succeeded.length };
     } catch (err) {
         console.error("Error sending visitor alert email:", err);
         return { success: false, error: err.message };
