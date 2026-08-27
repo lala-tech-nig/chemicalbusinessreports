@@ -9,15 +9,46 @@ const API_URL =
 const SITE_URL =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.chemicalbusinessreports.net";
 
+/**
+ * Convert any image URL into a WhatsApp-optimised OG image.
+ * – Cloudinary URLs get an automatic c_fill,w_1200,h_630,q_85,f_jpg transform
+ *   so the image is always a compressed JPEG ≤ 300 KB (WhatsApp's threshold).
+ * – Other HTTPS URLs are returned as-is.
+ * – Relative URLs are prefixed with the Render backend origin.
+ */
 function getAbsoluteImageUrl(imgUrl) {
-    if (!imgUrl) return `${SITE_URL}/favicon.ico`;
-    if (imgUrl.startsWith("http://") || imgUrl.startsWith("https://")) {
-        // Enforce HTTPS for social crawlers (WhatsApp, Facebook, Twitter)
-        return imgUrl.replace(/^http:\/\//i, "https://");
+    if (!imgUrl) return `${SITE_URL}/og-default.jpg`;
+
+    // Enforce HTTPS
+    let url = imgUrl.replace(/^http:\/\//i, "https://");
+
+    // For Cloudinary images: inject the transformation pipeline
+    // before the version segment (v123456) so it becomes:
+    //   .../image/upload/c_fill,w_1200,h_630,q_85,f_jpg/v123456/...
+    if (url.includes("res.cloudinary.com")) {
+        url = url.replace(
+            /\/image\/upload\/(v\d+\/)/,
+            "/image/upload/c_fill,w_1200,h_630,q_85,f_jpg/$1"
+        );
+        // Handle URLs that don't have a version segment
+        if (!url.includes("c_fill")) {
+            url = url.replace(
+                /\/image\/upload\//,
+                "/image/upload/c_fill,w_1200,h_630,q_85,f_jpg/"
+            );
+        }
+        // Cloudinary images are already HTTPS and public — return directly
+        return url;
     }
-    const origin = process.env.NEXT_PUBLIC_SERVER_URL || "https://chemicalbusinessreports-f078.onrender.com";
-    return `${origin}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`;
+
+    if (url.startsWith("https://")) return url;
+
+    const origin =
+        process.env.NEXT_PUBLIC_SERVER_URL ||
+        "https://chemicalbusinessreports-f078.onrender.com";
+    return `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
 }
+
 
 async function getPost(slug) {
     try {
@@ -56,7 +87,8 @@ export async function generateMetadata({ params }) {
     const description = rawDescription.trim();
     const imageUrl = getAbsoluteImageUrl(post.image);
     const postUrl = `${SITE_URL}/posts/${slug}`;
-    const imageType = imageUrl.match(/\.png$/i) ? "image/png" : imageUrl.match(/\.webp$/i) ? "image/webp" : "image/jpeg";
+    // Cloudinary transform forces f_jpg, so always declare JPEG for WhatsApp
+    const imageType = "image/jpeg";
 
     return {
         title: `${title} | Chemical Business Reports`,
