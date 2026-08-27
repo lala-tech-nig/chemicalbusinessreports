@@ -19,6 +19,8 @@ export default function AdManagement() {
         link: "",
         actionType: "link",
         whatsappNumber: "",
+        clientEmail: "",
+        clientName: "",
         image: ""
     });
 
@@ -44,7 +46,17 @@ export default function AdManagement() {
             await createAd(formData);
             toast.success("Ad campaign launched successfully!");
             setIsFormOpen(false);
-            setFormData({ title: "", type: "popup", durationDays: 7, link: "", actionType: "link", whatsappNumber: "", image: "" });
+            setFormData({
+                title: "",
+                type: "popup",
+                durationDays: 7,
+                link: "",
+                actionType: "link",
+                whatsappNumber: "",
+                clientEmail: "",
+                clientName: "",
+                image: ""
+            });
             loadAds(); // Refresh list
         } catch (error) {
             toast.error(error.message);
@@ -98,10 +110,11 @@ export default function AdManagement() {
                     <form onSubmit={handleCreateAd} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">Ad Title</label>
+                                <label className="block text-sm font-medium mb-1">Ad Title / Campaign Name *</label>
                                 <input
                                     type="text"
                                     required
+                                    placeholder="e.g. Industrial Chemical Promo"
                                     className="w-full px-3 py-2 rounded-md border border-input bg-background"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -159,6 +172,29 @@ export default function AdManagement() {
                                     <p className="text-xs text-muted-foreground mt-1">Include country code without '+' (e.g. 234...)</p>
                                 </div>
                             )}
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Client / Advertiser Email (for instant click & daily reports)</label>
+                                <input
+                                    type="email"
+                                    placeholder="advertiser@company.com"
+                                    className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                                    value={formData.clientEmail}
+                                    onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Client receives daily report and instant email alert whenever a visitor clicks their ad.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Client / Company Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Apex Chemicals Ltd"
+                                    className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                                    value={formData.clientName}
+                                    onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -233,8 +269,9 @@ export default function AdManagement() {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                         <tr>
-                            <th className="px-6 py-4">Title</th>
+                            <th className="px-6 py-4">Title & Client</th>
                             <th className="px-6 py-4">Type</th>
+                            <th className="px-6 py-4">Clicks</th>
                             <th className="px-6 py-4">End Date</th>
                             <th className="px-6 py-4">Status</th>
                             <th className="px-6 py-4 text-right">Actions</th>
@@ -243,8 +280,16 @@ export default function AdManagement() {
                     <tbody className="divide-y divide-border">
                         {ads.map((ad) => (
                             <tr key={ad._id} className="hover:bg-accent/50 transition-colors">
-                                <td className="px-6 py-4 font-medium">{ad.title}</td>
+                                <td className="px-6 py-4">
+                                    <div className="font-medium">{ad.title}</div>
+                                    {ad.clientEmail && (
+                                        <div className="text-xs text-muted-foreground mt-0.5">
+                                            ✉️ {ad.clientEmail} {ad.clientName ? `(${ad.clientName})` : ''}
+                                        </div>
+                                    )}
+                                </td>
                                 <td className="px-6 py-4 capitalize">{ad.type === 'popup' ? 'Main Popup' : 'In-Feed'}</td>
+                                <td className="px-6 py-4 font-bold text-emerald-600">{ad.totalClicks || 0}</td>
                                 <td className="px-6 py-4 text-muted-foreground">
                                     {new Date(ad.endDate).toLocaleDateString()}
                                 </td>

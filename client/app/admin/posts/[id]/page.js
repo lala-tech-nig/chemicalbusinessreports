@@ -227,6 +227,75 @@ export default function EditPost({ params }) {
 
     const renderDynamicFields = () => {
         switch (formData.category) {
+            case "Corporate Profile":
+                return (
+                    <div className="space-y-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100">
+                        <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
+                            <span>🏢 Corporate Profile Details & Client Readership Alerts</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Company Name</label>
+                                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="e.g., Dangote Sugar Refinery" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Client / Company Email (for Instant Read Alerts & Daily Reports)</label>
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="e.g., info@company.com" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                                <p className="text-[11px] text-muted-foreground">Company receives an instant email alert when visitors read their story.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Official Website URL</label>
+                                <input type="text" name="website" value={formData.website} onChange={handleChange} placeholder="https://company.com" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Contact / WhatsApp Number</label>
+                                <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 2348012345678" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                        </div>
+                    </div>
+                );
+            case "Executive Brief":
+                return (
+                    <div className="space-y-4 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100">
+                        <div className="flex items-center gap-2 text-indigo-900 font-semibold text-sm">
+                            <span>👤 Executive Brief Details & Executive Readership Alerts</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Executive / Company Name</label>
+                                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="e.g., Dr. John Doe (CEO, Zenith Chemicals)" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Executive Email (for Instant Read Alerts & Daily Reports)</label>
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="e.g., executive@company.com" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                                <p className="text-[11px] text-muted-foreground">Executive receives an instant email alert when visitors read their executive story.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Contact / WhatsApp Number</label>
+                                <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 2348012345678" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Website or LinkedIn</label>
+                                <input type="text" name="website" value={formData.website} onChange={handleChange} placeholder="https://linkedin.com/in/..." className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                        </div>
+                    </div>
+                );
+            case "Services":
+                return (
+                    <div className="space-y-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Service Provider / Company Name</label>
+                                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="e.g., ChemLogistics Express" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-700">Client Email (for Read Alerts & Daily Reports)</label>
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="e.g., support@chemlogistics.com" className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none text-sm" />
+                            </div>
+                        </div>
+                    </div>
+                );
             case "News Roundup":
                 return null;
             case "Chemical Mart":

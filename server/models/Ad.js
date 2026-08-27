@@ -23,6 +23,21 @@ const AdSchema = new mongoose.Schema({
         type: String, // Store as string to preserve leading zeros or +
         trim: true
     },
+    clientEmail: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        default: ""
+    },
+    clientName: {
+        type: String,
+        trim: true,
+        default: ""
+    },
+    totalClicks: {
+        type: Number,
+        default: 0
+    },
     type: {
         type: String,
         enum: ["popup", "card"],

@@ -128,7 +128,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -150,7 +150,7 @@ exports.createPost = async (req, res) => {
             category,
             image,
             isStoryOfTheDay,
-            companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
+            companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
             subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor,
             adPlacements,
             author: authorName,
@@ -180,7 +180,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -197,21 +197,23 @@ exports.updatePost = async (req, res) => {
         if (isStoryOfTheDay !== undefined) post.isStoryOfTheDay = isStoryOfTheDay;
 
         // Dynamic fields update
-        if (companyName) post.companyName = companyName;
-        if (productName) post.productName = productName;
-        if (contactNumber) post.contactNumber = contactNumber;
-        if (researchTopic) post.researchTopic = researchTopic;
-        if (video) post.video = video;
-        if (ceoDetails) post.ceoDetails = ceoDetails;
-        if (companyServices) post.companyServices = companyServices;
-        if (earlyBeginning) post.earlyBeginning = earlyBeginning;
-        if (fails) post.fails = fails;
-        if (success) post.success = success;
-        if (awards) post.awards = awards;
-        if (topic) post.topic = topic;
-        if (subcategory) post.subcategory = subcategory;
-        if (adSize) post.adSize = adSize;
-        if (adDuration) post.adDuration = adDuration;
+        if (companyName !== undefined) post.companyName = companyName;
+        if (productName !== undefined) post.productName = productName;
+        if (contactNumber !== undefined) post.contactNumber = contactNumber;
+        if (website !== undefined) post.website = website;
+        if (email !== undefined) post.email = email;
+        if (researchTopic !== undefined) post.researchTopic = researchTopic;
+        if (video !== undefined) post.video = video;
+        if (ceoDetails !== undefined) post.ceoDetails = ceoDetails;
+        if (companyServices !== undefined) post.companyServices = companyServices;
+        if (earlyBeginning !== undefined) post.earlyBeginning = earlyBeginning;
+        if (fails !== undefined) post.fails = fails;
+        if (success !== undefined) post.success = success;
+        if (awards !== undefined) post.awards = awards;
+        if (topic !== undefined) post.topic = topic;
+        if (subcategory !== undefined) post.subcategory = subcategory;
+        if (adSize !== undefined) post.adSize = adSize;
+        if (adDuration !== undefined) post.adDuration = adDuration;
         if (excerpt !== undefined) post.excerpt = excerpt;
         if (excerptColor) post.excerptColor = excerptColor;
         if (excerptTextColor) post.excerptTextColor = excerptTextColor;

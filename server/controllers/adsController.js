@@ -35,7 +35,7 @@ exports.getActiveAds = async (req, res) => {
 // @access  Private (Admin)
 exports.createAd = async (req, res) => {
     try {
-        const { title, image, link, type, durationDays, actionType, whatsappNumber } = req.body;
+        const { title, image, link, type, durationDays, actionType, whatsappNumber, clientEmail, clientName } = req.body;
 
         // endDate is calculated in pre-save middleware, but we can also set it explicitly if needed
 
@@ -47,6 +47,8 @@ exports.createAd = async (req, res) => {
             durationDays,
             actionType,
             whatsappNumber,
+            clientEmail: clientEmail ? clientEmail.trim().toLowerCase() : "",
+            clientName: clientName ? clientName.trim() : "",
             startDate: new Date()
         });
 

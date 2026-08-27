@@ -5,25 +5,31 @@ const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
 const EmailReportLog = require("../models/EmailReportLog");
+const Ad = require("../models/Ad");
 
 // In-memory debounce cache to prevent flooding notifications for the same IP/session within a short time window (10 mins)
 const visitorAlertThrottle = new Map();
 const VISITOR_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
 
+// In-memory debounce cache for client ad clicks and article read notifications (10 mins per client/session)
+const clientAlertThrottle = new Map();
+const CLIENT_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
+
 // Configure nodemailer transporter using Gmail SMTP with App Password
 // IMPORTANT: EMAIL_PASS must be a 16-character Gmail App Password, NOT your regular Gmail password.
 // Generate one at: https://myaccount.google.com/apppasswords (2FA must be enabled first)
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for port 465 (SSL)
+    service: "gmail",
     auth: {
         user: process.env.EMAIL_USER || "coslab.media@gmail.com",
         pass: process.env.EMAIL_PASS || "" // Must be a Gmail App Password, not your account password
     },
     tls: {
-        rejectUnauthorized: true
-    }
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000
 });
 
 // Verify transporter connection on startup
@@ -38,16 +44,31 @@ transporter.verify((error, success) => {
 });
 
 /**
- * Fetch all registered user emails and submission subscriber emails (deduplicated).
+ * Fetch all registered user emails, active advertiser emails, and client posting emails (deduplicated).
  */
 async function getAllRecipientEmails() {
     try {
-        // Only registered active users
-        const users = await User.find({ isActive: { $ne: false } }, "email");
-
         const emailSet = new Set();
+
+        // 1. Registered active users
+        const users = await User.find({ isActive: { $ne: false } }, "email");
         users.forEach(u => {
             if (u.email && u.email.trim()) emailSet.add(u.email.trim().toLowerCase());
+        });
+
+        // 2. Active Advertisers
+        const activeAds = await Ad.find({ isActive: true, clientEmail: { $exists: true, $ne: "" } }, "clientEmail");
+        activeAds.forEach(a => {
+            if (a.clientEmail && a.clientEmail.trim()) emailSet.add(a.clientEmail.trim().toLowerCase());
+        });
+
+        // 3. Category posts with client emails (Corporate Profile, Executive Brief, Chemical Mart)
+        const postsWithEmail = await Post.find({
+            status: "published",
+            email: { $exists: true, $ne: "" }
+        }, "email");
+        postsWithEmail.forEach(p => {
+            if (p.email && p.email.trim()) emailSet.add(p.email.trim().toLowerCase());
         });
 
         // Always include main company email as fallback
@@ -1019,6 +1040,225 @@ async function sendNewExecutiveProfileNotification({ fullName, company, email, p
 }
 
 /**
+ * Send Instant Notification to Client / Advertiser when their Ad is clicked.
+ * Includes throttling to avoid spamming the client's inbox for repeated clicks in the same session.
+ */
+async function sendAdClickClientNotification({ adTitle, clientEmail, clientName, path, ip, device, sessionId }) {
+    if (!clientEmail || !clientEmail.trim()) {
+        return { success: false, message: "No client email provided" };
+    }
+
+    const cleanEmail = clientEmail.trim().toLowerCase();
+    const throttleKey = `adclick_${cleanEmail}_${sessionId || ip || "default"}`;
+    const lastSent = clientAlertThrottle.get(throttleKey);
+    const now = Date.now();
+
+    if (lastSent && (now - lastSent) < CLIENT_ALERT_THROTTLE_MS) {
+        return { throttled: true };
+    }
+    clientAlertThrottle.set(throttleKey, now);
+
+    try {
+        const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+                    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+                    .hdr { background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 26px; text-align: center; color: #ffffff; }
+                    .hdr h2 { margin: 0; font-size: 21px; font-weight: 800; }
+                    .hdr p { margin: 6px 0 0 0; font-size: 13px; color: #d1fae5; }
+                    .body { padding: 26px; }
+                    .greeting { font-size: 15px; color: #334155; margin-bottom: 18px; line-height: 1.5; }
+                    .stat-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin: 16px 0; }
+                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    .row:last-child { border-bottom: none; }
+                    .lbl { color: #64748b; font-weight: 600; }
+                    .val { font-weight: 700; color: #0f172a; }
+                    .cta { display: block; text-align: center; background: #059669; color: #ffffff !important; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 22px; font-size: 13px; }
+                    .ftr { background: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <h2>🎯 New Ad Click Engagement Alert</h2>
+                        <p>Chemical Business Reports Advertiser Intelligence</p>
+                    </div>
+                    <div class="body">
+                        <div class="greeting">
+                            Hello <strong>${clientName || "Valued Advertiser"}</strong>,
+                            <br><br>
+                            Great news! A visitor on <strong>Chemical Business Reports</strong> just clicked on your active advertisement campaign.
+                        </div>
+
+                        <div class="stat-box">
+                            <div class="row">
+                                <span class="lbl">Ad Campaign:</span>
+                                <span class="val" style="color: #059669;">${adTitle || "Advertisement"}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Engagement Time (WAT):</span>
+                                <span class="val">${watTime}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Page Placement:</span>
+                                <span class="val">${path || "Website"}</span>
+                            </div>
+                            ${device ? `
+                            <div class="row">
+                                <span class="lbl">Visitor Device:</span>
+                                <span class="val">${device}</span>
+                            </div>` : ""}
+                        </div>
+
+                        <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-top: 15px;">
+                            Your campaign continues to attract engaged chemical and allied industry professionals across our platform.
+                        </p>
+
+                        <a href="https://chemicalbusinessreports.com" class="cta">
+                            Visit Chemical Business Reports
+                        </a>
+                    </div>
+                    <div class="ftr">
+                        © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await transporter.sendMail({
+            from: '"CBR Ad Analytics" <coslab.media@gmail.com>',
+            to: cleanEmail,
+            subject: `🎯 New Visitor Click on your Ad: "${adTitle || "Campaign"}" - Chemical Business Reports`,
+            html
+        });
+
+        console.log(`Ad click notification email sent to advertiser: ${cleanEmail}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error sending ad click client notification:", err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Send Instant Notification to Client / Executive when their Corporate Profile or Executive Brief article is read.
+ */
+async function sendArticleReadClientNotification({ postTitle, category, clientEmail, companyName, path, ip, device, sessionId }) {
+    if (!clientEmail || !clientEmail.trim()) {
+        return { success: false, message: "No client email provided" };
+    }
+
+    const cleanEmail = clientEmail.trim().toLowerCase();
+    const throttleKey = `articleread_${cleanEmail}_${sessionId || ip || "default"}`;
+    const lastSent = clientAlertThrottle.get(throttleKey);
+    const now = Date.now();
+
+    if (lastSent && (now - lastSent) < CLIENT_ALERT_THROTTLE_MS) {
+        return { throttled: true };
+    }
+    clientAlertThrottle.set(throttleKey, now);
+
+    try {
+        const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
+
+        const isExecutive = category === "Executive Brief";
+        const themeColor = isExecutive ? "#0284c7" : "#4f46e5";
+        const categoryLabel = isExecutive ? "Executive Brief" : "Corporate Profile";
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+                    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+                    .hdr { background: linear-gradient(135deg, ${themeColor} 0%, #1e1b4b 100%); padding: 26px; text-align: center; color: #ffffff; }
+                    .hdr h2 { margin: 0; font-size: 21px; font-weight: 800; }
+                    .hdr p { margin: 6px 0 0 0; font-size: 13px; color: #e0e7ff; }
+                    .body { padding: 26px; }
+                    .greeting { font-size: 15px; color: #334155; margin-bottom: 18px; line-height: 1.5; }
+                    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; }
+                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+                    .row:last-child { border-bottom: none; }
+                    .lbl { color: #64748b; font-weight: 600; }
+                    .val { font-weight: 700; color: #0f172a; }
+                    .cta { display: block; text-align: center; background: ${themeColor}; color: #ffffff !important; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 22px; font-size: 13px; }
+                    .ftr { background: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <h2>📖 Article Readership Alert</h2>
+                        <p>Chemical Business Reports Editorial Readership Monitor</p>
+                    </div>
+                    <div class="body">
+                        <div class="greeting">
+                            Hello <strong>${companyName || "Leader"}</strong>,
+                            <br><br>
+                            A visitor on <strong>Chemical Business Reports</strong> is currently reading your published <strong>${categoryLabel}</strong> feature story!
+                        </div>
+
+                        <div class="stat-box">
+                            <div class="row">
+                                <span class="lbl">Feature Article:</span>
+                                <span class="val" style="color: ${themeColor};">${postTitle || "Feature Story"}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Category:</span>
+                                <span class="val">${categoryLabel}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Read Time (WAT):</span>
+                                <span class="val">${watTime}</span>
+                            </div>
+                            ${device ? `
+                            <div class="row">
+                                <span class="lbl">Reader Device:</span>
+                                <span class="val">${device}</span>
+                            </div>` : ""}
+                        </div>
+
+                        <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-top: 15px;">
+                            Your leadership insights and business profile are actively reaching chemical manufacturers, suppliers, researchers, and executive decision-makers.
+                        </p>
+
+                        <a href="https://chemicalbusinessreports.com${path || ""}" class="cta">
+                            View Your Article on Chemical Business Reports
+                        </a>
+                    </div>
+                    <div class="ftr">
+                        © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await transporter.sendMail({
+            from: '"CBR Readership Monitor" <coslab.media@gmail.com>',
+            to: cleanEmail,
+            subject: `📖 Visitor Reading Your ${categoryLabel}: "${postTitle ? postTitle.slice(0, 45) + "..." : "Story"}"`,
+            html
+        });
+
+        console.log(`Article readership alert sent to client: ${cleanEmail}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error sending article readership client alert:", err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
  * Fetch past report execution logs for Admin Dashboard.
  */
 async function getRecentReportLogs(limit = 20) {
@@ -1037,6 +1277,8 @@ module.exports = {
     sendNewCommentNotification,
     sendNewSubmissionNotification,
     sendNewExecutiveProfileNotification,
+    sendAdClickClientNotification,
+    sendArticleReadClientNotification,
     getRecentReportLogs,
     gatherDailyMetrics,
     gatherWeeklyMetrics,

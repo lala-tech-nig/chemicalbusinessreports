@@ -1,6 +1,12 @@
 const VisitorLog = require("../models/VisitorLog");
 const EmailReportLog = require("../models/EmailReportLog");
-const { sendVisitorAlertEmail } = require("../services/emailReportService");
+const Post = require("../models/Post");
+const Ad = require("../models/Ad");
+const {
+    sendVisitorAlertEmail,
+    sendAdClickClientNotification,
+    sendArticleReadClientNotification
+} = require("../services/emailReportService");
 const { getSchedulerStatus } = require("../services/reportSchedulerService");
 
 /**
@@ -135,6 +141,45 @@ const trackEvent = async (req, res) => {
                 });
                 break;
 
+            case "ad_click":
+                log.buttons.push({
+                    label: `Ad Click: ${event.payload?.adTitle || event.payload?.adId || "Advertisement"}`,
+                    path: event.payload?.path || "/",
+                    clickedAt: new Date()
+                });
+
+                // Increment ad click counter & dispatch client notification
+                (async () => {
+                    try {
+                        let targetAd = null;
+                        if (event.payload?.adId) {
+                            targetAd = await Ad.findById(event.payload.adId);
+                        } else if (event.payload?.adTitle) {
+                            targetAd = await Ad.findOne({ title: event.payload.adTitle, isActive: true });
+                        }
+
+                        if (targetAd) {
+                            targetAd.totalClicks = (targetAd.totalClicks || 0) + 1;
+                            await targetAd.save();
+
+                            if (targetAd.clientEmail) {
+                                sendAdClickClientNotification({
+                                    adTitle: targetAd.title,
+                                    clientEmail: targetAd.clientEmail,
+                                    clientName: targetAd.clientName,
+                                    path: event.payload?.path || "/",
+                                    ip: cleanIp,
+                                    device: log.device,
+                                    sessionId: activeSessionId
+                                }).catch(e => console.error("Ad click client alert error:", e));
+                            }
+                        }
+                    } catch (adErr) {
+                        console.error("Error processing ad_click event:", adErr);
+                    }
+                })();
+                break;
+
             case "post_interaction":
                 log.postsInteracted.push({
                     postSlug: event.payload?.postSlug || "",
@@ -142,6 +187,29 @@ const trackEvent = async (req, res) => {
                     action: event.payload?.action || "view",
                     at: new Date()
                 });
+
+                // If this is an article view for Corporate Profile or Executive Brief with a client email, notify the client
+                if ((event.payload?.action === "view" || !event.payload?.action) && event.payload?.postSlug) {
+                    (async () => {
+                        try {
+                            const post = await Post.findOne({ slug: event.payload.postSlug }, "title category email companyName");
+                            if (post && post.email && (post.category === "Corporate Profile" || post.category === "Executive Brief" || post.category === "Chemical Mart")) {
+                                sendArticleReadClientNotification({
+                                    postTitle: post.title,
+                                    category: post.category,
+                                    clientEmail: post.email,
+                                    companyName: post.companyName,
+                                    path: `/posts/${event.payload.postSlug}`,
+                                    ip: cleanIp,
+                                    device: log.device,
+                                    sessionId: activeSessionId
+                                }).catch(pErr => console.error("Article read client alert error:", pErr));
+                            }
+                        } catch (pErr) {
+                            console.error("Error checking post for readership alert:", pErr);
+                        }
+                    })();
+                }
                 break;
 
             case "time_spent":

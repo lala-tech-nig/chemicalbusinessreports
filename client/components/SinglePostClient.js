@@ -50,6 +50,38 @@ export default function SinglePostClient({ slug, initialPost = null }) {
                 if (postData && postData._id) {
                     const commentsData = await fetchApprovedComments(postData._id);
                     setComments(commentsData);
+
+                    // Track post view interaction (for analytics & client readership alerts)
+                    try {
+                        const { getOrCreateSessionId } = await import("@/hooks/useAnalytics");
+                        // Dispatch via fetch so it's reliable
+                        const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api");
+                        let sid = typeof window !== "undefined" ? sessionStorage.getItem("cbr_sid") : null;
+                        if (!sid && typeof window !== "undefined") {
+                            sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+                            sessionStorage.setItem("cbr_sid", sid);
+                        }
+
+                        fetch(`${API_URL}/analytics/track`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                sessionId: sid,
+                                userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+                                event: {
+                                    type: "post_interaction",
+                                    payload: {
+                                        postSlug: postData.slug || slug,
+                                        postTitle: postData.title,
+                                        action: "view"
+                                    }
+                                }
+                            }),
+                            keepalive: true
+                        }).catch(() => {});
+                    } catch (trackErr) {
+                        // ignore
+                    }
                 }
             } catch (err) {
                 console.error("Failed to fetch content:", err);

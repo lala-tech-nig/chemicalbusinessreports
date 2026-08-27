@@ -38,6 +38,45 @@ export default function AdModal() {
 
     if (!ad) return null;
 
+    const getAdLink = () => {
+        if (ad.actionType === 'whatsapp' && ad.whatsappNumber) {
+            const message = encodeURIComponent("hey, i saw your ad on chemicalbusinessreports website");
+            return `https://wa.me/${ad.whatsappNumber}?text=${message}`;
+        }
+        return ad.link || "#";
+    };
+
+    const handleAdClick = () => {
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api");
+            let sid = typeof window !== "undefined" ? sessionStorage.getItem("cbr_sid") : null;
+            if (!sid && typeof window !== "undefined") {
+                sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+                sessionStorage.setItem("cbr_sid", sid);
+            }
+
+            fetch(`${API_URL}/analytics/track`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sessionId: sid,
+                    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+                    event: {
+                        type: "ad_click",
+                        payload: {
+                            adId: ad._id,
+                            adTitle: ad.title,
+                            path: typeof window !== "undefined" ? window.location.pathname : "/"
+                        }
+                    }
+                }),
+                keepalive: true
+            }).catch(() => {});
+        } catch (e) {
+            // fail silently
+        }
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -56,7 +95,8 @@ export default function AdModal() {
                         </button>
 
                         <a
-                            href={ad.link || "#"}
+                            href={getAdLink()}
+                            onClick={handleAdClick}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block relative w-full aspect-[4/5] sm:aspect-square bg-black"
