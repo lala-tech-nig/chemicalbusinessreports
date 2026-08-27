@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdModal from "@/components/AdModal";
-import UserDataModal from "@/components/UserDataModal";
+// import UserDataModal from "@/components/UserDataModal";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
@@ -16,7 +16,7 @@ export default function WebsiteLayout({ children }) {
             </main>
             <Footer />
             <AdModal />
-            <UserDataModal />
+            {/* <UserDataModal /> */}
             <FloatingWhatsApp />
             <GlobalAudioPlayer />
         </div>
