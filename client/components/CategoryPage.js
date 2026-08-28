@@ -20,7 +20,9 @@ function getAdSizeClasses(adSize) {
     }
 }
 
-export default function CategoryPage({ categoryName, description, subcategoryName, hideFeatured = false, categoryFilters = [] }) {
+export default function CategoryPage({ categoryName, apiCategoryName, description, subcategoryName, hideFeatured = false, categoryFilters = [] }) {
+    // apiCategoryName is the value stored in DB; categoryName is the display label
+    const queryCategory = apiCategoryName || categoryName;
     const [searchTerm, setSearchTerm] = useState("");
     const [activeFilter, setActiveFilter] = useState("All");
     const [posts, setPosts] = useState([]);
@@ -40,7 +42,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
         setError(null);
         try {
             const [postsData, adsData] = await Promise.all([
-                fetchPosts(categoryName, searchTerm, effectiveSubcategory),
+                fetchPosts(queryCategory, searchTerm, effectiveSubcategory),
                 fetchActiveAds()
             ]);
             setPosts(postsData);
@@ -84,7 +86,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                         <span className="inline-block text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">
                             Chemical Business Reports
                         </span>
-                        <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
+                        <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4" aria-label={categoryName}>
                             {categoryName}
                         </h1>
                         {description && (
@@ -214,7 +216,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                             className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-auto"
                         >
                             {combinedItems.map((item, index) => {
-                                const adSize = item.type === "post" && item.data.category === "Chemical Business Mart" ? item.data.adSize : null;
+                                const adSize = item.type === "post" && item.data.category === queryCategory ? item.data.adSize : null;
                                 const spanClass = getAdSizeClasses(adSize);
                                 return (
                                     <motion.div
@@ -225,7 +227,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                                         className={spanClass}
                                     >
                                         {item.type === "post" ? (
-                                            item.data.category === "Chemical Business Mart" ? (
+                                            item.data.category === queryCategory ? (
                                                 <ChemicalMartCard post={item.data} />
                                             ) : (
                                                 <PostCard {...item.data} />
