@@ -26,7 +26,7 @@ export default function AdModal() {
                 if (popupAd) {
                     setAd(popupAd);
                     // Show modal after 3 seconds if ad exists
-                    setTimeout(() => setIsOpen(true), 12000);
+                    setTimeout(() => setIsOpen(true), 30000);
                 }
             } catch (error) {
                 console.error("Failed to load ads:", error);
