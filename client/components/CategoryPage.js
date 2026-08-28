@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import PostCard from "@/components/PostCard";
 import ChemicalMartCard from "@/components/ChemicalMartCard";
 import InFeedAd from "@/components/InFeedAd";
-import { Search, Loader2, Clock, ArrowRight } from "lucide-react";
+import { Search, Loader2, Clock, ArrowRight, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
 
@@ -20,24 +20,27 @@ function getAdSizeClasses(adSize) {
     }
 }
 
-export default function CategoryPage({ categoryName, description, subcategoryName, hideFeatured = false }) {
+export default function CategoryPage({ categoryName, description, subcategoryName, hideFeatured = false, categoryFilters = [] }) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeFilter, setActiveFilter] = useState("All");
     const [posts, setPosts] = useState([]);
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const effectiveSubcategory = subcategoryName || (activeFilter !== "All" ? activeFilter : "");
+
     useEffect(() => {
         const timer = setTimeout(() => loadData(), 400);
         return () => clearTimeout(timer);
-    }, [searchTerm, categoryName, subcategoryName]);
+    }, [searchTerm, categoryName, subcategoryName, activeFilter]);
 
     const loadData = async () => {
         setLoading(true);
         setError(null);
         try {
             const [postsData, adsData] = await Promise.all([
-                fetchPosts(categoryName, searchTerm, subcategoryName || ""),
+                fetchPosts(categoryName, searchTerm, effectiveSubcategory),
                 fetchActiveAds()
             ]);
             setPosts(postsData);
@@ -66,6 +69,8 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
     const combinedItems = getCombinedItems();
     const featuredPost = posts.find(p => p.isStoryOfTheDay) || posts[0];
 
+    const allFilters = categoryFilters.length > 0 ? ["All", ...categoryFilters] : [];
+
     return (
         <div className="min-h-screen bg-white">
             {/* Category Banner */}
@@ -91,29 +96,64 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                 </div>
             </section>
 
-            {/* Sticky Search Bar */}
+            {/* Sticky Search + Filter Bar */}
             <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder={`Search ${categoryName}...`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none focus:bg-white transition-all"
-                        />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3">
+                    {/* Search Row */}
+                    <div className="flex items-center gap-4">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder={`Search ${categoryName}...`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none focus:bg-white transition-all"
+                            />
+                        </div>
+                        <span className="text-sm text-gray-500 hidden sm:block">
+                            {loading ? "Loading…" : `${posts.length} article${posts.length !== 1 ? "s" : ""}`}
+                        </span>
                     </div>
-                    <span className="text-sm text-gray-500 hidden sm:block">
-                        {loading ? "Loading…" : `${posts.length} article${posts.length !== 1 ? "s" : ""}`}
-                    </span>
+
+                    {/* Category Filter Pills */}
+                    {allFilters.length > 0 && (
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                            <Filter className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            {allFilters.map((filter) => {
+                                const isActive = activeFilter === filter;
+                                return (
+                                    <motion.button
+                                        key={filter}
+                                        onClick={() => setActiveFilter(filter)}
+                                        whileTap={{ scale: 0.95 }}
+                                        className={[
+                                            "relative flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap select-none border",
+                                            isActive
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                                                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200",
+                                        ].join(" ")}
+                                    >
+                                        {filter}
+                                        {isActive && (
+                                            <motion.span
+                                                layoutId={`filter-pill-${categoryName}`}
+                                                className="absolute inset-0 rounded-full bg-blue-600 -z-10"
+                                                transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
+                                            />
+                                        )}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Featured Post */}
-                {!searchTerm && featuredPost && !loading && !hideFeatured && (
+                {!searchTerm && activeFilter === "All" && featuredPost && !loading && !hideFeatured && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -166,7 +206,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                 ) : (
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={searchTerm + categoryName}
+                            key={searchTerm + categoryName + activeFilter}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -174,7 +214,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                             className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-auto"
                         >
                             {combinedItems.map((item, index) => {
-                                const adSize = item.type === "post" && item.data.category === "Chemical Mart" ? item.data.adSize : null;
+                                const adSize = item.type === "post" && item.data.category === "Chemical Business Mart" ? item.data.adSize : null;
                                 const spanClass = getAdSizeClasses(adSize);
                                 return (
                                     <motion.div
@@ -185,7 +225,7 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
                                         className={spanClass}
                                     >
                                         {item.type === "post" ? (
-                                            item.data.category === "Chemical Mart" ? (
+                                            item.data.category === "Chemical Business Mart" ? (
                                                 <ChemicalMartCard post={item.data} />
                                             ) : (
                                                 <PostCard {...item.data} />
@@ -202,14 +242,26 @@ export default function CategoryPage({ categoryName, description, subcategoryNam
 
                 {!loading && posts.length === 0 && (
                     <div className="bg-gray-50 rounded-2xl p-16 text-center">
-                        <p className="text-gray-500 text-lg">No posts found in {categoryName}.</p>
-                        {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm("")}
-                                className="mt-4 text-blue-600 hover:underline text-sm"
-                            >
-                                Clear search
-                            </button>
+                        <p className="text-gray-500 text-lg">No posts found{activeFilter !== "All" ? ` in "${activeFilter}"` : ` in ${categoryName}`}.</p>
+                        {(searchTerm || activeFilter !== "All") && (
+                            <div className="flex items-center justify-center gap-4 mt-4">
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm("")}
+                                        className="text-blue-600 hover:underline text-sm"
+                                    >
+                                        Clear search
+                                    </button>
+                                )}
+                                {activeFilter !== "All" && (
+                                    <button
+                                        onClick={() => setActiveFilter("All")}
+                                        className="text-blue-600 hover:underline text-sm"
+                                    >
+                                        Show all
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}

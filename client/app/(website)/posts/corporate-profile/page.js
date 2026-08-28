@@ -10,6 +10,15 @@ export default function CorporateProfilePage() {
         <CategoryPage
             categoryName="Corporate Profile"
             description="Spotlighting the companies, executives, and organisations shaping the chemical industry landscape."
+            categoryFilters={[
+                "Manufacturers",
+                "Distributors",
+                "Multinationals",
+                "SMEs",
+                "Associations",
+                "Government Agencies",
+            ]}
         />
     );
 }
+

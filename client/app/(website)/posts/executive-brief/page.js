@@ -10,6 +10,15 @@ export default function ExecutiveBriefPage() {
         <CategoryPage
             categoryName="Executive Brief"
             description="Exclusive interviews, insights, and perspectives from C-suite leaders shaping the chemical industry."
+            categoryFilters={[
+                "CEO Spotlight",
+                "Strategy & Vision",
+                "Innovation",
+                "Sustainability Leadership",
+                "Market Outlook",
+                "Women in Industry",
+            ]}
         />
     );
 }
+

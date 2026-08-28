@@ -24,7 +24,7 @@ const roundupSubLinks = [
 
 const categoryLinks = [
     { name: "News Roundup", href: "/posts/news-roundup" },
-    { name: "Chemical Mart", href: "/posts/chemical-mart" },
+    { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "Research & Reports", href: "/posts/research-reports" },
     { name: "Corporate Profile", href: "/posts/corporate-profile" },
     { name: "Start Up", href: "/posts/startup" },

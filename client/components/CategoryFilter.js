@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const categories = [
     "All",
     "News Roundup",
-    "Chemical Mart",
+    "Chemical Business Mart",
     "Research & Reports",
     "Corporate Profile",
     "START UP",

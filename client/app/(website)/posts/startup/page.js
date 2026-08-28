@@ -10,6 +10,15 @@ export default function StartupPage() {
         <CategoryPage
             categoryName="START UP"
             description="Celebrating emerging businesses and entrepreneurs driving innovation in the chemical sector."
+            categoryFilters={[
+                "Agrochem",
+                "Pharma & Biotech",
+                "Green Chemistry",
+                "Specialty Chemicals",
+                "Packaging",
+                "Digital & Tech",
+            ]}
         />
     );
 }
+

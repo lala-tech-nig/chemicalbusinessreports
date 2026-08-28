@@ -10,6 +10,15 @@ export default function ResearchReportsPage() {
         <CategoryPage
             categoryName="Research & Reports"
             description="Deep-dive research, market analyses, and comprehensive industry reports for chemical sector professionals."
+            categoryFilters={[
+                "Market Analysis",
+                "Industry Trends",
+                "Regulatory Updates",
+                "Price Reports",
+                "Sustainability",
+                "Technology",
+            ]}
         />
     );
 }
+

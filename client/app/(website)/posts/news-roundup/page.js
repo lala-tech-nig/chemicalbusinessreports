@@ -10,6 +10,15 @@ export default function NewsRoundupPage() {
         <CategoryPage
             categoryName="News Roundup"
             description="Stay current with the latest news and developments across the chemical and allied industries."
+            categoryFilters={[
+                "Pharma",
+                "Cosmetics & Personal Care",
+                "Paints & Chemicals",
+                "Brewing, Foods & Drinks",
+                "Beverages",
+                "Industries Chemical",
+            ]}
         />
     );
 }
+
