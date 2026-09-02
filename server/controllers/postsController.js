@@ -1,5 +1,6 @@
 const Post = require("../models/Post");
 const slugify = require("slugify");
+const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate } = require("../services/emailReportService");
 
 // Helper function to format post with populated author data
 const formatPostWithAuthor = (post) => {
@@ -169,6 +170,22 @@ exports.createPost = async (req, res) => {
             );
         }
 
+        // Trigger Brand Mention Notification & Platform User Updates if published
+        if (savedPost.status === 'published') {
+            const notifyBrand = req.body.notifyBrand !== false;
+            const notifyUsers = req.body.notifyUsers === true;
+
+            if (notifyBrand && savedPost.email && savedPost.email.trim()) {
+                sendBrandStoryNotification({ post: savedPost, isUpdate: false })
+                    .catch(err => console.error("Error sending brand story notification:", err));
+            }
+
+            if (notifyUsers) {
+                sendPlatformUsersStoryUpdate({ post: savedPost, isUpdate: false })
+                    .catch(err => console.error("Error sending platform users story update:", err));
+            }
+        }
+
         res.status(201).json(savedPost);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -180,7 +197,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate, notifyBrand, notifyUsers } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -247,6 +264,23 @@ exports.updatePost = async (req, res) => {
         }
 
         const updatedPost = await post.save();
+
+        // Trigger Brand Story Update Notification & Platform User Updates if published
+        if (updatedPost.status === 'published') {
+            const shouldNotifyBrand = notifyBrand !== false;
+            const shouldNotifyUsers = notifyUsers === true;
+
+            if (shouldNotifyBrand && updatedPost.email && updatedPost.email.trim()) {
+                sendBrandStoryNotification({ post: updatedPost, isUpdate: true })
+                    .catch(err => console.error("Error sending brand story update notification:", err));
+            }
+
+            if (shouldNotifyUsers) {
+                sendPlatformUsersStoryUpdate({ post: updatedPost, isUpdate: true })
+                    .catch(err => console.error("Error sending platform users story update:", err));
+            }
+        }
+
         res.json(updatedPost);
     } catch (error) {
         res.status(400).json({ message: error.message });

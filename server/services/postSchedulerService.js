@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const Post = require("../models/Post");
+const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate } = require("./emailReportService");
 
 /**
  * Starts a background cron job that runs every minute (* * * * *) to check for 
@@ -35,6 +36,12 @@ const startScheduler = () => {
                     await post.save();
                     
                     console.log(`[Scheduler] Post successfully published: "${post.title}" (ID: ${post._id})`);
+
+                    // Dispatch brand notification if email is attached
+                    if (post.email && post.email.trim()) {
+                        sendBrandStoryNotification({ post, isUpdate: false })
+                            .catch(err => console.error("[Scheduler] Error sending brand story notification:", err));
+                    }
                 }
             }
         } catch (error) {

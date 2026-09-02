@@ -44,6 +44,24 @@ transporter.verify((error, success) => {
 });
 
 /**
+ * Helper to split and sanitize comma, semicolon, newline, or whitespace separated emails.
+ */
+function extractEmailList(rawEmails) {
+    if (!rawEmails) return [];
+    if (Array.isArray(rawEmails)) {
+        return rawEmails
+            .flatMap(e => extractEmailList(e))
+            .filter(Boolean);
+    }
+    if (typeof rawEmails !== "string") return [];
+
+    return rawEmails
+        .split(/[\s,;]+/)
+        .map(e => e.trim().toLowerCase())
+        .filter(e => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+}
+
+/**
  * Fetch all registered user emails, active advertiser emails, and client posting emails (deduplicated).
  */
 async function getAllRecipientEmails() {
@@ -53,22 +71,22 @@ async function getAllRecipientEmails() {
         // 1. Registered active users
         const users = await User.find({ isActive: { $ne: false } }, "email");
         users.forEach(u => {
-            if (u.email && u.email.trim()) emailSet.add(u.email.trim().toLowerCase());
+            extractEmailList(u.email).forEach(em => emailSet.add(em));
         });
 
         // 2. Active Advertisers
         const activeAds = await Ad.find({ isActive: true, clientEmail: { $exists: true, $ne: "" } }, "clientEmail");
         activeAds.forEach(a => {
-            if (a.clientEmail && a.clientEmail.trim()) emailSet.add(a.clientEmail.trim().toLowerCase());
+            extractEmailList(a.clientEmail).forEach(em => emailSet.add(em));
         });
 
-        // 3. Category posts with client emails (Corporate Profile, Executive Brief, Chemical Mart)
+        // 3. All posts with client / brand emails attached
         const postsWithEmail = await Post.find({
             status: "published",
             email: { $exists: true, $ne: "" }
         }, "email");
         postsWithEmail.forEach(p => {
-            if (p.email && p.email.trim()) emailSet.add(p.email.trim().toLowerCase());
+            extractEmailList(p.email).forEach(em => emailSet.add(em));
         });
 
         // Always include main company email as fallback
@@ -1148,29 +1166,157 @@ async function sendAdClickClientNotification({ adTitle, clientEmail, clientName,
 }
 
 /**
- * Send Instant Notification to Client / Executive when their Corporate Profile or Executive Brief article is read.
+ * Send Instant Notification to Client / Brand / Executive when any article with their email is read.
  */
 async function sendArticleReadClientNotification({ postTitle, category, clientEmail, companyName, path, ip, device, sessionId }) {
     if (!clientEmail || !clientEmail.trim()) {
         return { success: false, message: "No client email provided" };
     }
 
-    const cleanEmail = clientEmail.trim().toLowerCase();
-    const throttleKey = `articleread_${cleanEmail}_${sessionId || ip || "default"}`;
-    const lastSent = clientAlertThrottle.get(throttleKey);
-    const now = Date.now();
-
-    if (lastSent && (now - lastSent) < CLIENT_ALERT_THROTTLE_MS) {
-        return { throttled: true };
+    const emailList = extractEmailList(clientEmail);
+    if (emailList.length === 0) {
+        return { success: false, message: "No valid recipient email provided" };
     }
-    clientAlertThrottle.set(throttleKey, now);
+
+    const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
+    const categoryLabel = category || "Feature Story";
+    const themeColor = (category === "Executive Brief" || category === "Corporate Profile") ? "#0284c7" : "#4f46e5";
+
+    let sentCount = 0;
+
+    for (const cleanEmail of emailList) {
+        const throttleKey = `articleread_${cleanEmail}_${sessionId || ip || "default"}`;
+        const lastSent = clientAlertThrottle.get(throttleKey);
+        const now = Date.now();
+
+        if (lastSent && (now - lastSent) < CLIENT_ALERT_THROTTLE_MS) {
+            continue; // Throttled for this session/IP
+        }
+        clientAlertThrottle.set(throttleKey, now);
+
+        try {
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+                        .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+                        .hdr { background: linear-gradient(135deg, ${themeColor} 0%, #1e1b4b 100%); padding: 26px; text-align: center; color: #ffffff; }
+                        .hdr h2 { margin: 0; font-size: 21px; font-weight: 800; }
+                        .hdr p { margin: 6px 0 0 0; font-size: 13px; color: #e0e7ff; }
+                        .body { padding: 26px; }
+                        .greeting { font-size: 15px; color: #334155; margin-bottom: 18px; line-height: 1.5; }
+                        .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; }
+                        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+                        .row:last-child { border-bottom: none; }
+                        .lbl { color: #64748b; font-weight: 600; }
+                        .val { font-weight: 700; color: #0f172a; }
+                        .cta { display: block; text-align: center; background: ${themeColor}; color: #ffffff !important; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 22px; font-size: 13px; }
+                        .reachout-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; margin-top: 20px; }
+                        .ftr { background: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.5; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="hdr">
+                            <h2>📖 Article Readership Alert</h2>
+                            <p>Chemical Business Reports Editorial Readership Monitor</p>
+                        </div>
+                        <div class="body">
+                            <div class="greeting">
+                                Hello <strong>${companyName || "Leader / Corporate Team"}</strong>,
+                                <br><br>
+                                A visitor on <strong>Chemical Business Reports</strong> is currently reading your published <strong>${categoryLabel}</strong> story!
+                            </div>
+
+                            <div class="stat-box">
+                                <div class="row">
+                                    <span class="lbl">Feature Article:</span>
+                                    <span class="val" style="color: ${themeColor};">${postTitle || "Feature Story"}</span>
+                                </div>
+                                <div class="row">
+                                    <span class="lbl">Category:</span>
+                                    <span class="val">${categoryLabel}</span>
+                                </div>
+                                <div class="row">
+                                    <span class="lbl">Read Time (WAT):</span>
+                                    <span class="val">${watTime}</span>
+                                </div>
+                                ${device ? `
+                                <div class="row">
+                                    <span class="lbl">Reader Device:</span>
+                                    <span class="val">${device}</span>
+                                </div>` : ""}
+                            </div>
+
+                            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-top: 15px;">
+                                Your leadership insights and business coverage are actively reaching chemical manufacturers, suppliers, researchers, and executive decision-makers.
+                            </p>
+
+                            <a href="https://chemicalbusinessreports.com${path || ""}" class="cta">
+                                View Your Article on Chemical Business Reports
+                            </a>
+
+                            <div class="reachout-box">
+                                <p style="margin: 0; font-size: 12px; color: #1e3a8a; line-height: 1.5;">
+                                    💬 <strong>Editorial Contact:</strong> Have an update or press release to add? Reach out back to us at <a href="mailto:coslab.media@gmail.com" style="color: #2563eb; font-weight: 700;">coslab.media@gmail.com</a>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="ftr">
+                            © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            await transporter.sendMail({
+                from: '"CBR Readership Monitor" <coslab.media@gmail.com>',
+                replyTo: 'coslab.media@gmail.com',
+                to: cleanEmail,
+                subject: `📖 Visitor Reading Your ${categoryLabel}: "${postTitle ? postTitle.slice(0, 45) + "..." : "Story"}"`,
+                html
+            });
+
+            sentCount++;
+            console.log(`Article readership alert sent to client: ${cleanEmail}`);
+        } catch (err) {
+            console.error(`Error sending article readership alert to ${cleanEmail}:`, err);
+        }
+    }
+
+    return { success: true, count: sentCount };
+}
+
+/**
+ * Send Brand Mention / Story Update Notification to companies/brands tagged in an article.
+ */
+async function sendBrandStoryNotification({ post, isUpdate = false, customNote = "" }) {
+    if (!post || !post.email) {
+        return { success: false, message: "No recipient emails provided for this post" };
+    }
+
+    const recipients = extractEmailList(post.email);
+    if (recipients.length === 0) {
+        return { success: false, message: "No valid emails found in post email field" };
+    }
 
     try {
+        const postTitle = post.title || "Industry Feature Story";
+        const category = post.category || "News Roundup";
+        const postSlug = post.slug || "";
+        const postExcerpt = post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 220) + "..." : "");
+        const companyName = post.companyName || "";
+        const postUrl = `https://chemicalbusinessreports.com/posts/${postSlug}`;
         const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
 
-        const isExecutive = category === "Executive Brief";
-        const themeColor = isExecutive ? "#0284c7" : "#4f46e5";
-        const categoryLabel = isExecutive ? "Executive Brief" : "Corporate Profile";
+        const themeColor = "#2563eb";
+        const subject = isUpdate
+            ? `🔔 Story Update: "${postTitle.slice(0, 50)}${postTitle.length > 50 ? '...' : ''}" | Chemical Business Reports`
+            : `📢 Mention Alert: Your Brand Featured on Chemical Business Reports: "${postTitle.slice(0, 45)}${postTitle.length > 45 ? '...' : ''}"`;
 
         const html = `
             <!DOCTYPE html>
@@ -1178,62 +1324,174 @@ async function sendArticleReadClientNotification({ postTitle, category, clientEm
             <head>
                 <meta charset="utf-8">
                 <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-                    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-                    .hdr { background: linear-gradient(135deg, ${themeColor} 0%, #1e1b4b 100%); padding: 26px; text-align: center; color: #ffffff; }
-                    .hdr h2 { margin: 0; font-size: 21px; font-weight: 800; }
-                    .hdr p { margin: 6px 0 0 0; font-size: 13px; color: #e0e7ff; }
-                    .body { padding: 26px; }
-                    .greeting { font-size: 15px; color: #334155; margin-bottom: 18px; line-height: 1.5; }
-                    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; }
-                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-                    .row:last-child { border-bottom: none; }
-                    .lbl { color: #64748b; font-weight: 600; }
-                    .val { font-weight: 700; color: #0f172a; }
-                    .cta { display: block; text-align: center; background: ${themeColor}; color: #ffffff !important; padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 22px; font-size: 13px; }
-                    .ftr { background: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+                    .card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+                    .hdr { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
+                    .badge { display: inline-block; background: rgba(255,255,255,0.18); color: #93c5fd; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+                    .hdr h1 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3; }
+                    .hdr p { margin: 8px 0 0 0; font-size: 13px; color: #cbd5e1; }
+                    .body { padding: 30px 24px; }
+                    .greeting { font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px; }
+                    .article-box { background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 0 12px 12px 0; padding: 18px 20px; margin: 20px 0; }
+                    .article-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+                    .article-meta { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+                    .article-excerpt { font-size: 13px; color: #475569; line-height: 1.5; font-style: italic; }
+                    .cta-btn { display: block; text-align: center; background: #2563eb; color: #ffffff !important; padding: 14px 24px; border-radius: 10px; font-weight: 700; text-decoration: none; margin: 26px 0 20px 0; font-size: 14px; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+                    .reachout-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px 20px; margin-top: 24px; }
+                    .reachout-title { font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+                    .reachout-text { font-size: 12.5px; color: #1e3a8a; line-height: 1.5; margin: 0; }
+                    .reachout-email { font-weight: 700; color: #1d4ed8; text-decoration: underline; }
+                    .ftr { background: #f8fafc; padding: 20px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
                 </style>
             </head>
             <body>
                 <div class="card">
                     <div class="hdr">
-                        <h2>📖 Article Readership Alert</h2>
-                        <p>Chemical Business Reports Editorial Readership Monitor</p>
+                        <div class="badge">${isUpdate ? 'Story Update Alert' : 'Brand Feature & Mention'}</div>
+                        <h1>Chemical Business Reports</h1>
+                        <p>Nigeria & Africa's Premier Chemical & Industrial Intelligence Platform</p>
                     </div>
                     <div class="body">
                         <div class="greeting">
-                            Hello <strong>${companyName || "Leader"}</strong>,
+                            Hello <strong>${companyName || "Executive / Corporate Communications Team"}</strong>,
                             <br><br>
-                            A visitor on <strong>Chemical Business Reports</strong> is currently reading your published <strong>${categoryLabel}</strong> feature story!
+                            ${isUpdate
+                                ? `We wanted to inform you that an update has just been published regarding your featured story in <strong>Chemical Business Reports</strong>:`
+                                : `We are pleased to inform you that your brand/organization has been featured in our latest <strong>${category}</strong> editorial publication on <strong>Chemical Business Reports</strong>:`}
                         </div>
 
-                        <div class="stat-box">
-                            <div class="row">
-                                <span class="lbl">Feature Article:</span>
-                                <span class="val" style="color: ${themeColor};">${postTitle || "Feature Story"}</span>
-                            </div>
-                            <div class="row">
-                                <span class="lbl">Category:</span>
-                                <span class="val">${categoryLabel}</span>
-                            </div>
-                            <div class="row">
-                                <span class="lbl">Read Time (WAT):</span>
-                                <span class="val">${watTime}</span>
-                            </div>
-                            ${device ? `
-                            <div class="row">
-                                <span class="lbl">Reader Device:</span>
-                                <span class="val">${device}</span>
-                            </div>` : ""}
+                        <div class="article-box">
+                            <div class="article-title">${postTitle}</div>
+                            <div class="article-meta">Category: <strong>${category}</strong> • Published: ${watTime} (WAT)</div>
+                            ${postExcerpt ? `<div class="article-excerpt">&ldquo;${postExcerpt}&rdquo;</div>` : ""}
                         </div>
 
-                        <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin-top: 15px;">
-                            Your leadership insights and business profile are actively reaching chemical manufacturers, suppliers, researchers, and executive decision-makers.
-                        </p>
-
-                        <a href="https://chemicalbusinessreports.com${path || ""}" class="cta">
-                            View Your Article on Chemical Business Reports
+                        <a href="${postUrl}" class="cta-btn">
+                            Read Full Story on Chemical Business Reports →
                         </a>
+
+                        <div class="reachout-box">
+                            <div class="reachout-title">
+                                📬 Editorial Desk & Direct Reach-Out
+                            </div>
+                            <p class="reachout-text">
+                                Have new press releases, executive updates, corrections, or partnership inquiries? 
+                                You can reply directly to this email or reach out to our editorial desk anytime at 
+                                <a href="mailto:coslab.media@gmail.com" class="reachout-email">coslab.media@gmail.com</a>.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ftr">
+                        © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).<br>
+                        Delivering strategic chemical, manufacturing, pharma, and business intelligence.
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        for (const recipient of recipients) {
+            await transporter.sendMail({
+                from: '"Chemical Business Reports Editorial" <coslab.media@gmail.com>',
+                replyTo: 'coslab.media@gmail.com',
+                to: recipient,
+                subject,
+                html
+            });
+            console.log(`Brand mention/update email dispatched to: ${recipient} for post: "${postTitle}"`);
+        }
+
+        return { success: true, count: recipients.length };
+    } catch (err) {
+        console.error("Error sending brand story notification:", err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Broadcast New Article or Update to Registered Platform Users.
+ */
+async function sendPlatformUsersStoryUpdate({ post, isUpdate = false }) {
+    if (!post) return { success: false, message: "No post provided" };
+
+    try {
+        const users = await User.find({ isActive: { $ne: false } }, "email username");
+        const recipientSet = new Set();
+        users.forEach(u => {
+            extractEmailList(u.email).forEach(em => recipientSet.add(em));
+        });
+
+        const recipients = Array.from(recipientSet);
+        if (recipients.length === 0) {
+            return { success: true, count: 0, message: "No active platform users found" };
+        }
+
+        const postTitle = post.title || "Industry Feature Story";
+        const category = post.category || "News Roundup";
+        const postSlug = post.slug || "";
+        const postExcerpt = post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 220) + "..." : "");
+        const postUrl = `https://chemicalbusinessreports.com/posts/${postSlug}`;
+        const watTime = new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos", dateStyle: "full", timeStyle: "medium" });
+
+        const subject = isUpdate
+            ? `🔔 Article Updated: "${postTitle.slice(0, 50)}${postTitle.length > 50 ? '...' : ''}" | Chemical Business Reports`
+            : `✨ New Intelligence: "${postTitle.slice(0, 50)}${postTitle.length > 50 ? '...' : ''}" | Chemical Business Reports`;
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+                    .card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+                    .hdr { background: linear-gradient(135deg, #0f766e 0%, #0f172a 100%); padding: 30px 24px; text-align: center; color: #ffffff; }
+                    .badge { display: inline-block; background: rgba(255,255,255,0.18); color: #a7f3d0; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+                    .hdr h1 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3; }
+                    .hdr p { margin: 8px 0 0 0; font-size: 13px; color: #cbd5e1; }
+                    .body { padding: 30px 24px; }
+                    .greeting { font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px; }
+                    .article-box { background: #f8fafc; border-left: 4px solid #0f766e; border-radius: 0 12px 12px 0; padding: 18px 20px; margin: 20px 0; }
+                    .article-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+                    .article-meta { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+                    .article-excerpt { font-size: 13px; color: #475569; line-height: 1.5; font-style: italic; }
+                    .cta-btn { display: block; text-align: center; background: #0f766e; color: #ffffff !important; padding: 14px 24px; border-radius: 10px; font-weight: 700; text-decoration: none; margin: 26px 0 20px 0; font-size: 14px; }
+                    .reachout-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; margin-top: 24px; }
+                    .reachout-title { font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 6px; }
+                    .reachout-text { font-size: 12.5px; color: #14532d; line-height: 1.5; margin: 0; }
+                    .ftr { background: #f8fafc; padding: 20px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <div class="badge">${isUpdate ? 'Platform Story Update' : 'New Publication'}</div>
+                        <h1>Chemical Business Reports</h1>
+                        <p>Industry Intelligence & Research Bulletin</p>
+                    </div>
+                    <div class="body">
+                        <div class="greeting">
+                            Hello CBR Reader,
+                            <br><br>
+                            ${isUpdate ? 'A fresh update has been made to the following story on our platform:' : 'A new article has just been published on Chemical Business Reports that may interest you:'}
+                        </div>
+
+                        <div class="article-box">
+                            <div class="article-title">${postTitle}</div>
+                            <div class="article-meta">Category: <strong>${category}</strong> • ${watTime} (WAT)</div>
+                            ${postExcerpt ? `<div class="article-excerpt">&ldquo;${postExcerpt}&rdquo;</div>` : ""}
+                        </div>
+
+                        <a href="${postUrl}" class="cta-btn">
+                            Read Full Article Now →
+                        </a>
+
+                        <div class="reachout-box">
+                            <div class="reachout-title">Have News or Inquiries?</div>
+                            <p class="reachout-text">
+                                Reach out to our editorial desk anytime at <a href="mailto:coslab.media@gmail.com" style="color: #15803d; font-weight: 700;">coslab.media@gmail.com</a>.
+                            </p>
+                        </div>
                     </div>
                     <div class="ftr">
                         © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).
@@ -1243,17 +1501,19 @@ async function sendArticleReadClientNotification({ postTitle, category, clientEm
             </html>
         `;
 
-        await transporter.sendMail({
-            from: '"CBR Readership Monitor" <coslab.media@gmail.com>',
-            to: cleanEmail,
-            subject: `📖 Visitor Reading Your ${categoryLabel}: "${postTitle ? postTitle.slice(0, 45) + "..." : "Story"}"`,
-            html
-        });
+        for (const recipient of recipients) {
+            await transporter.sendMail({
+                from: '"Chemical Business Reports" <coslab.media@gmail.com>',
+                replyTo: 'coslab.media@gmail.com',
+                to: recipient,
+                subject,
+                html
+            }).catch(e => console.error(`Error sending platform user update to ${recipient}:`, e.message));
+        }
 
-        console.log(`Article readership alert sent to client: ${cleanEmail}`);
-        return { success: true };
+        return { success: true, count: recipients.length };
     } catch (err) {
-        console.error("Error sending article readership client alert:", err);
+        console.error("Error broadcasting platform user story update:", err);
         return { success: false, error: err.message };
     }
 }
@@ -1279,6 +1539,9 @@ module.exports = {
     sendNewExecutiveProfileNotification,
     sendAdClickClientNotification,
     sendArticleReadClientNotification,
+    sendBrandStoryNotification,
+    sendPlatformUsersStoryUpdate,
+    extractEmailList,
     getRecentReportLogs,
     gatherDailyMetrics,
     gatherWeeklyMetrics,

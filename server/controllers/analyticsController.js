@@ -188,12 +188,12 @@ const trackEvent = async (req, res) => {
                     at: new Date()
                 });
 
-                // If this is an article view for Corporate Profile or Executive Brief with a client email, notify the client
+                // If this is an article view for any post with a brand / client email, notify the brand/client
                 if ((event.payload?.action === "view" || !event.payload?.action) && event.payload?.postSlug) {
                     (async () => {
                         try {
                             const post = await Post.findOne({ slug: event.payload.postSlug }, "title category email companyName");
-                            if (post && post.email && (post.category === "Corporate Profile" || post.category === "Executive Brief" || post.category === "Chemical Mart")) {
+                            if (post && post.email && post.email.trim()) {
                                 sendArticleReadClientNotification({
                                     postTitle: post.title,
                                     category: post.category,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { Upload, Loader2, X, ArrowLeft, User, Share2, ImagePlus, Eye } from "lucide-react";
+import { Upload, Loader2, X, ArrowLeft, User, Share2, ImagePlus, Eye, Mail, Bell, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchPostById, updatePost, uploadFile } from "@/lib/api";
 import Link from "next/link";
@@ -42,6 +42,8 @@ export default function EditPost({ params }) {
         contactNumber: "",
         website: "",
         email: "",
+        notifyBrand: true,
+        notifyUsers: false,
         researchTopic: "",
         ceoDetails: "",
         companyServices: "",
@@ -510,8 +512,9 @@ export default function EditPost({ params }) {
                             <option value="Chemical Mart">Chemical Mart</option>
                             <option value="Research & Reports">Research & Reports</option>
                             <option value="Corporate Profile">Corporate Profile</option>
-                            <option value="START UP">START UP</option>
+                            <option value="START UP">Startup</option>
                             <option value="Services">Services</option>
+                            <option value="Executive Brief">Executive Brief</option>
                         </select>
                     </div>
 
@@ -577,6 +580,65 @@ export default function EditPost({ params }) {
                         </div>
                         </div>
                     )}
+
+                    {/* ── Brand / Mentioned Organization Outreach & Notification Box ── */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-slate-50 border border-blue-200/80 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-blue-600 text-white shadow-sm">
+                                    <Mail className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900">Brand Mention Outreach & Story Alerts</h3>
+                                    <p className="text-xs text-slate-500">Reach out to mentioned companies and keep them updated on this story</p>
+                                </div>
+                            </div>
+                            <span className="text-[11px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-1 rounded-full border border-blue-200">
+                                All Categories
+                            </span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                                <span>Brand / Mentioned Company Email(s)</span>
+                                <span className="text-[11px] font-normal text-slate-400">Separate multiple with commas</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="e.g. pr@unilever.com, media@dangote.com, press@company.ng"
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm transition-all shadow-sm"
+                            />
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Featured brands will receive an alert with a direct story link and an invitation to reply or reach back out to <strong className="text-blue-600">coslab.media@gmail.com</strong> for updates.
+                            </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-blue-100/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    name="notifyBrand"
+                                    checked={formData.notifyBrand !== false}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                                />
+                                <span>Send update notification to brand email(s)</span>
+                            </label>
+                            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    name="notifyUsers"
+                                    checked={!!formData.notifyUsers}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                                />
+                                <span>Notify registered platform users</span>
+                            </label>
+                        </div>
+                    </div>
 
                     {formData.category !== "Chemical Mart" && (
                         <div className="space-y-2">
