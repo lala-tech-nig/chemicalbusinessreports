@@ -216,18 +216,19 @@ export default function CategoryPage({ categoryName, apiCategoryName, descriptio
                             className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-auto"
                         >
                             {combinedItems.map((item, index) => {
-                                const adSize = item.type === "post" && item.data.category === queryCategory ? item.data.adSize : null;
+                                const isChemicalMart = item.type === "post" && (item.data.category === "Chemical Mart" || queryCategory === "Chemical Mart");
+                                const adSize = isChemicalMart ? item.data.adSize : null;
                                 const spanClass = getAdSizeClasses(adSize);
                                 return (
                                     <motion.div
-                                        key={`${item.type}-${item.data._id}-${index}`}
+                                        key={`${item.type}-${item.data._id || index}-${index}`}
                                         initial={{ opacity: 0, y: 16 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.25, delay: index * 0.04 }}
                                         className={spanClass}
                                     >
                                         {item.type === "post" ? (
-                                            item.data.category === queryCategory ? (
+                                            item.data.category === "Chemical Mart" ? (
                                                 <ChemicalMartCard post={item.data} />
                                             ) : (
                                                 <PostCard {...item.data} />
