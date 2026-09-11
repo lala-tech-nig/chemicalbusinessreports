@@ -551,5 +551,103 @@ export async function toggleCommunityCommentLike(commentId) {
     return res.json();
 }
 
+// ── Admin ChemTalk Moderation API ──────────────────────────────────────
+
+export async function adminFetchCommunityPosts({ search = "", type = "all", status = "all", page = 1 } = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    if (type !== "all") params.append("type", type);
+    if (status !== "all") params.append("status", status);
+    params.append("page", page);
+    const res = await fetch(`${API_URL}/community/admin/posts?${params.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch community posts");
+    return res.json();
+}
+
+export async function adminFetchCommunityComments({ search = "", page = 1 } = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    params.append("page", page);
+    const res = await fetch(`${API_URL}/community/admin/comments?${params.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch community comments");
+    return res.json();
+}
+
+export async function adminFetchCommunityUsers({ search = "", page = 1 } = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    params.append("page", page);
+    const res = await fetch(`${API_URL}/community/admin/users?${params.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch community users");
+    return res.json();
+}
+
+export async function adminDeleteCommunityPost(id) {
+    const res = await fetch(`${API_URL}/community/admin/posts/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete post");
+    }
+    return res.json();
+}
+
+export async function adminFlagCommunityPost(id) {
+    const res = await fetch(`${API_URL}/community/admin/posts/${id}/flag`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to flag post");
+    }
+    return res.json();
+}
+
+export async function adminDeleteCommunityComment(id) {
+    const res = await fetch(`${API_URL}/community/admin/comments/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete comment");
+    }
+    return res.json();
+}
+
+export async function adminToggleSuspendUser(id) {
+    const res = await fetch(`${API_URL}/community/admin/users/${id}/suspend`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update user status");
+    }
+    return res.json();
+}
+
+export async function adminDeleteCommunityUser(id) {
+    const res = await fetch(`${API_URL}/community/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete user");
+    }
+    return res.json();
+}
+
+
 
 

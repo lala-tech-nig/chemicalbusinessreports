@@ -145,7 +145,7 @@ export default function ChemTalkPage() {
                     <div className="max-w-3xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-400/30 backdrop-blur-md">
                             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                            ChemTalk: The Chemical Agora
+                            ChemTalk: The Chemical
                         </div>
                         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-4">
                             Public Talks, Theses & Chemical Discourse
@@ -235,11 +235,10 @@ export default function ChemTalkPage() {
                                         key={t.id}
                                         type="button"
                                         onClick={() => setSelectedType(t.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                                            active
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${active
                                                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                                                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                        }`}
+                                            }`}
                                     >
                                         <Icon className="w-3.5 h-3.5" />
                                         {t.label}
@@ -274,11 +273,10 @@ export default function ChemTalkPage() {
                                     key={cat}
                                     type="button"
                                     onClick={() => setSelectedCategory(cat)}
-                                    className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                                        isSelected
+                                    className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${isSelected
                                             ? "bg-slate-900 text-white shadow-sm"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
+                                        }`}
                                 >
                                     {cat}
                                 </button>

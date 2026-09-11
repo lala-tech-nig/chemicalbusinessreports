@@ -221,10 +221,10 @@ export default function AboutPage() {
                                 initials: "SO"
                             },
                             {
-                                name: "Princess Adeola Shittu",
-                                role: "Editor",
-                                image: "/adeola.jpeg",
-                                initials: "PS"
+                                name: "Alexander Ehimare Olenloa-King",
+                                role: "Senior Writer",
+                                image: "/alex.jpeg",
+                                initials: "AO"
                             },
                             {
                                 name: "Chidi Orazulike",

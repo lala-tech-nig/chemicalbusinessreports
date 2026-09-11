@@ -15,33 +15,70 @@ const VISITOR_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
 const clientAlertThrottle = new Map();
 const CLIENT_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
 
-// Configure nodemailer transporter using Gmail SMTP with App Password
-// IMPORTANT: EMAIL_PASS must be a 16-character Gmail App Password, NOT your regular Gmail password.
-// Generate one at: https://myaccount.google.com/apppasswords (2FA must be enabled first)
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER || "coslab.media@gmail.com",
-        pass: process.env.EMAIL_PASS || "" // Must be a Gmail App Password, not your account password
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000
-});
+/**
+ * Build a fresh nodemailer transporter using explicit Gmail SMTP settings.
+ * Using host/port/secure directly is more reliable than the `service:"gmail"` shorthand,
+ * which can silently pick up wrong port numbers in some environments.
+ * Call this per-send so it always reflects the latest environment variables.
+ */
+function buildTransporter() {
+    const emailUser = process.env.EMAIL_USER || "coslab.media@gmail.com";
+    const emailPass = process.env.EMAIL_PASS || "";
 
-// Verify transporter connection on startup
-transporter.verify((error, success) => {
+    if (!emailPass) {
+        console.warn("⚠️  EMAIL_PASS is not set. Emails will fail until a valid Gmail App Password is configured.");
+    }
+
+    return nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true, // use SSL for port 465
+        auth: {
+            user: emailUser,
+            pass: emailPass
+        },
+        tls: {
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
+        pool: false // Don't pool — create fresh connections per send
+    });
+}
+
+// Singleton transporter (created once; replaced if env changes)
+let transporter = buildTransporter();
+
+// Verify transporter connection on startup (non-blocking)
+transporter.verify((error) => {
     if (error) {
         console.error("❌ Email transporter verification failed:", error.message);
-        console.error("   → Make sure EMAIL_PASS in .env is a valid Gmail App Password (16 chars).");
-        console.error("   → Generate one at: https://myaccount.google.com/apppasswords");
+        console.error("   → Ensure EMAIL_USER and EMAIL_PASS env vars are set correctly.");
+        console.error("   → EMAIL_PASS must be a 16-char Gmail App Password (not your account password).");
+        console.error("   → Generate one at: https://myaccount.google.com/apppasswords (2FA required)");
     } else {
-        console.log("✅ Email transporter is ready to send messages (Gmail SMTP connected).");
+        console.log("✅ Email transporter is ready to send messages (Gmail SMTP connected on port 465).");
     }
 });
+
+/**
+ * Send a single email with automatic transporter rebuild on auth failure.
+ * This ensures a stale transporter doesn't block all subsequent sends.
+ */
+async function sendMail(options) {
+    try {
+        return await transporter.sendMail(options);
+    } catch (err) {
+        // If it's an auth or connection error, rebuild the transporter and retry once
+        if (err.code === "EAUTH" || err.code === "ECONNECTION" || err.responseCode === 535) {
+            console.warn("⚠️  SMTP auth/connection failed — rebuilding transporter and retrying once...");
+            transporter = buildTransporter();
+            return await transporter.sendMail(options);
+        }
+        throw err;
+    }
+}
 
 /**
  * Helper to split and sanitize comma, semicolon, newline, or whitespace separated emails.

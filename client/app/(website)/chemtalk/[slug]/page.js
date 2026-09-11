@@ -275,7 +275,7 @@ export default function SingleChemTalkPage({ params }) {
                     className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors mb-6 group"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                    Back to ChemTalk Agora
+                    Back to ChemTalk
                 </Link>
 
                 {/* ── Main Article / Thesis Container ── */}

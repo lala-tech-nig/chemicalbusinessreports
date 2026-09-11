@@ -254,11 +254,10 @@ export default function NewChemTalkPostPage() {
                                         key={item.id}
                                         type="button"
                                         onClick={() => setFormData((prev) => ({ ...prev, type: item.id }))}
-                                        className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between ${
-                                            isSelected
+                                        className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between ${isSelected
                                                 ? "border-blue-600 bg-blue-50/50 shadow-sm"
                                                 : "border-slate-100 hover:border-slate-300 bg-white"
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <Icon className={`w-5 h-5 ${isSelected ? "text-blue-600" : "text-slate-400"}`} />
@@ -438,7 +437,7 @@ export default function NewChemTalkPostPage() {
                             className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl hover:shadow-blue-600/25 transition-all flex items-center gap-2 disabled:opacity-50 hover:scale-[1.01]"
                         >
                             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                            {submitting ? "Publishing to ChemTalk..." : "Publish to Community Agora"}
+                            {submitting ? "Publishing to ChemTalk..." : "Publish to Community "}
                         </button>
                     </div>
                 </form>

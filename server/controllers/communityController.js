@@ -438,3 +438,234 @@ exports.toggleCommunityCommentLike = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// ═══════════════════════════════════════════════════
+// ADMIN MODERATION ENDPOINTS
+// ═══════════════════════════════════════════════════
+
+// @desc    Get ALL community posts (including flagged) for admin moderation
+// @route   GET /api/community/admin/posts
+// @access  Private (Admin only)
+exports.adminGetAllCommunityPosts = async (req, res) => {
+    try {
+        const { search = "", type = "all", status = "all", page = 1, limit = 30 } = req.query;
+        let query = {};
+
+        if (status !== "all") query.status = status;
+        if (type !== "all") query.type = type;
+        if (search.trim()) {
+            query.$or = [
+                { title: { $regex: search.trim(), $options: "i" } },
+                { authorName: { $regex: search.trim(), $options: "i" } },
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [posts, total] = await Promise.all([
+            CommunityPost.find(query)
+                .populate("author", "username fullName email isActive role reputation")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            CommunityPost.countDocuments(query),
+        ]);
+
+        res.json({ posts, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    } catch (error) {
+        console.error("Admin get community posts error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get ALL community comments for admin moderation
+// @route   GET /api/community/admin/comments
+// @access  Private (Admin only)
+exports.adminGetAllCommunityComments = async (req, res) => {
+    try {
+        const { search = "", page = 1, limit = 40 } = req.query;
+        let query = {};
+
+        if (search.trim()) {
+            query.$or = [
+                { content: { $regex: search.trim(), $options: "i" } },
+                { authorName: { $regex: search.trim(), $options: "i" } },
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [comments, total] = await Promise.all([
+            CommunityComment.find(query)
+                .populate("postId", "title slug")
+                .populate("author", "username fullName email isActive")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            CommunityComment.countDocuments(query),
+        ]);
+
+        res.json({ comments, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    } catch (error) {
+        console.error("Admin get community comments error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get ALL community users (members) for admin moderation
+// @route   GET /api/community/admin/users
+// @access  Private (Admin only)
+exports.adminGetCommunityUsers = async (req, res) => {
+    try {
+        const { search = "", page = 1, limit = 40 } = req.query;
+        let query = { role: { $in: ["member", "moderator"] } };
+
+        if (search.trim()) {
+            query.$or = [
+                { username: { $regex: search.trim(), $options: "i" } },
+                { fullName: { $regex: search.trim(), $options: "i" } },
+                { email: { $regex: search.trim(), $options: "i" } },
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [users, total] = await Promise.all([
+            User.find(query)
+                .select("-password")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            User.countDocuments(query),
+        ]);
+
+        res.json({ users, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    } catch (error) {
+        console.error("Admin get community users error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin: Delete a community post (and all its comments)
+// @route   DELETE /api/community/admin/posts/:id
+// @access  Private (Admin only)
+exports.adminDeleteCommunityPost = async (req, res) => {
+    try {
+        const post = await CommunityPost.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Cascade delete all comments for this post
+        await CommunityComment.deleteMany({ postId: post._id });
+
+        await CommunityPost.findByIdAndDelete(req.params.id);
+
+        res.json({ message: "Post and all its comments have been permanently deleted." });
+    } catch (error) {
+        console.error("Admin delete community post error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin: Flag / unflag a community post (moderate without deleting)
+// @route   PUT /api/community/admin/posts/:id/flag
+// @access  Private (Admin only)
+exports.adminFlagCommunityPost = async (req, res) => {
+    try {
+        const post = await CommunityPost.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        post.status = post.status === "flagged" ? "published" : "flagged";
+        await post.save();
+
+        res.json({ message: `Post ${post.status === "flagged" ? "flagged" : "restored to published"}.`, status: post.status });
+    } catch (error) {
+        console.error("Admin flag community post error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin: Delete a community comment
+// @route   DELETE /api/community/admin/comments/:id
+// @access  Private (Admin only)
+exports.adminDeleteCommunityComment = async (req, res) => {
+    try {
+        const comment = await CommunityComment.findById(req.params.id);
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        // Also delete any replies to this comment
+        await CommunityComment.deleteMany({ parentId: comment._id });
+
+        // Decrement post comment counter
+        await CommunityPost.findByIdAndUpdate(comment.postId, {
+            $inc: { commentCount: -1 }
+        });
+
+        await CommunityComment.findByIdAndDelete(req.params.id);
+
+        res.json({ message: "Comment and its replies have been permanently deleted." });
+    } catch (error) {
+        console.error("Admin delete community comment error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin: Suspend or unsuspend a community user
+// @route   PUT /api/community/admin/users/:id/suspend
+// @access  Private (Admin only)
+exports.adminToggleSuspendUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.role === "admin") {
+            return res.status(403).json({ message: "Cannot suspend an admin account." });
+        }
+
+        user.isActive = !user.isActive;
+        await user.save();
+
+        res.json({
+            message: user.isActive ? "User account has been reactivated." : "User account has been suspended.",
+            isActive: user.isActive,
+        });
+    } catch (error) {
+        console.error("Admin suspend user error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin: Permanently delete a community user account
+// @route   DELETE /api/community/admin/users/:id
+// @access  Private (Admin only)
+exports.adminDeleteCommunityUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.role === "admin") {
+            return res.status(403).json({ message: "Cannot delete an admin account." });
+        }
+
+        // Delete all posts and comments by this user
+        const userPosts = await CommunityPost.find({ author: user._id });
+        for (const post of userPosts) {
+            await CommunityComment.deleteMany({ postId: post._id });
+        }
+        await CommunityPost.deleteMany({ author: user._id });
+        await CommunityComment.deleteMany({ author: user._id });
+        await User.findByIdAndDelete(req.params.id);
+
+        res.json({ message: "User, their posts, and comments have been permanently deleted." });
+    } catch (error) {
+        console.error("Admin delete community user error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
