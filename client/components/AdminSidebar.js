@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe, BarChart2 } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe, BarChart2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
@@ -12,6 +12,7 @@ const sidebarLinks = [
     { name: "Create Post", href: "/admin/create-post", icon: PlusCircle },
     { name: "Auto Scraper", href: "/admin/scraper", icon: Globe },
     { name: "Ads", href: "/admin/ads", icon: Megaphone },
+    { name: "ChemTalk Moderation", href: "/admin/chemtalk", icon: MessageSquare },
     { name: "Comments", href: "/admin/comments", icon: FileText },
     { name: "Submissions", href: "/admin/submissions", icon: FileText },
     { name: "Executive Profiles", href: "/admin/executive-profiles", icon: Users },
@@ -39,7 +40,7 @@ export default function AdminSidebar() {
     const filteredLinks = sidebarLinks.filter(link => {
         if (role === 'moderator') {
             // Moderators: No Ads, Users, Settings, Analytics
-            return ["Dashboard", "All Posts", "Create Post"].includes(link.name);
+            return ["Dashboard", "All Posts", "Create Post", "ChemTalk Moderation", "Comments", "Submissions"].includes(link.name);
         }
         // Admin-only links hidden from non-admins
         if (link.adminOnly && role !== 'admin') return false;

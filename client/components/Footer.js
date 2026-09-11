@@ -48,6 +48,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm">
                             <li><Link href="/" className="text-slate-400 hover:text-blue-400 transition-colors">Home</Link></li>
                             <li><Link href="/about" className="text-slate-400 hover:text-blue-400 transition-colors">About Us</Link></li>
+                            <li><Link href="/awards" className="text-slate-400 hover:text-blue-400 transition-colors">Awards &amp; Partners</Link></li>
                             <li><Link href="/chemtalk" className="text-blue-400 font-medium hover:text-blue-300 transition-colors flex items-center gap-1.5">ChemTalk (Public Forum &amp; Theses)</Link></li>
                             <li><Link href="/posts" className="text-slate-400 hover:text-blue-400 transition-colors">All Posts</Link></li>
                         </ul>

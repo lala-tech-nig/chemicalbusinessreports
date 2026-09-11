@@ -27,6 +27,7 @@ const categoryLinks = [
     { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "Research & Reports", href: "/posts/research-reports" },
     { name: "ChemTalk", href: "/chemtalk"},
+    { name: "Awards & Partners", href: "/awards" },
     { name: "Corporate Profile", href: "/posts/corporate-profile" },
     { name: "Start Up", href: "/posts/startup" },
     { name: "Executive Brief", href: "/posts/executive-brief" },
@@ -79,7 +80,7 @@ export default function Navbar() {
                     <div className="hidden lg:flex items-center gap-1">
                         {/* nav links (Home, About, News Roundup, ChemTalk, etc) */}
                         {[...navLinks, ...categoryLinks].map((link) => {
-                            const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk"));
+                            const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk")) || (link.name === "Awards & Partners" && pathname.startsWith("/awards"));
                             return (
                                 <Link
                                     key={link.name}
@@ -129,7 +130,7 @@ export default function Navbar() {
                     >
                         <div className="px-4 py-4 space-y-1">
                             {[...navLinks, ...categoryLinks].map((link) => {
-                                const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk"));
+                                const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk")) || (link.name === "Awards & Partners" && pathname.startsWith("/awards"));
                                 return (
                                     <Link
                                         key={link.name}
