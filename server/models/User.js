@@ -17,8 +17,28 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["admin", "moderator"],
-        default: "admin",
+        enum: ["admin", "moderator", "member"],
+        default: "member",
+    },
+    fullName: {
+        type: String,
+        default: "",
+    },
+    affiliation: {
+        type: String, // e.g. University, Chemical Plant, R&D Institute
+        default: "",
+    },
+    fieldOfStudy: {
+        type: String, // e.g. Petrochemical Engineering, Cosmetic Chemistry
+        default: "",
+    },
+    bio: {
+        type: String,
+        default: "",
+    },
+    reputation: {
+        type: Number,
+        default: 0,
     },
     isActive: {
         type: Boolean,

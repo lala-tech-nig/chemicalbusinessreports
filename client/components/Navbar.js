@@ -26,6 +26,7 @@ const categoryLinks = [
     { name: "News Roundup", href: "/posts/news-roundup" },
     { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "Research & Reports", href: "/posts/research-reports" },
+    { name: "ChemTalk", href: "/chemtalk", badge: "Agora" },
     { name: "Corporate Profile", href: "/posts/corporate-profile" },
     { name: "Start Up", href: "/posts/startup" },
     { name: "Executive Brief", href: "/posts/executive-brief" },
@@ -76,21 +77,26 @@ export default function Navbar() {
 
                     {/* Desktop Nav */}
                     <div className="hidden lg:flex items-center gap-1">
-                        {/* nav links (Home, About, News Roundup, etc) */}
+                        {/* nav links (Home, About, News Roundup, ChemTalk, etc) */}
                         {[...navLinks, ...categoryLinks].map((link) => {
-                            const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup"));
+                            const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk"));
                             return (
                                 <Link
                                     key={link.name}
                                     href={link.href}
                                     className={cn(
-                                        "px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap relative",
+                                        "px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap relative flex items-center gap-1",
                                         isActive
                                             ? "text-blue-700 bg-blue-50"
                                             : "text-gray-700 hover:text-blue-700 hover:bg-blue-50/60"
                                     )}
                                 >
                                     {link.name}
+                                    {link.badge && (
+                                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-blue-600 text-white uppercase tracking-wider">
+                                            {link.badge}
+                                        </span>
+                                    )}
                                     {isActive && (
                                         <motion.span
                                             layoutId="nav-indicator"
@@ -128,18 +134,23 @@ export default function Navbar() {
                     >
                         <div className="px-4 py-4 space-y-1">
                             {[...navLinks, ...categoryLinks].map((link) => {
-                                const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup"));
+                                const isActive = pathname === link.href || (link.name === "News Roundup" && pathname.startsWith("/posts/news-roundup")) || (link.name === "ChemTalk" && pathname.startsWith("/chemtalk"));
                                 return (
                                     <Link
                                         key={link.name}
                                         href={link.href}
                                         className={cn(
-                                            "block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                                            "flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
                                             isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                                         )}
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        {link.name}
+                                        <span>{link.name}</span>
+                                        {link.badge && (
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 uppercase tracking-wider">
+                                                {link.badge}
+                                            </span>
+                                        )}
                                     </Link>
                                 );
                             })}

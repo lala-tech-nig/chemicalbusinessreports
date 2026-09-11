@@ -129,7 +129,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private (Admin)
 exports.createPost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, paragraphImages, status, scheduledPublishDate } = req.body;
         let { slug } = req.body;
 
         if (!slug && title) {
@@ -154,6 +154,7 @@ exports.createPost = async (req, res) => {
             companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic,
             subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor,
             adPlacements,
+            paragraphImages: paragraphImages || [],
             author: authorName,
             authorPhoto: photo,
             authorId: req.user._id, // Store reference for robust linking
@@ -197,7 +198,7 @@ exports.createPost = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePost = async (req, res) => {
     try {
-        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, status, scheduledPublishDate, notifyBrand, notifyUsers } = req.body;
+        const { title, content, category, image, isStoryOfTheDay, companyName, productName, contactNumber, website, email, researchTopic, video, ceoDetails, companyServices, earlyBeginning, fails, success, awards, topic, subcategory, adSize, adDuration, excerpt, excerptColor, excerptTextColor, adPlacements, paragraphImages, status, scheduledPublishDate, notifyBrand, notifyUsers } = req.body;
         // Optional: Regenerate slug if title changes, but often better to keep stable.
         // For now, let's keep slug stable unless explicitly changed (not implemented in UI yet)
 
@@ -235,6 +236,7 @@ exports.updatePost = async (req, res) => {
         if (excerptColor) post.excerptColor = excerptColor;
         if (excerptTextColor) post.excerptTextColor = excerptTextColor;
         if (adPlacements) post.adPlacements = adPlacements;
+        if (paragraphImages !== undefined) post.paragraphImages = paragraphImages;
 
         if (status) post.status = status;
         if (status === 'scheduled') {

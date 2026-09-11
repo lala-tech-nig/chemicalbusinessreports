@@ -61,35 +61,45 @@ export default function PreviewPostPage() {
         toast.info("Commenting is disabled in preview mode.");
     };
 
-    // Helper to inject ads into content
+    // Helper to inject ads and paragraph images into content
     const contentWithAds = useMemo(() => {
         if (!post?.content) return [];
         
-        // Split by </p> but preserve the content
-        const paragraphs = post.content.split('</p>').filter(p => p.trim() !== '').map(p => p + '</p>');
-        const result = [];
-        
-        // If there are no manual placements, just return the content as one chunk
-        if (!post.adPlacements || post.adPlacements.length === 0) {
+        const hasAdPlacements = Array.isArray(post.adPlacements) && post.adPlacements.length > 0;
+        const hasParagraphImages = Array.isArray(post.paragraphImages) && post.paragraphImages.length > 0;
+
+        if (!hasAdPlacements && !hasParagraphImages) {
             return [{ type: 'content', data: post.content }];
         }
+
+        const paragraphs = post.content.split('</p>').filter(p => p.trim() !== '').map(p => p + '</p>');
+        const result = [];
 
         paragraphs.forEach((p, index) => {
             result.push({ type: 'content', data: p });
             
-            // Check if there's a manual ad placement after this paragraph
-            const placement = post.adPlacements.find(apl => apl.paragraphIndex === index);
-            if (placement) {
-                // Find the ad in the ads array (fetched separately)
-                const ad = ads.find(a => a._id === placement.adId);
-                if (ad) {
-                    result.push({ type: 'ad', data: ad });
+            // Check for paragraph image
+            if (hasParagraphImages) {
+                const imgPlacement = post.paragraphImages.find(img => img.paragraphIndex === index);
+                if (imgPlacement && imgPlacement.imageUrl) {
+                    result.push({ type: 'paragraphImage', data: imgPlacement });
+                }
+            }
+
+            // Check for ad placement
+            if (hasAdPlacements) {
+                const placement = post.adPlacements.find(apl => apl.paragraphIndex === index);
+                if (placement) {
+                    const ad = ads.find(a => a._id === placement.adId);
+                    if (ad) {
+                        result.push({ type: 'ad', data: ad });
+                    }
                 }
             }
         });
 
         return result;
-    }, [post?.content, post?.adPlacements, ads]);
+    }, [post?.content, post?.adPlacements, post?.paragraphImages, ads]);
 
     if (loading) {
         return (
@@ -238,6 +248,17 @@ export default function PreviewPostPage() {
                                                 <Fragment key={index}>
                                                     {item.type === 'content' ? (
                                                         <div dangerouslySetInnerHTML={{ __html: item.data }} className="[&>p]:mb-4" />
+                                                    ) : item.type === 'paragraphImage' ? (
+                                                        <figure className="my-8 not-prose">
+                                                            <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200/90 shadow-md bg-slate-50 transition-all duration-300 hover:shadow-xl">
+                                                                <img
+                                                                    src={item.data.imageUrl}
+                                                                    alt={post.title ? `${post.title} paragraph illustration` : "Preview paragraph image"}
+                                                                    className="w-full h-auto max-h-[620px] object-cover mx-auto block"
+                                                                    loading="lazy"
+                                                                />
+                                                            </div>
+                                                        </figure>
                                                     ) : (
                                                         <div className="my-10 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 not-prose">
                                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Sponsored Content</p>

@@ -427,4 +427,129 @@ export async function triggerTestVisitorAlert(payload = {}) {
     return res.json();
 }
 
+// ── ChemTalk / Community API Endpoints ─────────────────────────────────
+
+export function getCommunityAuthHeaders() {
+    const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('communityToken') || localStorage.getItem('adminToken'))
+        : null;
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+}
+
+export async function communityRegister(data) {
+    const res = await fetch(`${API_URL}/community/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Registration failed");
+    }
+    return res.json();
+}
+
+export async function communityLogin(credentials) {
+    const res = await fetch(`${API_URL}/community/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Login failed");
+    }
+    return res.json();
+}
+
+export async function getCommunityMe() {
+    const res = await fetch(`${API_URL}/community/auth/me`, {
+        headers: getCommunityAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch community profile");
+    return res.json();
+}
+
+export async function fetchCommunityPosts({ category = "All", type = "all", search = "", sort = "latest", page = 1 } = {}) {
+    const params = new URLSearchParams();
+    if (category && category !== "All") params.append("category", category);
+    if (type && type !== "all") params.append("type", type);
+    if (search) params.append("search", search);
+    if (sort) params.append("sort", sort);
+    if (page) params.append("page", page);
+
+    const res = await fetch(`${API_URL}/community/posts?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to fetch community posts");
+    return res.json();
+}
+
+export async function fetchCommunityPost(slug) {
+    const res = await fetch(`${API_URL}/community/posts/${slug}`);
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to fetch post");
+    }
+    return res.json();
+}
+
+export async function createCommunityPost(postData) {
+    const res = await fetch(`${API_URL}/community/posts`, {
+        method: 'POST',
+        headers: getCommunityAuthHeaders(),
+        body: JSON.stringify(postData),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to publish post");
+    }
+    return res.json();
+}
+
+export async function toggleCommunityPostLike(postId) {
+    const res = await fetch(`${API_URL}/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: getCommunityAuthHeaders(),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to like post");
+    }
+    return res.json();
+}
+
+export async function fetchCommunityComments(postId) {
+    const res = await fetch(`${API_URL}/community/posts/${postId}/comments`);
+    if (!res.ok) throw new Error("Failed to fetch comments");
+    return res.json();
+}
+
+export async function createCommunityComment(postId, commentData) {
+    const res = await fetch(`${API_URL}/community/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: getCommunityAuthHeaders(),
+        body: JSON.stringify(commentData),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to post comment");
+    }
+    return res.json();
+}
+
+export async function toggleCommunityCommentLike(commentId) {
+    const res = await fetch(`${API_URL}/community/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: getCommunityAuthHeaders(),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to like comment");
+    }
+    return res.json();
+}
+
+
 

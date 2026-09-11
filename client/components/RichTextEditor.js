@@ -31,7 +31,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
                 ["bold", "italic", "underline", "strike"],
                 [{ color: [] }, { background: [] }],
                 [{ list: "ordered" }, { list: "bullet" }],
-                ["link", "blockquote"],
+                ["link", "image", "blockquote"],
                 ["clean"],
             ];
 
@@ -42,6 +42,33 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
                     toolbar: toolbarOptions,
                 },
             });
+
+            // Custom handler for inline images to upload to Cloudinary
+            const toolbar = quill.getModule("toolbar");
+            if (toolbar) {
+                toolbar.addHandler("image", () => {
+                    const input = document.createElement("input");
+                    input.setAttribute("type", "file");
+                    input.setAttribute("accept", "image/*");
+                    input.click();
+                    input.onchange = async () => {
+                        const file = input.files?.[0];
+                        if (!file) return;
+                        try {
+                            const { uploadFile } = await import("@/lib/api");
+                            const res = await uploadFile(file);
+                            const range = quill.getSelection(true);
+                            const imageUrl = res.filePath || res.url;
+                            if (imageUrl) {
+                                quill.insertEmbed(range.index, "image", imageUrl);
+                                quill.setSelection(range.index + 1);
+                            }
+                        } catch (err) {
+                            console.error("Failed to upload editor image:", err);
+                        }
+                    };
+                });
+            }
 
             quillRef.current = quill;
 

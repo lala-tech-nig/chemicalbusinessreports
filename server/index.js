@@ -40,6 +40,7 @@ app.use("/api/submissions", require("./routes/submissions"));
 app.use("/api/executive-profiles", require("./routes/executiveProfiles"));
 app.use("/api/scraper", require("./routes/scraper"));
 app.use("/api/analytics", require("./routes/analytics"));
+app.use("/api/community", require("./routes/community"));
 
 // Health Check
 app.get("/", (req, res) => {
