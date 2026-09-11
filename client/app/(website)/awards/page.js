@@ -348,78 +348,25 @@ export default function AwardsAndPartnersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 pt-20 pb-28">
-            {/* ─────────────────────────────────────────────────────────────
-                HERO SECTION (Clean, Solid Slate Navy, No Gradient)
-            ───────────────────────────────────────────────────────────── */}
-            <section className="bg-slate-900 text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-28">
+            {/* Category Banner / Minimalist Hero */}
+            <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 pt-28 pb-14 px-4">
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
-                        <div className="max-w-3xl">
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-5 border border-blue-400/30">
-                                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                                Excellence, Credibility & Partnerships
-                            </div>
-                            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] mb-5">
-                                Awards, Trophies & Strategic Partners
-                            </h1>
-                            <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mb-8">
-                                Chemical Business Reports is recognized across Africa and globally for editorial rigor, transparent market intelligence, and deep partnerships with leading chemical institutions.
-                            </p>
-
-                            <div className="flex flex-wrap items-center gap-4">
-                                <button
-                                    onClick={() => setPartnerModalOpen(true)}
-                                    className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-lg hover:shadow-blue-600/30 flex items-center gap-2"
-                                >
-                                    <Handshake className="w-4 h-4" />
-                                    Partner With Us
-                                </button>
-                                <a
-                                    href="#directory"
-                                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition-colors border border-slate-700 flex items-center gap-2"
-                                >
-                                    Explore Directory
-                                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Quick Stats Grid */}
-                        <div className="grid grid-cols-2 gap-4 w-full lg:w-auto shrink-0">
-                            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 text-center min-w-[140px] sm:min-w-[160px]">
-                                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2">
-                                    <Award className="w-5 h-5" />
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-black text-white">4+</div>
-                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Prestigious Awards</div>
-                            </div>
-
-                            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 text-center min-w-[140px] sm:min-w-[160px]">
-                                <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-2">
-                                    <Handshake className="w-5 h-5" />
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-black text-white">12+</div>
-                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Corporate Partners</div>
-                            </div>
-
-                            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 text-center min-w-[140px] sm:min-w-[160px]">
-                                <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center mx-auto mb-2">
-                                    <Trophy className="w-5 h-5" />
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-black text-white">3+</div>
-                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Industry Trophies</div>
-                            </div>
-
-                            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 text-center min-w-[140px] sm:min-w-[160px]">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-2">
-                                    <ShieldCheck className="w-5 h-5" />
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-black text-white">100%</div>
-                                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">ISO & Press Verified</div>
-                            </div>
-                        </div>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <span className="inline-block text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">
+                            Chemical Business Reports
+                        </span>
+                        <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4" aria-label="Awards & Partners">
+                            Awards &amp; Partners
+                        </h1>
+                        <p className="text-lg text-slate-300 max-w-2xl leading-relaxed">
+                            Celebrating editorial excellence, industrial journalism prizes, coveted trophies, and strategic institutional alliances across the global chemical industry.
+                        </p>
+                    </motion.div>
                 </div>
             </section>
 
@@ -449,11 +396,18 @@ export default function AwardsAndPartnersPage() {
                             )}
                         </div>
 
-                        {/* Search count indicator */}
-                        <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
-                            <span>Showing <strong className="text-blue-600">{filteredItems.length}</strong> items</span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="text-slate-400">Category-Specific Custom Layouts</span>
+                        {/* Search count indicator & Partner CTA */}
+                        <div className="flex items-center gap-3">
+                            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500">
+                                <span>Showing <strong className="text-blue-600">{filteredItems.length}</strong> items</span>
+                            </div>
+                            <button
+                                onClick={() => setPartnerModalOpen(true)}
+                                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                            >
+                                <Handshake className="w-3.5 h-3.5" />
+                                Partner With Us
+                            </button>
                         </div>
                     </div>
 

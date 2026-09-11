@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
     Sparkles,
     Search,
@@ -138,73 +139,25 @@ export default function ChemTalkPage() {
     };
 
     return (
-        <div className="min-h-screen pt-24 pb-20 bg-[#f8fafc]">
-            {/* ── Hero Banner ── */}
-            <section className="bg-slate-900 text-white pt-28 pb-14 px-4">
+        <div className="min-h-screen pb-20 bg-[#f8fafc]">
+            {/* Category Banner / Minimalist Hero */}
+            <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 pt-28 pb-14 px-4">
                 <div className="max-w-7xl mx-auto">
-                    <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-400/30 backdrop-blur-md">
-                            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                            ChemTalk: The Chemical
-                        </div>
-                        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-4">
-                            Public Talks, Theses & Chemical Discourse
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <span className="inline-block text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">
+                            Chemical Business Reports
+                        </span>
+                        <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4" aria-label="ChemTalk">
+                            ChemTalk
                         </h1>
-                        <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-8">
-                            An open scientific exchange for chemical researchers, students, plant engineers, and industry analysts. Publish chemical theses, raise sub-topics, debate market trends, and participate in peer discourse.
+                        <p className="text-lg text-slate-300 max-w-2xl leading-relaxed">
+                            The public square for chemical science, academic theses, and industry discourse. Share research papers, raise sub-topics, debate market trends, and participate in peer discussions.
                         </p>
-
-                        <div className="flex flex-wrap gap-4">
-                            <Link
-                                href={currentUser ? "/chemtalk/new" : "#"}
-                                onClick={(e) => {
-                                    if (!currentUser) {
-                                        e.preventDefault();
-                                        setAuthModalMode("register");
-                                        setAuthModalOpen(true);
-                                    }
-                                }}
-                                className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-xl hover:shadow-blue-500/25 transition-all flex items-center gap-2 hover:scale-[1.02]"
-                            >
-                                <PlusCircle className="w-4 h-4" />
-                                Publish Thesis / Article
-                            </Link>
-
-                            {!currentUser && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAuthModalMode("register");
-                                        setAuthModalOpen(true);
-                                    }}
-                                    className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Create Free Member Account
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Stats Pill Bar */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 pt-8 border-t border-white/10">
-                        <div>
-                            <p className="text-2xl sm:text-3xl font-black text-white">{total || "24+"}</p>
-                            <p className="text-xs text-blue-200 font-medium">Published Theses & Articles</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl sm:text-3xl font-black text-amber-400">100%</p>
-                            <p className="text-xs text-blue-200 font-medium">Open & Public Peer Access</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl sm:text-3xl font-black text-emerald-400">8+</p>
-                            <p className="text-xs text-blue-200 font-medium">Chemical Disciplines</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl sm:text-3xl font-black text-purple-400">Live</p>
-                            <p className="text-xs text-blue-200 font-medium">Threaded Sub-Topic Debates</p>
-                        </div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
@@ -214,7 +167,7 @@ export default function ChemTalkPage() {
                 <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm mb-8 space-y-4">
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                         {/* Search Input */}
-                        <div className="relative w-full md:w-96">
+                        <div className="relative w-full md:w-80">
                             <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
@@ -247,9 +200,8 @@ export default function ChemTalkPage() {
                             })}
                         </div>
 
-                        {/* Sort Dropdown */}
-                        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                            <span className="text-xs font-semibold text-slate-500">Sort:</span>
+                        {/* Actions: Sort + Publish */}
+                        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
@@ -260,6 +212,21 @@ export default function ChemTalkPage() {
                                 <option value="discussed">Most Active Threads</option>
                                 <option value="theses">Theses First</option>
                             </select>
+
+                            <Link
+                                href={currentUser ? "/chemtalk/new" : "#"}
+                                onClick={(e) => {
+                                    if (!currentUser) {
+                                        e.preventDefault();
+                                        setAuthModalMode("register");
+                                        setAuthModalOpen(true);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors flex items-center gap-1.5 shrink-0"
+                            >
+                                <PlusCircle className="w-3.5 h-3.5" />
+                                Publish
+                            </Link>
                         </div>
                     </div>
 

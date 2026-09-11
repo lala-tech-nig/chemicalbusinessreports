@@ -8,7 +8,7 @@ import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 export default function WebsiteLayout({ children }) {
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-clip">
             <AnalyticsTracker />
             <Navbar />
             <main className="flex-grow pt-16">
