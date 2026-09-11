@@ -26,7 +26,7 @@ const categoryLinks = [
     { name: "News Roundup", href: "/posts/news-roundup" },
     { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "Research & Reports", href: "/posts/research-reports" },
-    { name: "ChemTalk", href: "/chemtalk", badge: "Agora" },
+    { name: "ChemTalk", href: "/chemtalk"},
     { name: "Corporate Profile", href: "/posts/corporate-profile" },
     { name: "Start Up", href: "/posts/startup" },
     { name: "Executive Brief", href: "/posts/executive-brief" },
@@ -92,11 +92,6 @@ export default function Navbar() {
                                     )}
                                 >
                                     {link.name}
-                                    {link.badge && (
-                                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-blue-600 text-white uppercase tracking-wider">
-                                            {link.badge}
-                                        </span>
-                                    )}
                                     {isActive && (
                                         <motion.span
                                             layoutId="nav-indicator"

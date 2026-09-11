@@ -140,9 +140,8 @@ export default function ChemTalkPage() {
     return (
         <div className="min-h-screen pt-24 pb-20 bg-[#f8fafc]">
             {/* ── Hero Banner ── */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white py-16 sm:py-20 border-b border-blue-900/50">
-                <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <section className="bg-slate-900 text-white pt-28 pb-14 px-4">
+                <div className="max-w-7xl mx-auto">
                     <div className="max-w-3xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-400/30 backdrop-blur-md">
                             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -422,7 +421,7 @@ export default function ChemTalkPage() {
                         </div>
 
                         {/* Peer Review Guidelines Card */}
-                        <div className="bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/50 rounded-3xl p-6 border border-indigo-100 shadow-sm space-y-3">
+                        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3">
                             <div className="flex items-center gap-2 text-indigo-900 font-bold text-sm">
                                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
                                 <span>Academic & Discussion Standards</span>

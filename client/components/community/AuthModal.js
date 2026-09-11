@@ -72,8 +72,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     transition={{ duration: 0.2 }}
                     className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden"
                 >
-                    {/* Header bar with gradient */}
-                    <div className="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white p-6 pb-8">
+                    {/* Header bar */}
+                    <div className="relative bg-slate-900 text-white p-6 pb-8">
                         <button
                             onClick={onClose}
                             className="absolute top-5 right-5 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors"

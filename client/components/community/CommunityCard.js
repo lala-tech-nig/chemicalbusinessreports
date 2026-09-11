@@ -86,7 +86,7 @@ export default function CommunityCard({ post, onLikeToggle }) {
             <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 mt-auto">
                 {/* Author Credentials */}
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden shrink-0">
                         {post.authorPhoto ? (
                             <img src={post.authorPhoto} alt={post.authorName} className="w-full h-full object-cover" />
                         ) : (

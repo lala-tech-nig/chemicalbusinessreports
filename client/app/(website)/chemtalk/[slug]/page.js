@@ -328,7 +328,7 @@ export default function SingleChemTalkPage({ params }) {
                     </h1>
 
                     {/* Author Attribution Card */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/70 via-slate-50 to-indigo-50/50 border border-blue-100/80 flex flex-wrap items-center justify-between gap-4 mb-8">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-4 mb-8">
                         <div className="flex items-center gap-3.5">
                             <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0 overflow-hidden">
                                 {post.authorPhoto ? (
