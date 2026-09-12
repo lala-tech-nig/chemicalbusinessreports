@@ -31,7 +31,7 @@ const allMobileLinks = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
     { name: "News Roundup", href: "/posts/news-roundup" },
-    { name: "Chemical Mart", href: "/posts/chemical-mart" },
+    { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "ChemTalk", href: "/chemtalk" },
     { name: "Awards & Partners", href: "/awards" },
     { name: "Research & Reports", href: "/posts/research-reports" },
