@@ -2,23 +2,24 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary-v2");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-// Configure Cloudinary
+// Configure Cloudinary (v2 - no core-js bloat, secure URLs by default)
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true, // Always use HTTPS URLs
 });
 
 // Configure Storage
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: "chemical-reports", // Folder name in Cloudinary
+        folder: "chemical-reports",
         resource_type: "auto", // Automatically detect image/video
         allowed_formats: ["jpg", "png", "jpeg", "gif", "mp4", "webm", "mov"],
     },
@@ -35,8 +36,7 @@ router.post("/", upload.single("file"), (req, res) => {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // Multer-storage-cloudinary puts the file info in req.file
-        // req.file.path is the Cloudinary URL
+        // multer-storage-cloudinary-v2 puts the Cloudinary URL in req.file.path
         res.status(200).json({
             message: "File uploaded successfully",
             url: req.file.path,

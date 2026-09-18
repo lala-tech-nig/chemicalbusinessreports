@@ -1,7 +1,9 @@
 const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api";
 
 function getAuthHeaders() {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+    const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('adminToken') || localStorage.getItem('staffToken') || localStorage.getItem('token'))
+        : null;
     return {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
@@ -647,6 +649,319 @@ export async function adminDeleteCommunityUser(id) {
     }
     return res.json();
 }
+
+// ── Staff Tasks & Kanban API ─────────────────────────────────────────
+
+export async function fetchStaffTasks(params = {}) {
+    const query = new URLSearchParams();
+    if (params.date) query.append("date", params.date);
+    if (params.staffId) query.append("staffId", params.staffId);
+    if (params.status) query.append("status", params.status);
+    if (params.isDraft !== undefined) query.append("isDraft", params.isDraft);
+    if (params.priority) query.append("priority", params.priority);
+    if (params.search) query.append("search", params.search);
+
+    const res = await fetch(`${API_URL}/staff-tasks?${query.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch staff tasks");
+    return res.json();
+}
+
+export async function createStaffTask(taskData) {
+    const res = await fetch(`${API_URL}/staff-tasks`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(taskData),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create task");
+    }
+    return res.json();
+}
+
+export async function updateStaffTaskStatus(id, { status, adminSupportNote }) {
+    const res = await fetch(`${API_URL}/staff-tasks/${id}/status`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, adminSupportNote }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update status");
+    }
+    return res.json();
+}
+
+export async function publishStaffDraft(id, date) {
+    const res = await fetch(`${API_URL}/staff-tasks/${id}/publish`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ date }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to publish draft");
+    }
+    return res.json();
+}
+
+export async function updateStaffTask(id, taskData) {
+    const res = await fetch(`${API_URL}/staff-tasks/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(taskData),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update task");
+    }
+    return res.json();
+}
+
+export async function deleteStaffTask(id) {
+    const res = await fetch(`${API_URL}/staff-tasks/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete task");
+    }
+    return res.json();
+}
+
+export async function addStaffTaskComment(id, text) {
+    const res = await fetch(`${API_URL}/staff-tasks/${id}/comments`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ text }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to add comment");
+    }
+    return res.json();
+}
+
+export async function fetchStaffLeaderboard(period = "today") {
+    const res = await fetch(`${API_URL}/staff-tasks/leaderboard?period=${period}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch leaderboard");
+    return res.json();
+}
+
+export async function fetchStaffInfographics(staffId = "") {
+    const url = staffId
+        ? `${API_URL}/staff-tasks/infographics?staffId=${staffId}`
+        : `${API_URL}/staff-tasks/infographics`;
+    const res = await fetch(url, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch staff infographics");
+    return res.json();
+}
+
+// ── Petty Cash API ────────────────────────────────────────────────────
+
+export async function fetchPettyCashRequests(params = {}) {
+    const query = new URLSearchParams();
+    if (params.status) query.append("status", params.status);
+    if (params.staffId) query.append("staffId", params.staffId);
+    if (params.date) query.append("date", params.date);
+    if (params.search) query.append("search", params.search);
+
+    const res = await fetch(`${API_URL}/petty-cash?${query.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch petty cash requests");
+    return res.json();
+}
+
+export async function createPettyCashRequest(data) {
+    const res = await fetch(`${API_URL}/petty-cash`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to submit reimbursement");
+    }
+    return res.json();
+}
+
+export async function reviewPettyCashRequest(id, { status, adminNote }) {
+    const res = await fetch(`${API_URL}/petty-cash/${id}/review`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, adminNote }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to review request");
+    }
+    return res.json();
+}
+
+export async function reimbursePettyCashRequest(id, data = {}) {
+    const res = await fetch(`${API_URL}/petty-cash/${id}/reimburse`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to reimburse request");
+    }
+    return res.json();
+}
+
+export async function deletePettyCashRequest(id) {
+    const res = await fetch(`${API_URL}/petty-cash/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete request");
+    }
+    return res.json();
+}
+
+// ── Finances API ──────────────────────────────────────────────────────
+
+export async function fetchFinanceOverview() {
+    const res = await fetch(`${API_URL}/finances/overview`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch financial overview");
+    return res.json();
+}
+
+export async function fetchTransactions(params = {}) {
+    const query = new URLSearchParams();
+    if (params.type) query.append("type", params.type);
+    if (params.category) query.append("category", params.category);
+    if (params.bankAccount) query.append("bankAccount", params.bankAccount);
+    if (params.startDate) query.append("startDate", params.startDate);
+    if (params.endDate) query.append("endDate", params.endDate);
+    if (params.search) query.append("search", params.search);
+
+    const res = await fetch(`${API_URL}/finances/transactions?${query.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch transactions");
+    return res.json();
+}
+
+export async function createTransaction(data) {
+    const res = await fetch(`${API_URL}/finances/transactions`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create transaction");
+    }
+    return res.json();
+}
+
+export async function deleteTransaction(id) {
+    const res = await fetch(`${API_URL}/finances/transactions/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete transaction");
+    }
+    return res.json();
+}
+
+export async function fetchStaffSalaries() {
+    const res = await fetch(`${API_URL}/finances/salaries`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch staff salaries");
+    return res.json();
+}
+
+export async function upsertStaffSalary(staffId, data) {
+    const res = await fetch(`${API_URL}/finances/salaries/${staffId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update staff salary");
+    }
+    return res.json();
+}
+
+export async function recordSalaryPayment(staffId, data) {
+    const res = await fetch(`${API_URL}/finances/salaries/${staffId}/pay`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to record salary payment");
+    }
+    return res.json();
+}
+
+export async function fetchBankAccounts() {
+    const res = await fetch(`${API_URL}/finances/bank-accounts`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch bank accounts");
+    return res.json();
+}
+
+export async function createBankAccount(data) {
+    const res = await fetch(`${API_URL}/finances/bank-accounts`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create bank account");
+    }
+    return res.json();
+}
+
+export async function updateBankAccount(id, data) {
+    const res = await fetch(`${API_URL}/finances/bank-accounts/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update bank account");
+    }
+    return res.json();
+}
+
+export async function deleteBankAccount(id) {
+    const res = await fetch(`${API_URL}/finances/bank-accounts/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete bank account");
+    }
+    return res.json();
+}
+
 
 
 

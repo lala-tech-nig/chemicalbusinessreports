@@ -41,6 +41,9 @@ app.use("/api/executive-profiles", require("./routes/executiveProfiles"));
 app.use("/api/scraper", require("./routes/scraper"));
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/community", require("./routes/community"));
+app.use("/api/staff-tasks", require("./routes/staffTasks"));
+app.use("/api/petty-cash", require("./routes/pettyCash"));
+app.use("/api/finances", require("./routes/finances"));
 
 // Health Check
 app.get("/", (req, res) => {
@@ -49,6 +52,15 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+        console.error(`❌ Port ${PORT} is already in use. Please stop the existing process and restart.`);
+        process.exit(1);
+    } else {
+        throw err;
+    }
 });

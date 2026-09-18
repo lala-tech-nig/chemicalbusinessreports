@@ -3,11 +3,32 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle, Settings, Users, LogOut, Megaphone, User, Globe, BarChart2, MessageSquare } from "lucide-react";
+import {
+    LayoutDashboard,
+    FileText,
+    PlusCircle,
+    Settings,
+    Users,
+    LogOut,
+    Megaphone,
+    User,
+    Globe,
+    BarChart2,
+    MessageSquare,
+    Kanban,
+    Receipt,
+    Wallet,
+    Trophy,
+    ArrowUpRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Staff Tasks & Kanban", href: "/admin/staff-tracker", icon: Kanban },
+    { name: "Staff Performance", href: "/admin/staff-performance", icon: Trophy },
+    { name: "Petty Cash Requests", href: "/admin/petty-cash", icon: Receipt },
+    { name: "Finance & Accounts", href: "/admin/finances", icon: Wallet, adminOnly: true },
     { name: "All Posts", href: "/admin/posts", icon: FileText },
     { name: "Create Post", href: "/admin/create-post", icon: PlusCircle },
     { name: "Auto Scraper", href: "/admin/scraper", icon: Globe },
@@ -89,6 +110,17 @@ export default function AdminSidebar() {
                         <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">{role}</span>
                     </div>
                 </div>
+
+                <Link
+                    href="/staff"
+                    className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition-colors border border-indigo-200/60 shadow-xs"
+                >
+                    <div className="flex items-center gap-2">
+                        <Kanban className="w-4 h-4 text-indigo-600" />
+                        <span>Staff Portal View</span>
+                    </div>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
 
                 <button
                     onClick={handleLogout}
