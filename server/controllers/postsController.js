@@ -328,3 +328,18 @@ exports.setStoryOfTheDay = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// @desc    Delete all draft posts in bulk
+// @route   DELETE /api/posts/drafts/all
+// @access  Private (Admin only)
+exports.deleteAllDrafts = async (req, res) => {
+    try {
+        const result = await Post.deleteMany({ status: "draft" });
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} draft post${result.deletedCount !== 1 ? "s" : ""}.`,
+            deletedCount: result.deletedCount,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

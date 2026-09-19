@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getPosts, getPostBySlug, createPost, deletePost, setStoryOfTheDay, updatePost, getPostById } = require("../controllers/postsController");
+const { getPosts, getPostBySlug, createPost, deletePost, setStoryOfTheDay, updatePost, getPostById, deleteAllDrafts } = require("../controllers/postsController");
 const { protect, admin, moderatorOrAdmin } = require("../middleware/authMiddleware");
 
 router.get("/", getPosts);
@@ -10,5 +10,6 @@ router.post("/", protect, moderatorOrAdmin, createPost);
 router.put("/:id", protect, admin, updatePost);
 router.delete("/:id", protect, admin, deletePost);
 router.put("/story/:id", protect, admin, setStoryOfTheDay);
+router.delete("/drafts/all", protect, admin, deleteAllDrafts);
 
 module.exports = router;

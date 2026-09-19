@@ -115,6 +115,18 @@ export async function deletePost(id) {
     return res.json();
 }
 
+export async function deleteAllDraftPosts() {
+    const res = await fetch(`${API_URL}/posts/drafts/all`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete all drafts");
+    }
+    return res.json();
+}
+
 export async function setStoryOfTheDay(id) {
     const res = await fetch(`${API_URL}/posts/story/${id}`, {
         method: 'PUT',
@@ -962,7 +974,70 @@ export async function deleteBankAccount(id) {
     return res.json();
 }
 
+// ── Meetings API ──────────────────────────────────────────────────────────
 
+export async function fetchMeetings(params = {}) {
+    const query = new URLSearchParams();
+    if (params.status) query.append("status", params.status);
+    if (params.limit) query.append("limit", params.limit);
+    const res = await fetch(`${API_URL}/meetings?${query.toString()}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch meetings");
+    return res.json();
+}
 
+export async function fetchNextMeeting() {
+    const res = await fetch(`${API_URL}/meetings/next`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch next meeting");
+    return res.json();
+}
 
+export async function fetchMeeting(id) {
+    const res = await fetch(`${API_URL}/meetings/${id}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch meeting");
+    return res.json();
+}
+
+export async function createMeeting(data) {
+    const res = await fetch(`${API_URL}/meetings`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create meeting");
+    }
+    return res.json();
+}
+
+export async function updateMeeting(id, data) {
+    const res = await fetch(`${API_URL}/meetings/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update meeting");
+    }
+    return res.json();
+}
+
+export async function deleteMeeting(id) {
+    const res = await fetch(`${API_URL}/meetings/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete meeting");
+    }
+    return res.json();
+}
 

@@ -1,6 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 const connectDB = require("./config/db");
 
 dotenv.config();
@@ -19,12 +21,10 @@ startReportScheduler();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] }));
 app.use(express.json());
 
 const path = require("path");
-
-// ... (middleware)
 
 // Make uploads folder static
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -44,15 +44,119 @@ app.use("/api/community", require("./routes/community"));
 app.use("/api/staff-tasks", require("./routes/staffTasks"));
 app.use("/api/petty-cash", require("./routes/pettyCash"));
 app.use("/api/finances", require("./routes/finances"));
+app.use("/api/meetings", require("./routes/meetings"));
 
 // Health Check
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
+// ── HTTP + Socket.io Server ──────────────────────────────────────────────
+const server = http.createServer(app);
+
+const io = new Server(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] },
+});
+
+// Track connected users per meeting room
+const meetingRooms = {};
+
+io.on("connection", (socket) => {
+    // Staff joins meeting room
+    socket.on("join-meeting", ({ roomName, userId, username }) => {
+        socket.join(roomName);
+        if (!meetingRooms[roomName]) meetingRooms[roomName] = {};
+        meetingRooms[roomName][socket.id] = { userId, username };
+
+        // Notify others in room
+        socket.to(roomName).emit("user-joined", { socketId: socket.id, userId, username });
+
+        // Send current participants list to new joiner
+        socket.emit("room-participants", Object.values(meetingRooms[roomName]));
+
+        console.log(`[Meeting] ${username} joined room: ${roomName}`);
+    });
+
+    // Admin starts meeting
+    socket.on("meeting-started", ({ roomName }) => {
+        io.to(roomName).emit("meeting-started", { roomName });
+        console.log(`[Meeting] Started: ${roomName}`);
+    });
+
+    // Admin ends meeting
+    socket.on("meeting-ended", ({ roomName }) => {
+        io.to(roomName).emit("meeting-ended", { roomName });
+        delete meetingRooms[roomName];
+        console.log(`[Meeting] Ended: ${roomName}`);
+    });
+
+    // Chat message inside meeting
+    socket.on("meeting-message", ({ roomName, message, username, userId }) => {
+        io.to(roomName).emit("meeting-message", { message, username, userId, time: new Date().toISOString() });
+    });
+
+    socket.on("disconnect", () => {
+        // Clean up from all rooms
+        for (const room of Object.keys(meetingRooms)) {
+            if (meetingRooms[room][socket.id]) {
+                const user = meetingRooms[room][socket.id];
+                delete meetingRooms[room][socket.id];
+                socket.to(room).emit("user-left", { socketId: socket.id, ...user });
+            }
+        }
+    });
+});
+
+// ── Meeting auto-scheduler: every Monday at 9am WAT auto-schedule Thursday meeting ──
+const cron = require("node-cron");
+const { autoScheduleThursdayMeeting } = require("./controllers/meetingController");
+
+// Every Monday at 9:00 WAT (8:00 UTC) — auto-schedule the Thursday meeting
+cron.schedule("0 8 * * 1", async () => {
+    console.log("[Cron] Auto-scheduling Thursday meeting...");
+    await autoScheduleThursdayMeeting();
+});
+
+// Wednesday at 10:00 WAT (9:00 UTC) — send 1-day reminder to all staff
+cron.schedule("0 9 * * 3", async () => {
+    console.log("[Cron] Sending Thursday meeting reminder to all staff...");
+    try {
+        const Meeting = require("./models/Meeting");
+        // Find Thursday's meeting (scheduled tomorrow)
+        const tomorrow = new Date();
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        const dayStart = new Date(tomorrow);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(tomorrow);
+        dayEnd.setUTCHours(23, 59, 59, 999);
+
+        const meeting = await Meeting.findOne({
+            scheduledAt: { $gte: dayStart, $lte: dayEnd },
+            status: { $in: ["scheduled", "active"] },
+            reminderSent: false,
+        });
+
+        if (meeting) {
+            meeting.reminderSent = true;
+            await meeting.save();
+            // Broadcast reminder via socket to all connected clients
+            io.emit("meeting-reminder", {
+                meetingId: meeting._id,
+                title: meeting.title,
+                scheduledAt: meeting.scheduledAt,
+                jitsiRoomUrl: meeting.jitsiRoomUrl,
+                message: "📅 Reminder: Weekly Staff Meeting is tomorrow at 11:00 AM Nigeria Time!",
+            });
+            console.log(`[Cron] Reminder sent for meeting: ${meeting.roomName}`);
+        }
+    } catch (err) {
+        console.error("[Cron] Meeting reminder error:", err);
+    }
+});
+
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 

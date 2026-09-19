@@ -14,8 +14,10 @@ import {
     Flame,
     Layers,
     ArrowUpRight,
+    Video,
 } from "lucide-react";
 import { getMe } from "@/lib/api";
+import MeetingReminderPopup from "@/components/MeetingReminderPopup";
 
 export default function StaffLayout({ children }) {
     const router = useRouter();
@@ -104,6 +106,7 @@ export default function StaffLayout({ children }) {
 
     const navLinks = [
         { name: "Daily Kanban", href: "/staff", icon: Kanban },
+        { name: "Voice Meeting", href: "/staff/meeting", icon: Video },
         { name: "Performance & Leaderboard", href: "/staff/analytics", icon: BarChart3 },
         { name: "Petty Cash Claims", href: "/staff/petty-cash", icon: Receipt },
     ];
@@ -249,6 +252,9 @@ export default function StaffLayout({ children }) {
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {children}
             </main>
+
+            {/* Reminder Popup 1 day before Thursday meeting / live meeting */}
+            <MeetingReminderPopup />
         </div>
     );
 }

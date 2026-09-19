@@ -20,11 +20,13 @@ import {
     Wallet,
     Trophy,
     ArrowUpRight,
+    Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Voice Meetings", href: "/admin/meetings", icon: Video },
     { name: "Staff Tasks & Kanban", href: "/admin/staff-tracker", icon: Kanban },
     { name: "Staff Performance", href: "/admin/staff-performance", icon: Trophy },
     { name: "Petty Cash Requests", href: "/admin/petty-cash", icon: Receipt },
