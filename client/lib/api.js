@@ -1,5 +1,5 @@
-const API_URL = process.env.NODE_ENV === "development" ? "https://chemical.livingvinepropertiesinvestment.com/api" : "https://chemical.livingvinepropertiesinvestment.com/api";
-// const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api";
+// const API_URL = process.env.NODE_ENV === "development" ? "https://chemical.livingvinepropertiesinvestment.com/api" : "https://chemical.livingvinepropertiesinvestment.com/api";
+const API_URL = process.env.NODE_ENV === "development" ? "https://chemicalbusinessreports-f078.onrender.com/api" : "https://chemicalbusinessreports-f078.onrender.com/api";
 
 function getAuthHeaders() {
     const token = typeof window !== 'undefined'
