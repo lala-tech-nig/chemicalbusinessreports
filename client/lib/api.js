@@ -266,6 +266,16 @@ export async function fetchPendingComments() {
     return res.json();
 }
 
+export async function fetchAllComments(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const url = `${API_URL}/comments/all${query ? `?${query}` : ''}`;
+    const res = await fetch(url, {
+        headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch comments");
+    return res.json();
+}
+
 export async function approveComment(id) {
     const res = await fetch(`${API_URL}/comments/${id}/approve`, {
         method: 'PUT',

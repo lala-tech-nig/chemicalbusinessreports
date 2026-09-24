@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Loader2, MessageSquare, CornerDownRight, X, Mail, Phone, User, Check, Send } from "lucide-react";
-import { createComment } from "@/lib/api";
+import { useState, useEffect, useMemo } from "react";
+import { Loader2, MessageSquare, CornerDownRight, X, Mail, Phone, User, Check, Send, Trash2 } from "lucide-react";
+import { createComment, deleteComment } from "@/lib/api";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -61,6 +61,8 @@ function CommentItem({
     depth = 0,
     activeReplyId,
     setActiveReplyId,
+    isAdmin = false,
+    onDeleteComment,
     onSuccess,
 }) {
     const isReplying = activeReplyId === comment._id;
@@ -151,28 +153,41 @@ function CommentItem({
                         </div>
                     </div>
 
-                    {/* Reply Action Button */}
-                    <button
-                        onClick={() => setActiveReplyId(isReplying ? null : comment._id)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                            isReplying
-                                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                : "text-primary hover:bg-primary/10"
-                        }`}
-                        title={`Reply to ${comment.authorName}`}
-                    >
-                        {isReplying ? (
-                            <>
-                                <X className="w-3.5 h-3.5" />
-                                <span>Cancel</span>
-                            </>
-                        ) : (
-                            <>
-                                <CornerDownRight className="w-3.5 h-3.5" />
-                                <span>Reply</span>
-                            </>
+                    {/* Action Buttons: Reply + Admin Delete */}
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        <button
+                            onClick={() => setActiveReplyId(isReplying ? null : comment._id)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                isReplying
+                                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    : "text-primary hover:bg-primary/10"
+                            }`}
+                            title={`Reply to ${comment.authorName}`}
+                        >
+                            {isReplying ? (
+                                <>
+                                    <X className="w-3.5 h-3.5" />
+                                    <span>Cancel</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CornerDownRight className="w-3.5 h-3.5" />
+                                    <span>Reply</span>
+                                </>
+                            )}
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                                onClick={() => onDeleteComment(comment._id)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all"
+                                title="Admin: Delete comment and all chained replies"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Delete</span>
+                            </button>
                         )}
-                    </button>
+                    </div>
                 </div>
 
                 {/* Comment Content */}
@@ -300,6 +315,8 @@ function CommentItem({
                             depth={depth + 1}
                             activeReplyId={activeReplyId}
                             setActiveReplyId={setActiveReplyId}
+                            isAdmin={isAdmin}
+                            onDeleteComment={onDeleteComment}
                             onSuccess={onSuccess}
                         />
                     ))}
@@ -319,12 +336,38 @@ export default function CommentSection({
 }) {
     const [submitting, setSubmitting] = useState(false);
     const [activeReplyId, setActiveReplyId] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [commentForm, setCommentForm] = useState({
         authorName: "",
         authorEmail: "",
         authorPhone: "",
         content: "",
     });
+
+    useEffect(() => {
+        try {
+            const adminToken = localStorage.getItem("adminToken");
+            const role = localStorage.getItem("adminRole");
+            if (adminToken || role === "admin") {
+                setIsAdmin(true);
+            }
+        } catch (e) {
+            // ignore localStorage errors in non-browser env
+        }
+    }, []);
+
+    const handleDeleteComment = async (commentId) => {
+        if (!confirm("Are you sure you want to delete this comment? Any chained replies will also be permanently removed.")) {
+            return;
+        }
+        try {
+            await deleteComment(commentId);
+            toast.success("Comment and any chained replies deleted successfully");
+            if (onCommentSubmitted) onCommentSubmitted();
+        } catch (err) {
+            toast.error(err.message || "Failed to delete comment");
+        }
+    };
 
     // Build hierarchical tree from flat comments
     const commentTree = useMemo(() => {
@@ -501,6 +544,8 @@ export default function CommentSection({
                         depth={0}
                         activeReplyId={activeReplyId}
                         setActiveReplyId={setActiveReplyId}
+                        isAdmin={isAdmin}
+                        onDeleteComment={handleDeleteComment}
                         onSuccess={onCommentSubmitted}
                     />
                 ))}

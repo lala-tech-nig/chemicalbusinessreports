@@ -97,9 +97,45 @@ exports.getApprovedComments = async (req, res) => {
 exports.getPendingComments = async (req, res) => {
     try {
         const comments = await Comment.find({ isApproved: false })
-            .populate("post", "title")
+            .populate("post", "title slug")
             .populate("parentId", "authorName content")
             .sort({ createdAt: -1 });
+        res.json(comments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get all comments across platform with filtering and search (Admin/Mod)
+// @route   GET /api/comments/all
+// @access  Private (Admin/Mod)
+exports.getAllComments = async (req, res) => {
+    try {
+        const { status, search } = req.query;
+        const filter = {};
+
+        if (status === "pending") {
+            filter.isApproved = false;
+        } else if (status === "approved") {
+            filter.isApproved = true;
+        }
+
+        if (search && search.trim()) {
+            const regex = new RegExp(search.trim(), "i");
+            filter.$or = [
+                { authorName: regex },
+                { authorEmail: regex },
+                { authorPhone: regex },
+                { content: regex },
+                { replyToAuthor: regex },
+            ];
+        }
+
+        const comments = await Comment.find(filter)
+            .populate("post", "title slug")
+            .populate("parentId", "authorName content")
+            .sort({ createdAt: -1 });
+
         res.json(comments);
     } catch (error) {
         res.status(500).json({ message: error.message });
