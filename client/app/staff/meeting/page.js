@@ -7,10 +7,10 @@ import {
     Send, X, Calendar, Clock, AlertTriangle, ExternalLink, Shield,
     Loader2, ChevronRight, Radio,
 } from "lucide-react";
-import { fetchNextMeeting, updateMeeting } from "@/lib/api";
+import { fetchNextMeeting, updateMeeting, API_URL } from "@/lib/api";
 import io from "socket.io-client";
 
-const SOCKET_URL = process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://chemicalbusinessreports-f078.onrender.com";
+const SOCKET_URL = API_URL.replace(/\/api\/?$/, "");
 
 const getNigeriaTime = () => {
     const now = new Date();

@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-
-const API_URL =
-    process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NODE_ENV === "development"
-        ? "http://localhost:5000/api"
-        : "https://chemicalbusinessreports-f078.onrender.com/api");
+import { API_URL } from "@/lib/api";
 
 function getOrCreateSessionId() {
     if (typeof window === "undefined") return null;

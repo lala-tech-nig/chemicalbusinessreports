@@ -23,50 +23,58 @@ import {
     Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const sidebarLinks = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Voice Meetings", href: "/admin/meetings", icon: Video },
-    { name: "Staff Tasks & Kanban", href: "/admin/staff-tracker", icon: Kanban },
-    { name: "Staff Performance", href: "/admin/staff-performance", icon: Trophy },
-    { name: "Petty Cash Requests", href: "/admin/petty-cash", icon: Receipt },
-    { name: "Finance & Accounts", href: "/admin/finances", icon: Wallet, adminOnly: true },
-    { name: "All Posts", href: "/admin/posts", icon: FileText },
-    { name: "Create Post", href: "/admin/create-post", icon: PlusCircle },
-    { name: "Auto Scraper", href: "/admin/scraper", icon: Globe },
-    { name: "Ads", href: "/admin/ads", icon: Megaphone },
-    { name: "ChemTalk Moderation", href: "/admin/chemtalk", icon: MessageSquare },
-    { name: "Comments", href: "/admin/comments", icon: FileText },
-    { name: "Submissions", href: "/admin/submissions", icon: FileText },
-    { name: "Executive Profiles", href: "/admin/executive-profiles", icon: Users },
-    { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Detailed Report", href: "/admin/analytics", icon: BarChart2, adminOnly: true },
-    { name: "Settings", href: "/admin/settings", icon: Settings },
-];
-
 import { UserProvider, useUser } from "@/context/UserContext";
+
+// permissionKey must match a key in ALL_DASHBOARD_SECTIONS from UserPermissionsModal
+const sidebarLinks = [
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard, permissionKey: "overview" },
+    { name: "Voice Meetings", href: "/admin/meetings", icon: Video, permissionKey: "meetings" },
+    { name: "Staff Tasks & Kanban", href: "/admin/staff-tracker", icon: Kanban, permissionKey: "staff-tracker" },
+    { name: "Staff Performance", href: "/admin/staff-performance", icon: Trophy, permissionKey: "staff-performance" },
+    { name: "Petty Cash Requests", href: "/admin/petty-cash", icon: Receipt, permissionKey: "petty-cash" },
+    { name: "Finance & Accounts", href: "/admin/finances", icon: Wallet, permissionKey: "finances", adminOnly: true },
+    { name: "All Posts", href: "/admin/posts", icon: FileText, permissionKey: "posts" },
+    { name: "Create Post", href: "/admin/create-post", icon: PlusCircle, permissionKey: "create-post" },
+    { name: "Auto Scraper", href: "/admin/scraper", icon: Globe, permissionKey: "scraper" },
+    { name: "Ads", href: "/admin/ads", icon: Megaphone, permissionKey: "ads" },
+    { name: "ChemTalk Moderation", href: "/admin/chemtalk", icon: MessageSquare, permissionKey: "chemtalk" },
+    { name: "Comments", href: "/admin/comments", icon: FileText, permissionKey: "comments" },
+    { name: "Submissions", href: "/admin/submissions", icon: FileText, permissionKey: "submissions" },
+    { name: "Executive Profiles", href: "/admin/executive-profiles", icon: Users, permissionKey: "executive-profiles" },
+    { name: "Users", href: "/admin/users", icon: Users, permissionKey: "users" },
+    { name: "Detailed Report", href: "/admin/analytics", icon: BarChart2, permissionKey: "analytics", adminOnly: true },
+    { name: "Settings", href: "/admin/settings", icon: Settings, permissionKey: "settings" },
+];
 
 export default function AdminSidebar() {
     const pathname = usePathname();
     const { user } = useUser();
     const role = user.role || "admin";
-
+    // dashboardPermissions from the logged-in user (fetched via getMe in admin layout)
+    const userPerms = user.dashboardPermissions; // null = use role defaults
 
     const handleLogout = () => {
         if (typeof window !== "undefined") {
             localStorage.removeItem("adminToken");
             localStorage.removeItem("adminRole");
-            window.location.href = "/admin/login"; // Hard redirect to ensure state clear
+            window.location.href = "/admin/login";
         }
     };
 
     const filteredLinks = sidebarLinks.filter(link => {
-        if (role === 'moderator') {
-            // Moderators: No Ads, Users, Settings, Analytics
-            return ["Dashboard", "All Posts", "Create Post", "ChemTalk Moderation", "Comments", "Submissions"].includes(link.name);
+        // 1. If admin-set per-user permissions exist, use them
+        if (userPerms && Array.isArray(userPerms) && userPerms.length > 0) {
+            return userPerms.includes(link.permissionKey);
         }
-        // Admin-only links hidden from non-admins
-        if (link.adminOnly && role !== 'admin') return false;
+
+        // 2. Fall back to role-based defaults
+        if (role === "moderator") {
+            return ["overview", "posts", "create-post", "chemtalk", "comments", "submissions"].includes(link.permissionKey);
+        }
+
+        // 3. Admin-only links hidden from non-admins
+        if (link.adminOnly && role !== "admin") return false;
+
         return true;
     });
 
@@ -76,7 +84,7 @@ export default function AdminSidebar() {
                 <h2 className="text-2xl font-bold text-primary">Admin Panel</h2>
             </div>
 
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {filteredLinks.map((link) => {
                     const Icon = link.icon;
                     const isActive = pathname === link.href;

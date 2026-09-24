@@ -87,3 +87,29 @@ exports.updateUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Update user dashboard permissions (admin-controlled section visibility)
+// @route   PUT /api/users/:id/permissions
+// @access  Private (Admin)
+exports.updateUserPermissions = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const { dashboardPermissions } = req.body;
+        // null or empty array = reset to role defaults
+        user.dashboardPermissions =
+            Array.isArray(dashboardPermissions) && dashboardPermissions.length > 0
+                ? dashboardPermissions
+                : null;
+
+        await user.save();
+        res.json({
+            _id: user._id,
+            username: user.username,
+            dashboardPermissions: user.dashboardPermissions,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

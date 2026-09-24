@@ -18,6 +18,17 @@ const nextConfig = {
         pathname: '/uploads/**',
       },
       {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5050',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'chemical.livingvinepropertiesinvestment.com',
+        pathname: '/uploads/**',
+      },
+      {
         protocol: 'https',
         hostname: 'chemicalbusinessreports.onrender.com',
         pathname: '/uploads/**',
@@ -25,6 +36,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
       },
     ],
   },

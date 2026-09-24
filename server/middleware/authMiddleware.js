@@ -54,4 +54,18 @@ const moderatorOrAdmin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin, moderatorOrAdmin };
+module.exports = {
+    protect,
+    admin,
+    moderatorOrAdmin,
+    // Aliases used by backup route
+    authenticate: protect,
+    authorize: (role) => (req, res, next) => {
+        if (req.user && (req.user.role === role || role === "admin" && req.user.role === "admin")) {
+            next();
+        } else {
+            res.status(403).json({ message: `Not authorized. Requires ${role} role.` });
+        }
+    },
+};
+

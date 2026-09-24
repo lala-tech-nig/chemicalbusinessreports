@@ -23,27 +23,32 @@ const CLIENT_ALERT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
  */
 function buildTransporter() {
     const emailUser = process.env.EMAIL_USER || "coslab.media@gmail.com";
-    const emailPass = process.env.EMAIL_PASS || "";
+    // Gmail App Passwords are 16-chars with NO spaces.
+    // Strip surrounding quotes (if dotenv included them) and all whitespace.
+    const rawPass = process.env.EMAIL_PASS || "";
+    const emailPass = rawPass.replace(/^["']|["']$/g, "").replace(/\s+/g, "");
 
     if (!emailPass) {
         console.warn("⚠️  EMAIL_PASS is not set. Emails will fail until a valid Gmail App Password is configured.");
+    } else {
+        console.log(`[Email] Using Gmail App Password: ${emailPass.slice(0, 4)}**** (length: ${emailPass.length})`);
     }
 
     return nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 465,
-        secure: true, // use SSL for port 465
+        secure: true, // SSL for port 465
         auth: {
             user: emailUser,
-            pass: emailPass
+            pass: emailPass,
         },
         tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
         },
         connectionTimeout: 30000,
         greetingTimeout: 15000,
         socketTimeout: 30000,
-        pool: false // Don't pool — create fresh connections per send
+        pool: false,
     });
 }
 
@@ -1002,18 +1007,29 @@ async function sendVisitorAlertEmail({ ip, path, userAgent, sessionId, country, 
 /**
  * Send Instant Notification for New Comment.
  */
-async function sendNewCommentNotification({ authorName, content, postTitle, postId }) {
+async function sendNewCommentNotification({ authorName, authorEmail, authorPhone, content, postTitle, postId, isReply, replyToAuthor }) {
     try {
         const recipients = await getAdminAlertEmails();
+        const contactInfo = [
+            authorEmail ? `<strong>Email:</strong> <a href="mailto:${authorEmail}">${authorEmail}</a>` : null,
+            authorPhone ? `<strong>Phone:</strong> <a href="tel:${authorPhone}">${authorPhone}</a>` : null,
+        ].filter(Boolean).join(" &nbsp;|&nbsp; ");
+
+        const replyBadge = isReply
+            ? `<div style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 8px;">↩ Replying to ${replyToAuthor || "a comment"}</div>`
+            : "";
+
         const html = `
             <div style="font-family: sans-serif; max-width: 580px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
-                <h3 style="color: #0f172a; margin-top: 0;">💬 New Comment Submitted for Moderation</h3>
+                <h3 style="color: #0f172a; margin-top: 0;">💬 ${isReply ? "New Reply" : "New Comment"} Submitted for Moderation</h3>
+                ${replyBadge}
                 <p><strong>Article:</strong> ${postTitle || "Chemical Business Report"}</p>
                 <p><strong>Author:</strong> ${authorName || "Anonymous"}</p>
+                ${contactInfo ? `<p style="font-size: 13px; color: #64748b;">${contactInfo}</p>` : ""}
                 <div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 16px; margin: 15px 0; font-style: italic; color: #334155;">
                     "${content}"
                 </div>
-                <a href="https://chemicalbusinessreports.com/admin" style="display: inline-block; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">Review & Approve in Admin</a>
+                <a href="https://chemicalbusinessreports.com/admin/comments" style="display: inline-block; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">Review & Approve in Admin</a>
             </div>
         `;
         await Promise.allSettled(
@@ -1021,7 +1037,7 @@ async function sendNewCommentNotification({ authorName, content, postTitle, post
                 transporter.sendMail({
                     from: '"CBR Notifications" <coslab.media@gmail.com>',
                     to: email,
-                    subject: `💬 New Comment from ${authorName || "User"} on "${postTitle ? postTitle.slice(0, 35) + "..." : "Article"}"`,
+                    subject: `💬 ${isReply ? "New Reply" : "New Comment"} from ${authorName || "User"} on "${postTitle ? postTitle.slice(0, 35) + "..." : "Article"}"`,
                     html
                 })
             )

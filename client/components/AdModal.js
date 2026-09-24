@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { fetchActiveAds } from "@/lib/api";
+import { fetchActiveAds, API_URL } from "@/lib/api";
 
 const isVideo = (url) => {
     if (!url) return false;
@@ -48,7 +48,6 @@ export default function AdModal() {
 
     const handleAdClick = () => {
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api");
             let sid = typeof window !== "undefined" ? sessionStorage.getItem("cbr_sid") : null;
             if (!sid && typeof window !== "undefined") {
                 sid = Math.random().toString(36).slice(2) + Date.now().toString(36);

@@ -27,16 +27,12 @@ function AdminLayoutContent({ children }) {
             getMe()
                 .then(data => {
                     if (data && data.username) {
-                        const latestPhoto = data.profilePhoto || "";
-                        const latestUsername = data.username;
-                        const latestId = data._id;
-
-                        // Always update context; UserProvider handles storage sync if needed
                         updateUser({
-                            username: latestUsername,
-                            photo: latestPhoto,
-                            id: latestId,
-                            role: data.role
+                            username: data.username,
+                            photo: data.profilePhoto || "",
+                            id: data._id,
+                            role: data.role,
+                            dashboardPermissions: data.dashboardPermissions || null,
                         });
                     }
                 })

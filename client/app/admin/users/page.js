@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, UserPlus, Shield, Ban, Loader2, Trash2, Upload, X, Pencil } from "lucide-react";
+import { Users, UserPlus, Shield, Ban, Loader2, Trash2, Upload, X, Pencil, Settings2 } from "lucide-react";
 import { fetchUsers, registerUser, updateUserStatus, deleteUser, uploadFile, updateUser as apiUpdateUser } from "@/lib/api";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
+import UserPermissionsModal from "@/components/UserPermissionsModal";
 
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const { user: currentUser, updateUser } = useUser();
+    const [permissionsUser, setPermissionsUser] = useState(null);
 
     const [formData, setFormData] = useState({
         username: "",
@@ -297,6 +299,13 @@ export default function UserManagement() {
                                 </td>
                                 <td className="px-6 py-4 text-right space-x-2">
                                     <button
+                                        onClick={() => setPermissionsUser(user)}
+                                        className="p-2 text-purple-500 hover:text-purple-700 transition-colors"
+                                        title="Manage Dashboard Permissions"
+                                    >
+                                        <Settings2 className="w-4 h-4" />
+                                    </button>
+                                    <button
                                         onClick={() => handleEditEnter(user)}
                                         className="p-2 text-blue-500 hover:text-blue-700 transition-colors"
                                         title="Edit User"
@@ -323,6 +332,15 @@ export default function UserManagement() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Dashboard Permissions Modal */}
+            {permissionsUser && (
+                <UserPermissionsModal
+                    user={permissionsUser}
+                    onClose={() => setPermissionsUser(null)}
+                    onSaved={loadUsers}
+                />
+            )}
         </div>
     );
 }

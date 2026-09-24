@@ -60,6 +60,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    // Admin-controlled per-user dashboard section permissions
+    // If null/empty → fall back to role-based defaults
+    dashboardPermissions: {
+        type: [String],
+        default: null,
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -1,5 +1,10 @@
-const API_URL = process.env.NODE_ENV === "development" ? "https://chemical.livingvinepropertiesinvestment.com/api" : "https://chemical.livingvinepropertiesinvestment.com/api";
-// const API_URL = process.env.NODE_ENV === "development" ? "https://chemicalbusinessreports-f078.onrender.com/api" : "https://chemicalbusinessreports-f078.onrender.com/api";
+export const API_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+        ? "https://chemical.livingvinepropertiesinvestment.com/api"
+        : (process.env.NODE_ENV === "production"
+            ? "https://chemical.livingvinepropertiesinvestment.com/api"
+            : "http://localhost:5050/api"));
 
 function getAuthHeaders() {
     const token = typeof window !== 'undefined'
@@ -196,6 +201,31 @@ export async function updateUser(id, userData) {
     if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to update user");
+    }
+    return res.json();
+}
+
+export async function updateUserPermissions(id, dashboardPermissions) {
+    const res = await fetch(`${API_URL}/users/${id}/permissions`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ dashboardPermissions }),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update permissions");
+    }
+    return res.json();
+}
+
+export async function triggerBackup() {
+    const res = await fetch(`${API_URL}/backup/run`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Backup failed");
     }
     return res.json();
 }

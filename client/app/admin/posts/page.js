@@ -1,10 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Edit, Trash2, Star, Loader2, User, FileX2, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Edit, Trash2, Star, Loader2, User, FileX2, AlertTriangle, Share2, Search, Filter, X, Check } from "lucide-react";
 import Link from "next/link";
 import { fetchPosts, deletePost, setStoryOfTheDay, deleteAllDraftPosts } from "@/lib/api";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+
+const CATEGORIES = [
+    "All",
+    "News Roundup",
+    "Chemical Mart",
+    "Research & Reports",
+    "Corporate Profile",
+    "Start Up",
+    "Services",
+    "Executive Brief",
+];
+
+const STATUS_OPTIONS = ["All", "Published", "Draft", "Scheduled"];
 
 export default function PostsList() {
     const [posts, setPosts] = useState([]);
@@ -12,6 +26,13 @@ export default function PostsList() {
     const [role, setRole] = useState("admin");
     const [deletingDrafts, setDeletingDrafts] = useState(false);
     const [showDraftConfirm, setShowDraftConfirm] = useState(false);
+    const [copiedId, setCopiedId] = useState(null);
+
+    // Filter state
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterCategory, setFilterCategory] = useState("All");
+    const [filterStatus, setFilterStatus] = useState("All");
+    const [showFilterPanel, setShowFilterPanel] = useState(false);
 
     useEffect(() => {
         const storedRole = localStorage.getItem("adminRole");
@@ -66,17 +87,66 @@ export default function PostsList() {
         }
     };
 
-    if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin" /></div>;
+    const handleShare = (slug) => {
+        const url = `https://chemicalbusinessreports.net/posts/${slug}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedId(slug);
+            toast.success("Live link copied to clipboard!", { duration: 2000 });
+            setTimeout(() => setCopiedId(null), 2000);
+        }).catch(() => toast.error("Failed to copy link"));
+    };
+
+    // Filtered + searched posts (client-side since all posts are loaded)
+    const filteredPosts = useMemo(() => {
+        return posts.filter(post => {
+            // Category filter
+            if (filterCategory !== "All" && post.category !== filterCategory) return false;
+
+            // Status filter
+            if (filterStatus !== "All") {
+                const pStatus = post.status || "published";
+                if (filterStatus === "Published" && pStatus !== "published" && pStatus !== "") return false;
+                if (filterStatus === "Draft" && pStatus !== "draft") return false;
+                if (filterStatus === "Scheduled" && pStatus !== "scheduled") return false;
+            }
+
+            // Full-text search across title, excerpt, content, author, category
+            if (searchTerm.trim()) {
+                const q = searchTerm.toLowerCase();
+                const searchable = [
+                    post.title,
+                    post.excerpt,
+                    post.author,
+                    post.category,
+                    post.content?.replace(/<[^>]*>/g, "") || "",
+                ].join(" ").toLowerCase();
+                if (!searchable.includes(q)) return false;
+            }
+
+            return true;
+        });
+    }, [posts, searchTerm, filterCategory, filterStatus]);
+
+    if (loading) return (
+        <div className="flex justify-center p-10">
+            <Loader2 className="animate-spin text-primary w-8 h-8" />
+        </div>
+    );
 
     const draftCount = posts.filter(p => p.status === "draft").length;
+    const activeFilters = (filterCategory !== "All" ? 1 : 0) + (filterStatus !== "All" ? 1 : 0) + (searchTerm ? 1 : 0);
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-3">
-                <h1 className="text-2xl font-bold">All Posts</h1>
+                <div>
+                    <h1 className="text-2xl font-bold">All Posts</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                        {filteredPosts.length} of {posts.length} posts
+                    </p>
+                </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                    {/* Delete All Drafts Button — only visible to admin when drafts exist */}
                     {role === "admin" && draftCount > 0 && (
                         <button
                             id="delete-all-drafts-btn"
@@ -99,6 +169,114 @@ export default function PostsList() {
                         Create New
                     </Link>
                 </div>
+            </div>
+
+            {/* Search + Filter Bar */}
+            <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                    {/* Search Box */}
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search by title, content, author..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Toggle Button */}
+                    <button
+                        onClick={() => setShowFilterPanel(p => !p)}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition-colors ${
+                            activeFilters > 0
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background border-input text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <Filter className="w-4 h-4" />
+                        Filter
+                        {activeFilters > 0 && (
+                            <span className="w-5 h-5 rounded-full bg-white/30 text-[11px] font-bold flex items-center justify-center">
+                                {activeFilters}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                {/* Expandable Filter Panel */}
+                <AnimatePresence>
+                    {showFilterPanel && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="pt-3 border-t border-border space-y-3">
+                                {/* Category Filter */}
+                                <div>
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Category</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {CATEGORIES.map(cat => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setFilterCategory(cat)}
+                                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                                    filterCategory === cat
+                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                        : "bg-background border-input text-muted-foreground hover:border-primary/50"
+                                                }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Status Filter */}
+                                <div>
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Status</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {STATUS_OPTIONS.map(s => (
+                                            <button
+                                                key={s}
+                                                onClick={() => setFilterStatus(s)}
+                                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                                    filterStatus === s
+                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                        : "bg-background border-input text-muted-foreground hover:border-primary/50"
+                                                }`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Clear All */}
+                                {activeFilters > 0 && (
+                                    <button
+                                        onClick={() => { setFilterCategory("All"); setFilterStatus("All"); setSearchTerm(""); }}
+                                        className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
+                                    >
+                                        <X className="w-3 h-3" /> Clear all filters
+                                    </button>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Confirmation Modal */}
@@ -156,37 +334,65 @@ export default function PostsList() {
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-muted-foreground uppercase bg-accent/50 border-b border-border">
                             <tr>
-                                <th className="px-6 py-3">Title</th>
-                                <th className="px-6 py-3">Category</th>
-                                <th className="px-6 py-3">Author</th>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3">Date</th>
-                                <th className="px-6 py-3 text-right">Actions</th>
+                                <th className="px-4 py-3 w-8"></th>
+                                <th className="px-4 py-3">Title</th>
+                                <th className="px-4 py-3">Category</th>
+                                <th className="px-4 py-3">Author</th>
+                                <th className="px-4 py-3">Status</th>
+                                <th className="px-4 py-3">Date</th>
+                                <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {posts.length === 0 ? (
+                            {filteredPosts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground text-sm">
-                                        No posts found.
+                                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground text-sm">
+                                        {searchTerm || filterCategory !== "All" || filterStatus !== "All"
+                                            ? "No posts match your search/filter."
+                                            : "No posts found."}
                                     </td>
                                 </tr>
                             ) : (
-                                posts.map((post) => (
+                                filteredPosts.map((post) => (
                                     <tr
                                         key={post._id}
                                         className="bg-card hover:bg-accent/50 transition-colors border-b border-border last:border-0"
                                     >
-                                        <td className="px-6 py-4 font-medium">
+                                        {/* Share Button — in front of each row */}
+                                        <td className="px-4 py-4">
+                                            <button
+                                                onClick={() => handleShare(post.slug)}
+                                                title="Copy live link to clipboard"
+                                                className={`p-1.5 rounded-lg transition-all ${
+                                                    copiedId === post.slug
+                                                        ? "bg-green-100 text-green-600"
+                                                        : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                                                }`}
+                                            >
+                                                {copiedId === post.slug ? (
+                                                    <Check className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <Share2 className="w-3.5 h-3.5" />
+                                                )}
+                                            </button>
+                                        </td>
+
+                                        <td className="px-4 py-4 font-medium max-w-xs">
                                             <div className="flex items-center gap-2">
                                                 {post.isStoryOfTheDay && (
                                                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 shrink-0" />
                                                 )}
-                                                <span className="line-clamp-2">{post.title}</span>
+                                                <span className="line-clamp-2 text-sm">{post.title}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{post.category}</td>
-                                        <td className="px-6 py-4">
+
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-medium">
+                                                {post.category}
+                                            </span>
+                                        </td>
+
+                                        <td className="px-4 py-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border shrink-0">
                                                     {post.authorPhoto ? (
@@ -204,7 +410,8 @@ export default function PostsList() {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+
+                                        <td className="px-4 py-4 whitespace-nowrap">
                                             {(post.status === "published" || !post.status || post.status === "") && (
                                                 <span className="px-2.5 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full bg-green-100 text-green-800">
                                                     Published
@@ -221,11 +428,12 @@ export default function PostsList() {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
+
+                                        <td className="px-4 py-4 text-muted-foreground whitespace-nowrap text-xs">
                                             {post.status === "scheduled" && post.scheduledPublishDate ? (
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-semibold text-blue-600">Goes live:</span>
-                                                    <span className="text-xs">
+                                                    <span className="text-[11px] font-semibold text-blue-600">Goes live:</span>
+                                                    <span>
                                                         {new Date(post.scheduledPublishDate).toLocaleString("en-NG", {
                                                             timeZone: "Africa/Lagos",
                                                         })}
@@ -235,15 +443,16 @@ export default function PostsList() {
                                                 new Date(post.createdAt).toLocaleDateString()
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
+
+                                        <td className="px-4 py-4 text-right space-x-1">
                                             {role === "admin" && (
                                                 <>
                                                     <button
                                                         onClick={() => handleSetStory(post._id)}
-                                                        className={`p-1 transition-colors ${
+                                                        className={`p-1.5 rounded-lg transition-colors ${
                                                             post.isStoryOfTheDay
                                                                 ? "text-yellow-500"
-                                                                : "text-gray-400 hover:text-yellow-500"
+                                                                : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
                                                         }`}
                                                         title="Set as Story of the Day"
                                                     >
@@ -251,14 +460,14 @@ export default function PostsList() {
                                                     </button>
                                                     <Link
                                                         href={`/admin/posts/${post._id}`}
-                                                        className="p-1 text-gray-400 hover:text-blue-500 transition-colors inline-block"
+                                                        className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors inline-block rounded-lg"
                                                         title="Edit Post"
                                                     >
                                                         <Edit className="w-4 h-4" />
                                                     </Link>
                                                     <button
                                                         onClick={() => handleDelete(post._id)}
-                                                        className="p-1 hover:text-destructive transition-colors"
+                                                        className="p-1.5 hover:text-destructive hover:bg-red-50 transition-colors rounded-lg"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

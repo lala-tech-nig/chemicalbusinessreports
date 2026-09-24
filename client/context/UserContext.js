@@ -9,7 +9,8 @@ export function UserProvider({ children }) {
         username: "Admin User",
         photo: "",
         role: "admin",
-        id: ""
+        id: "",
+        dashboardPermissions: null, // null = role-based defaults
     });
 
     useEffect(() => {
@@ -18,13 +19,15 @@ export function UserProvider({ children }) {
         const storedPhoto = localStorage.getItem("adminPhoto");
         const storedRole = localStorage.getItem("adminRole");
         const storedId = localStorage.getItem("adminId");
+        const storedPerms = localStorage.getItem("adminDashboardPermissions");
 
         if (storedUsername || storedPhoto) {
             setUser({
                 username: storedUsername || "Admin User",
                 photo: storedPhoto || "",
                 role: storedRole || "admin",
-                id: storedId || ""
+                id: storedId || "",
+                dashboardPermissions: storedPerms ? JSON.parse(storedPerms) : null,
             });
         }
     }, []);
@@ -37,6 +40,13 @@ export function UserProvider({ children }) {
         if (userData.photo !== undefined) localStorage.setItem("adminPhoto", userData.photo);
         if (userData.role) localStorage.setItem("adminRole", userData.role);
         if (userData.id) localStorage.setItem("adminId", userData.id);
+        if (userData.dashboardPermissions !== undefined) {
+            if (userData.dashboardPermissions) {
+                localStorage.setItem("adminDashboardPermissions", JSON.stringify(userData.dashboardPermissions));
+            } else {
+                localStorage.removeItem("adminDashboardPermissions");
+            }
+        }
     };
 
     return (

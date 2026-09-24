@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, Fragment } from "react";
 import Image from "next/image";
 import { Calendar, User, ArrowLeft, Loader2, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { fetchSinglePost, fetchApprovedComments, createComment, fetchActiveAds } from "@/lib/api";
+import { fetchSinglePost, fetchApprovedComments, createComment, fetchActiveAds, API_URL } from "@/lib/api";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import InFeedAd from "@/components/InFeedAd";
@@ -55,7 +55,6 @@ export default function SinglePostClient({ slug, initialPost = null }) {
                     try {
                         const { getOrCreateSessionId } = await import("@/hooks/useAnalytics");
                         // Dispatch via fetch so it's reliable
-                        const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api");
                         let sid = typeof window !== "undefined" ? sessionStorage.getItem("cbr_sid") : null;
                         if (!sid && typeof window !== "undefined") {
                             sid = Math.random().toString(36).slice(2) + Date.now().toString(36);

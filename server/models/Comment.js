@@ -5,11 +5,37 @@ const CommentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Post",
         required: true,
+        index: true,
+    },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+        default: null,
+        index: true,
+    },
+    replyToAuthor: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+    depth: {
+        type: Number,
+        default: 0,
     },
     authorName: {
         type: String,
         required: true,
         trim: true,
+    },
+    authorEmail: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+    authorPhone: {
+        type: String,
+        trim: true,
+        default: "",
     },
     content: {
         type: String,
@@ -19,6 +45,7 @@ const CommentSchema = new mongoose.Schema({
     isApproved: {
         type: Boolean,
         default: false, // Requires moderation
+        index: true,
     },
     createdAt: {
         type: Date,

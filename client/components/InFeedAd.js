@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/lib/api";
 
 export default function InFeedAd({ ad, className }) {
     if (!ad) return null;
@@ -17,7 +18,6 @@ export default function InFeedAd({ ad, className }) {
 
     const handleAdClick = () => {
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "development" ? "http://localhost:5000/api" : "https://chemicalbusinessreports-f078.onrender.com/api");
             let sid = typeof window !== "undefined" ? sessionStorage.getItem("cbr_sid") : null;
             if (!sid && typeof window !== "undefined") {
                 sid = Math.random().toString(36).slice(2) + Date.now().toString(36);

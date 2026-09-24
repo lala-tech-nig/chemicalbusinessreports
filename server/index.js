@@ -18,6 +18,10 @@ startScheduler();
 const { startReportScheduler } = require("./services/reportSchedulerService");
 startReportScheduler();
 
+// Start nightly database backup scheduler (00:00 Nigeria Time)
+const { startBackupScheduler } = require("./services/backupService");
+startBackupScheduler();
+
 const app = express();
 
 // Middleware
@@ -28,6 +32,11 @@ const path = require("path");
 
 // Make uploads folder static
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Make backup folder available for download (backup email links)
+const backupDir = path.join(__dirname, "backup");
+if (!require("fs").existsSync(backupDir)) require("fs").mkdirSync(backupDir, { recursive: true });
+app.use("/backup", express.static(backupDir));
 
 // Routes
 app.use("/api/posts", require("./routes/posts"));
@@ -45,6 +54,7 @@ app.use("/api/staff-tasks", require("./routes/staffTasks"));
 app.use("/api/petty-cash", require("./routes/pettyCash"));
 app.use("/api/finances", require("./routes/finances"));
 app.use("/api/meetings", require("./routes/meetings"));
+app.use("/api/backup", require("./routes/backup"));
 
 // Health Check
 app.get("/", (req, res) => {

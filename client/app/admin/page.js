@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, FileText, Eye, TrendingUp, Loader2, Globe, Monitor, MousePointerClick, Clock } from "lucide-react";
-import { fetchPosts, fetchActiveAds, fetchAnalyticsSummary } from "@/lib/api";
+import { Users, FileText, Eye, TrendingUp, Loader2, Globe, Monitor, MousePointerClick, Clock, Database } from "lucide-react";
+import { fetchPosts, fetchActiveAds, fetchAnalyticsSummary, triggerBackup } from "@/lib/api";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
+import { toast } from "sonner";
 
 function formatTime(seconds) {
     if (!seconds || seconds < 60) return `${seconds || 0}s`;
@@ -21,6 +22,19 @@ export default function AdminDashboard() {
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
+    const [backingUp, setBackingUp] = useState(false);
+
+    const handleBackup = async () => {
+        setBackingUp(true);
+        try {
+            const result = await triggerBackup();
+            toast.success(`✅ Backup complete! ${result.totalDocs?.toLocaleString()} docs · ${result.zipSizeKB} KB — check your email for the download link.`, { duration: 6000 });
+        } catch (err) {
+            toast.error(`Backup failed: ${err.message}`);
+        } finally {
+            setBackingUp(false);
+        }
+    };
 
     useEffect(() => {
         const loadStats = async () => {
@@ -71,6 +85,17 @@ export default function AdminDashboard() {
                     <p className="text-muted-foreground mt-1">Manage your publications and monitor performance.</p>
                 </div>
                 <div className="flex items-center gap-4 bg-card p-3 rounded-xl border border-border shadow-sm">
+                    {isAdmin && (
+                        <button
+                            onClick={handleBackup}
+                            disabled={backingUp}
+                            title="Run manual database backup"
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-60"
+                        >
+                            {backingUp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                            {backingUp ? "Backing up..." : "Backup Now"}
+                        </button>
+                    )}
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 bg-muted flex items-center justify-center shrink-0">
                         {user.photo ? (
                             <img src={user.photo} alt={user.username} className="w-full h-full object-cover" />
