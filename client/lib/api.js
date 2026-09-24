@@ -1,17 +1,20 @@
-export const API_URL =
+const rawApiUrl =
     process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NEXT_PUBLIC_SERVER_URL ? `${process.env.NEXT_PUBLIC_SERVER_URL.replace(/\/+$/, '')}/api` : null) ||
     (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
         ? "https://chemical.livingvinepropertiesinvestment.com/api"
         : (process.env.NODE_ENV === "production"
             ? "https://chemical.livingvinepropertiesinvestment.com/api"
             : "http://localhost:5050/api"));
 
+export const API_URL = rawApiUrl.replace(/\/+$/, '');
+
 export const SERVER_URL =
-    process.env.NEXT_PUBLIC_SERVER_URL ||
+    (process.env.NEXT_PUBLIC_SERVER_URL ? process.env.NEXT_PUBLIC_SERVER_URL.replace(/\/+$/, '') : null) ||
     API_URL.replace(/\/api\/?$/, "");
 
 export const SOCKET_URL =
-    process.env.NEXT_PUBLIC_SOCKET_URL ||
+    (process.env.NEXT_PUBLIC_SOCKET_URL ? process.env.NEXT_PUBLIC_SOCKET_URL.replace(/\/+$/, '') : null) ||
     SERVER_URL;
 
 export const SITE_URL =
