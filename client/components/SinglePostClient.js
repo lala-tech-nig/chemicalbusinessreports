@@ -10,6 +10,7 @@ import confetti from "canvas-confetti";
 import InFeedAd from "@/components/InFeedAd";
 import VoicePlayer from "@/components/VoicePlayer";
 import SocialShareBar from "@/components/SocialShareBar";
+import CommentSection from "@/components/CommentSection";
 
 const CATEGORY_ROUTES = {
     "News Roundup": "/posts/news-roundup",
@@ -30,8 +31,6 @@ export default function SinglePostClient({ slug, initialPost = null }) {
     const [loading, setLoading] = useState(!initialPost);
     const [error, setError] = useState(null);
     const [comments, setComments] = useState([]);
-    const [commentForm, setCommentForm] = useState({ authorName: "", content: "" });
-    const [submitting, setSubmitting] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
@@ -93,23 +92,14 @@ export default function SinglePostClient({ slug, initialPost = null }) {
         loadContent();
     }, [slug, initialPost]);
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
-        if (!post || !post._id) return;
-        setSubmitting(true);
-        try {
-            await createComment({ ...commentForm, postId: post._id });
-            toast.success("Comment submitted for moderation. It will appear after approval.");
-            setCommentForm({ authorName: "", content: "" });
-            confetti({
-                particleCount: 50,
-                spread: 50,
-                origin: { y: 0.7 }
-            });
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setSubmitting(false);
+    const refreshComments = async () => {
+        if (post && post._id) {
+            try {
+                const data = await fetchApprovedComments(post._id);
+                setComments(data);
+            } catch (err) {
+                console.error("Failed to refresh comments:", err);
+            }
         }
     };
 
@@ -377,70 +367,12 @@ export default function SinglePostClient({ slug, initialPost = null }) {
                         </div>
 
                         {/* Comments Section */}
-                        <div className="border-t border-gray-200 pt-16">
-                            <div className="flex items-center justify-between mb-10">
-                                <h2 className="text-3xl font-black text-gray-900">Conversations <span className="text-gray-400 font-normal">({comments.length})</span></h2>
-                            </div>
-
-                            <form onSubmit={handleCommentSubmit} className="mb-16 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                                <h3 className="text-xl font-bold mb-6">Join the discussion</h3>
-                                <div className="grid grid-cols-1 gap-6 mb-6">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Your Name</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="eg. John Doe"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                            value={commentForm.authorName}
-                                            onChange={(e) => setCommentForm({ ...commentForm, authorName: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Message</label>
-                                        <textarea
-                                            required
-                                            rows="4"
-                                            placeholder="What are your thoughts?"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
-                                            value={commentForm.content}
-                                            onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="w-full md:w-auto bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold hover:bg-primary/90 transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
-                                >
-                                    {submitting ? "Sharing..." : "Post Comment"}
-                                </button>
-                            </form>
-
-                            <div className="space-y-8">
-                                {comments.map((comment) => (
-                                    <div key={comment._id} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-hover hover:shadow-md">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                                                    {comment.authorName[0]}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900">{comment.authorName}</h4>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(comment.createdAt).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-600 leading-relaxed text-lg">{comment.content}</p>
-                                    </div>
-                                ))}
-                                {comments.length === 0 && (
-                                    <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-gray-200">
-                                        <p className="text-gray-400 font-medium">No comments yet. Be the first to share your thoughts!</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        {/* Threaded Comments Section */}
+                        <CommentSection
+                            postId={post._id}
+                            comments={comments}
+                            onCommentSubmitted={refreshComments}
+                        />
                     </article>
 
                     {/* Sidebar Column */}

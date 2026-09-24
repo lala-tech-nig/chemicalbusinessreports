@@ -299,7 +299,7 @@ export default function PreviewPostPage() {
 
                             <form onSubmit={handleCommentSubmit} className="mb-16 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
                                 <h3 className="text-xl font-bold mb-6">Join the discussion</h3>
-                                <div className="grid grid-cols-1 gap-6 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                     <div>
                                         <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Your Name</label>
                                         <input
@@ -310,14 +310,32 @@ export default function PreviewPostPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Message</label>
-                                        <textarea
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email (optional)</label>
+                                        <input
+                                            type="email"
                                             disabled
-                                            rows="4"
-                                            placeholder="Commenting is disabled in preview mode."
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none resize-none"
+                                            placeholder="john@example.com"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Phone (optional)</label>
+                                        <input
+                                            type="tel"
+                                            disabled
+                                            placeholder="+234..."
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Message</label>
+                                    <textarea
+                                        disabled
+                                        rows="4"
+                                        placeholder="Commenting is disabled in preview mode."
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none resize-none"
+                                    />
                                 </div>
                                 <button
                                     type="button"
