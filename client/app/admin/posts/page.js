@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Edit, Trash2, Star, Loader2, User, FileX2, AlertTriangle, Share2, Search, Filter, X, Check } from "lucide-react";
 import Link from "next/link";
-import { fetchPosts, deletePost, setStoryOfTheDay, deleteAllDraftPosts } from "@/lib/api";
+import { fetchPosts, deletePost, setStoryOfTheDay, deleteAllDraftPosts, SITE_URL } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 

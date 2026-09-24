@@ -6,6 +6,21 @@ export const API_URL =
             ? "https://chemical.livingvinepropertiesinvestment.com/api"
             : "http://localhost:5050/api"));
 
+export const SERVER_URL =
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    API_URL.replace(/\/api\/?$/, "");
+
+export const SOCKET_URL =
+    process.env.NEXT_PUBLIC_SOCKET_URL ||
+    SERVER_URL;
+
+export const SITE_URL =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "https://www.chemicalbusinessreports.net");
+
+
 function getAuthHeaders() {
     const token = typeof window !== 'undefined'
         ? (localStorage.getItem('adminToken') || localStorage.getItem('staffToken') || localStorage.getItem('token'))

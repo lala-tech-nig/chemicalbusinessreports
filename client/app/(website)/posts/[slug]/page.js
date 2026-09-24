@@ -1,8 +1,5 @@
 import SinglePostClient from "@/components/SinglePostClient";
-import { API_URL } from "@/lib/api";
-
-const SITE_URL =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://www.chemicalbusinessreports.net";
+import { API_URL, SERVER_URL, SITE_URL } from "@/lib/api";
 
 /**
  * Convert any image URL into a WhatsApp-optimised OG image.
@@ -38,9 +35,7 @@ function getAbsoluteImageUrl(imgUrl) {
 
     if (url.startsWith("https://")) return url;
 
-    const origin =
-        process.env.NEXT_PUBLIC_SERVER_URL ||
-        "https://chemicalbusinessreports-f078.onrender.com";
+    const origin = SERVER_URL;
     return `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
