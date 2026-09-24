@@ -55,6 +55,7 @@ app.use("/api/petty-cash", require("./routes/pettyCash"));
 app.use("/api/finances", require("./routes/finances"));
 app.use("/api/meetings", require("./routes/meetings"));
 app.use("/api/backup", require("./routes/backup"));
+app.use("/api/youtube", require("./routes/youtube"));
 
 // Health Check
 app.get("/", (req, res) => {

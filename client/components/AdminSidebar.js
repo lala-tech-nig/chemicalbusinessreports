@@ -21,6 +21,7 @@ import {
     Trophy,
     ArrowUpRight,
     Video,
+    Youtube,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -28,6 +29,7 @@ import { UserProvider, useUser } from "@/context/UserContext";
 // permissionKey must match a key in ALL_DASHBOARD_SECTIONS from UserPermissionsModal
 const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard, permissionKey: "overview" },
+    { name: "YouTube Hub", href: "/admin/youtube", icon: Youtube, permissionKey: "youtube" },
     { name: "Voice Meetings", href: "/admin/meetings", icon: Video, permissionKey: "meetings" },
     { name: "Staff Tasks & Kanban", href: "/admin/staff-tracker", icon: Kanban, permissionKey: "staff-tracker" },
     { name: "Staff Performance", href: "/admin/staff-performance", icon: Trophy, permissionKey: "staff-performance" },

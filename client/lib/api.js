@@ -1082,3 +1082,58 @@ export async function deleteMeeting(id) {
     return res.json();
 }
 
+// ── YouTube Video Hub ───────────────────────────────────────────────────────
+export async function fetchYouTubeVideos(search = "") {
+    const query = search ? `?search=${encodeURIComponent(search)}` : "";
+    const res = await fetch(`${API_URL}/youtube${query}`);
+    if (!res.ok) throw new Error("Failed to fetch YouTube videos");
+    return res.json();
+}
+
+export async function fetchYouTubeInfo(url) {
+    const res = await fetch(`${API_URL}/youtube/info?url=${encodeURIComponent(url)}`);
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to fetch YouTube video info");
+    }
+    return res.json();
+}
+
+export async function createYouTubeVideo(data) {
+    const res = await fetch(`${API_URL}/youtube`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to publish YouTube video");
+    }
+    return res.json();
+}
+
+export async function updateYouTubeVideo(id, data) {
+    const res = await fetch(`${API_URL}/youtube/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update YouTube video");
+    }
+    return res.json();
+}
+
+export async function deleteYouTubeVideo(id) {
+    const res = await fetch(`${API_URL}/youtube/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete YouTube video");
+    }
+    return res.json();
+}
+

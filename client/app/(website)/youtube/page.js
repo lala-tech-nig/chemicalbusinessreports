@@ -1,319 +1,370 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Play, X, Youtube, ExternalLink, Loader2, Search, TrendingUp, Eye } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import {
+    Play,
+    X,
+    Youtube,
+    ExternalLink,
+    Loader2,
+    Search,
+    Calendar,
+    Clock,
+    Sparkles,
+    Film,
+    Share2,
+    Check,
+    ArrowRight,
+    Shield,
+} from "lucide-react";
+import { fetchYouTubeVideos } from "@/lib/api";
+import { toast } from "sonner";
+import Link from "next/link";
 
-const YOUTUBE_CHANNEL_ID = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || "UCxxxxxxxxxxxxxxxx"; // Replace with real channel ID
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || ""; // Set in .env.local
-
-const FALLBACK_VIDEOS = [
+// Graceful fallback videos if none published yet in database
+const SAMPLE_VIDEOS = [
     {
-        id: "dQw4w9WgXcQ",
-        title: "Chemical Business Reports — Channel Introduction",
-        description: "Welcome to Chemical Business Reports — your trusted source for chemical industry insights, market reports, and executive interviews.",
+        _id: "sample-1",
+        videoId: "dQw4w9WgXcQ",
+        youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        title: "Chemical Business Reports — Market Intelligence & Insights",
+        narration:
+            "A comprehensive overview of Chemical Business Reports: delivering timely industry reports, market trends, executive perspectives, and actionable intelligence across African and global chemical sectors.",
         thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-        publishedAt: "2024-01-01T00:00:00Z",
-        viewCount: "1200",
+        author: "Chemical Business Reports",
+        publishedAt: new Date().toISOString(),
     },
 ];
-
-function formatViews(n) {
-    if (!n) return "";
-    const num = parseInt(n);
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M views`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K views`;
-    return `${num} views`;
-}
-
-function formatDate(iso) {
-    if (!iso) return "";
-    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
 
 export default function YouTubePage() {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [activeVideo, setActiveVideo] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [autoplay, setAutoplay] = useState(true);
-    const playerRef = useRef(null);
+    const [copiedId, setCopiedId] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
-        fetchVideos();
+        try {
+            const token = localStorage.getItem("adminToken");
+            const role = localStorage.getItem("adminRole");
+            if (token || role === "admin") {
+                setIsAdmin(true);
+            }
+        } catch (e) {
+            // ignore
+        }
+        loadVideos();
     }, []);
 
-    async function fetchVideos() {
-        setLoading(true);
+    const loadVideos = async () => {
         try {
-            if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === "") {
-                // No API key — use fallback
-                setVideos(FALLBACK_VIDEOS);
-                setLoading(false);
-                return;
+            const data = await fetchYouTubeVideos();
+            if (Array.isArray(data) && data.length > 0) {
+                setVideos(data);
+            } else {
+                setVideos(SAMPLE_VIDEOS);
             }
-
-            // 1. Get the uploads playlist for this channel
-            const channelRes = await fetch(
-                `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,statistics&id=${YOUTUBE_CHANNEL_ID}&key=${YOUTUBE_API_KEY}`
-            );
-            const channelData = await channelRes.json();
-            const playlistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-            if (!playlistId) throw new Error("Could not find uploads playlist");
-
-            // 2. Get up to 50 videos from the uploads playlist
-            const playlistRes = await fetch(
-                `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${YOUTUBE_API_KEY}`
-            );
-            const playlistData = await playlistRes.json();
-            const items = playlistData.items || [];
-
-            // 3. Get statistics for each video
-            const videoIds = items.map(i => i.snippet.resourceId.videoId).join(",");
-            let statsMap = {};
-            if (videoIds) {
-                const statsRes = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`
-                );
-                const statsData = await statsRes.json();
-                (statsData.items || []).forEach(v => { statsMap[v.id] = v.statistics; });
-            }
-
-            const formattedVideos = items.map(item => ({
-                id: item.snippet.resourceId.videoId,
-                title: item.snippet.title,
-                description: item.snippet.description,
-                thumbnail:
-                    item.snippet.thumbnails?.maxres?.url ||
-                    item.snippet.thumbnails?.high?.url ||
-                    item.snippet.thumbnails?.default?.url,
-                publishedAt: item.snippet.publishedAt,
-                viewCount: statsMap[item.snippet.resourceId.videoId]?.viewCount,
-                likeCount: statsMap[item.snippet.resourceId.videoId]?.likeCount,
-            }));
-
-            setVideos(formattedVideos);
-        } catch (err) {
-            console.error("[YouTube] Fetch error:", err);
-            setError("Could not load videos from YouTube. Showing channel page.");
-            setVideos(FALLBACK_VIDEOS);
+        } catch (error) {
+            console.warn("Using sample videos fallback:", error);
+            setVideos(SAMPLE_VIDEOS);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    const filteredVideos = videos.filter(v =>
-        v.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const handleShare = (e, video) => {
+        e.stopPropagation();
+        const url = video.youtubeUrl || `https://www.youtube.com/watch?v=${video.videoId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedId(video._id);
+            toast.success("YouTube link copied to clipboard!");
+            setTimeout(() => setCopiedId(null), 2000);
+        }).catch(() => toast.error("Failed to copy link"));
+    };
 
-    const featuredVideo = filteredVideos[0];
-    const restVideos = filteredVideos.slice(1);
+    const filteredVideos = useMemo(() => {
+        if (!searchQuery.trim()) return videos;
+        const q = searchQuery.toLowerCase();
+        return videos.filter(
+            (v) =>
+                v.title?.toLowerCase().includes(q) ||
+                v.narration?.toLowerCase().includes(q) ||
+                v.author?.toLowerCase().includes(q)
+        );
+    }, [videos, searchQuery]);
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
-            {/* Hero Banner */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-red-900 via-gray-900 to-gray-950 py-20 px-4">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-20 w-64 h-64 rounded-full bg-red-500 blur-3xl" />
-                    <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-red-700 blur-3xl" />
+        <div className="min-h-screen bg-slate-50/60 pb-24">
+            {/* ── Hero Banner (Matching Existing Blue Design) ── */}
+            <section className="relative bg-gradient-to-br from-primary via-blue-700 to-sky-900 text-white pt-16 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+                {/* Background decorative blurs */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                    <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white blur-3xl" />
+                    <div className="absolute top-1/2 -right-24 w-96 h-96 rounded-full bg-sky-300 blur-3xl" />
                 </div>
-                <div className="relative max-w-5xl mx-auto text-center">
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg mb-6 shadow-xl"
-                    >
-                        <Youtube className="w-6 h-6" />
-                        Chemical Business Reports
-                    </motion.div>
-                    <motion.h1
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-6xl font-black mb-4 leading-tight"
-                    >
-                        Our YouTube Channel
-                    </motion.h1>
-                    <motion.p
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-gray-300 text-lg max-w-2xl mx-auto mb-8"
-                    >
-                        Watch in-depth market reports, executive interviews, and chemical industry insights — all in one place.
-                    </motion.p>
-                    <motion.a
-                        href={`https://www.youtube.com/channel/${YOUTUBE_CHANNEL_ID}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-full transition-colors shadow-xl"
-                    >
-                        <Youtube className="w-5 h-5" />
-                        Subscribe on YouTube
-                        <ExternalLink className="w-4 h-4" />
-                    </motion.a>
-                </div>
-            </div>
 
-            {/* Search */}
-            <div className="max-w-5xl mx-auto px-4 py-8">
-                <div className="relative max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search videos..."
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-full text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
-                    />
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="max-w-5xl mx-auto px-4 pb-20">
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
-                    </div>
-                ) : filteredVideos.length === 0 ? (
-                    <div className="text-center py-20 text-gray-400">No videos found.</div>
-                ) : (
-                    <>
-                        {/* Featured Video */}
-                        {featuredVideo && (
-                            <div className="mb-12">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <TrendingUp className="w-5 h-5 text-red-500" />
-                                    <span className="text-sm font-bold uppercase tracking-widest text-red-400">Latest Video</span>
-                                </div>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="relative rounded-2xl overflow-hidden bg-gray-900 shadow-2xl cursor-pointer group"
-                                    onClick={() => setActiveVideo(featuredVideo)}
-                                >
-                                    <div className="relative aspect-video">
-                                        <img
-                                            src={featuredVideo.thumbnail}
-                                            alt={featuredVideo.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                                            <motion.div
-                                                whileHover={{ scale: 1.1 }}
-                                                className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl"
-                                            >
-                                                <Play className="w-9 h-9 text-white ml-1" fill="white" />
-                                            </motion.div>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h2 className="text-xl font-bold text-white mb-2 line-clamp-2">{featuredVideo.title}</h2>
-                                        <div className="flex items-center gap-4 text-gray-400 text-sm">
-                                            {featuredVideo.viewCount && (
-                                                <span className="flex items-center gap-1">
-                                                    <Eye className="w-4 h-4" />
-                                                    {formatViews(featuredVideo.viewCount)}
-                                                </span>
-                                            )}
-                                            <span>{formatDate(featuredVideo.publishedAt)}</span>
-                                        </div>
-                                    </div>
-                                </motion.div>
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="max-w-2xl space-y-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-xs font-semibold uppercase tracking-wider text-sky-200">
+                                <Youtube className="w-3.5 h-3.5 text-red-400" />
+                                <span>CBR Media & Video Reports</span>
                             </div>
-                        )}
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
+                                Video Insights & Market Reports
+                            </h1>
+                            <p className="text-sm sm:text-base text-sky-100/90 leading-relaxed">
+                                Curated video briefings, expert interviews, and executive summaries narrating the latest developments across the chemical and petrochemical industries.
+                            </p>
+                        </div>
 
-                        {/* Video Grid */}
-                        {restVideos.length > 0 && (
-                            <div>
-                                <h2 className="text-xl font-bold mb-6 text-white">More Videos</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                    {restVideos.map((video, index) => (
-                                        <motion.div
-                                            key={video.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            viewport={{ once: true }}
-                                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                                            className="bg-gray-900 rounded-xl overflow-hidden cursor-pointer group hover:bg-gray-800 transition-colors border border-gray-800 hover:border-red-900"
-                                            onClick={() => setActiveVideo(video)}
-                                        >
-                                            <div className="relative aspect-video">
-                                                <img
-                                                    src={video.thumbnail}
-                                                    alt={video.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center">
-                                                        <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="text-sm font-semibold text-white line-clamp-2 mb-2">{video.title}</h3>
-                                                <div className="flex items-center gap-3 text-xs text-gray-500">
-                                                    {video.viewCount && <span>{formatViews(video.viewCount)}</span>}
-                                                    <span>{formatDate(video.publishedAt)}</span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* Video Modal Player */}
-            <AnimatePresence>
-                {activeVideo && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-                        onClick={() => setActiveVideo(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative w-full max-w-4xl"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <button
-                                onClick={() => setActiveVideo(null)}
-                                className="absolute -top-12 right-0 text-white hover:text-red-400 transition-colors flex items-center gap-2 text-sm font-medium"
-                            >
-                                <X className="w-5 h-5" /> Close
-                            </button>
-                            <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl">
-                                <iframe
-                                    ref={playerRef}
-                                    src={`https://www.youtube.com/embed/${activeVideo.id}?autoplay=1&rel=0&modestbranding=1`}
-                                    title={activeVideo.title}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                    className="w-full h-full"
+                        {/* Search & Admin Quick Action */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <div className="relative w-full sm:w-72">
+                                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60" />
+                                <input
+                                    type="text"
+                                    placeholder="Search video reports..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 text-sm bg-white/10 backdrop-blur-xs border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 transition-all"
                                 />
-                            </div>
-                            <div className="mt-4 px-1">
-                                <h3 className="text-white font-bold text-lg">{activeVideo.title}</h3>
-                                {activeVideo.viewCount && (
-                                    <p className="text-gray-400 text-sm mt-1">{formatViews(activeVideo.viewCount)} · {formatDate(activeVideo.publishedAt)}</p>
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery("")}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
                                 )}
                             </div>
-                        </motion.div>
-                    </motion.div>
+
+                            {isAdmin && (
+                                <Link
+                                    href="/admin/youtube"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-primary text-xs font-bold rounded-xl hover:bg-white/90 transition-all shadow-md shrink-0"
+                                >
+                                    <Shield className="w-3.5 h-3.5" />
+                                    <span>Manage Videos</span>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Main Content Area: Video Cards with Little Narration ── */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+                {/* Stats / Results Bar */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-8 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                        <Film className="w-4 h-4 text-primary" />
+                        <span>
+                            {filteredVideos.length} Video Report{filteredVideos.length !== 1 ? "s" : ""} Available
+                        </span>
+                        {searchQuery && (
+                            <span className="text-primary font-normal">
+                                for &ldquo;{searchQuery}&rdquo;
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-[11px] text-gray-400 font-medium">
+                        Click any video card to play instantly with full narration
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-24">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary mb-3" />
+                        <p className="text-sm font-semibold text-gray-500">Loading video reports...</p>
+                    </div>
+                ) : filteredVideos.length === 0 ? (
+                    <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 p-8 shadow-sm">
+                        <Youtube className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <h3 className="text-lg font-bold text-gray-800">No videos match your search</h3>
+                        <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                            Try searching with different keywords or clear the search filter above.
+                        </p>
+                    </div>
+                ) : (
+                    /* ── Video Cards Grid ── */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {filteredVideos.map((video) => (
+                            <article
+                                key={video._id}
+                                onClick={() => setActiveVideo(video)}
+                                className="group bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1"
+                            >
+                                {/* Thumbnail Container */}
+                                <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                                    {video.thumbnail ? (
+                                        <img
+                                            src={video.thumbnail}
+                                            alt={video.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-slate-800 text-white">
+                                            <Play className="w-12 h-12 text-red-500 fill-red-500" />
+                                        </div>
+                                    )}
+
+                                    {/* Play Button Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center transition-opacity">
+                                        <div className="w-14 h-14 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-300">
+                                            <Play className="w-6 h-6 fill-white ml-0.5" />
+                                        </div>
+                                    </div>
+
+                                    {/* Top Badges */}
+                                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-xs text-white text-[11px] font-bold">
+                                            <Youtube className="w-3 h-3 text-red-500 fill-red-500" />
+                                            <span>YouTube</span>
+                                        </span>
+                                    </div>
+
+                                    {/* Share Button */}
+                                    <button
+                                        onClick={(e) => handleShare(e, video)}
+                                        className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
+                                            copiedId === video._id
+                                                ? "bg-green-500 text-white"
+                                                : "bg-black/60 text-white/80 hover:text-white hover:bg-black/90"
+                                        }`}
+                                        title="Copy YouTube Link"
+                                    >
+                                        {copiedId === video._id ? (
+                                            <Check className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <Share2 className="w-3.5 h-3.5" />
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Content Body */}
+                                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                                    <div className="space-y-2.5">
+                                        {/* Caption / Title */}
+                                        <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                                            {video.title}
+                                        </h3>
+
+                                        {/* Little Narration */}
+                                        {video.narration ? (
+                                            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-3">
+                                                {video.narration}
+                                            </p>
+                                        ) : (
+                                            <p className="text-gray-400 text-xs italic">
+                                                Click to play this report video.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Footer Details */}
+                                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                                        <div className="flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                                            <span>
+                                                {new Date(video.publishedAt || video.createdAt).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })}
+                                            </span>
+                                        </div>
+
+                                        <span className="inline-flex items-center gap-1 font-bold text-primary text-xs group-hover:translate-x-0.5 transition-transform">
+                                            <span>Watch Video</span>
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
                 )}
-            </AnimatePresence>
+            </main>
+
+            {/* ── Interactive Video Player Modal with Full Narration ── */}
+            {activeVideo && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+                    onClick={() => setActiveVideo(null)}
+                >
+                    <div
+                        className="bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 my-8"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* 16:9 YouTube Player */}
+                        <div className="relative aspect-video bg-black">
+                            <iframe
+                                src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&rel=0`}
+                                title={activeVideo.title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className="w-full h-full border-0"
+                            />
+                            <button
+                                onClick={() => setActiveVideo(null)}
+                                className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black text-white rounded-full transition-colors z-20"
+                                title="Close player"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Narration & Details */}
+                        <div className="p-6 sm:p-8 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full mb-2">
+                                        <Youtube className="w-3.5 h-3.5" />
+                                        <span>Chemical Business Reports Video</span>
+                                    </div>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
+                                        {activeVideo.title}
+                                    </h2>
+                                    <p className="text-xs text-gray-400">
+                                        Published on{" "}
+                                        {new Date(activeVideo.publishedAt || activeVideo.createdAt).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric",
+                                        })}
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <a
+                                        href={activeVideo.youtubeUrl || `https://www.youtube.com/watch?v=${activeVideo.videoId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                                    >
+                                        <span>Open on YouTube</span>
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Narration Section */}
+                            {activeVideo.narration && (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                                        Video Narration & Report Summary
+                                    </h4>
+                                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+                                        {activeVideo.narration}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

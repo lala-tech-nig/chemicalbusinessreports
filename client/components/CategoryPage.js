@@ -7,6 +7,7 @@ import InFeedAd from "@/components/InFeedAd";
 import { Search, Loader2, Clock, ArrowRight, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPosts, fetchActiveAds } from "@/lib/api";
+import Link from "next/link";
 
 function getAdSizeClasses(adSize) {
     switch (adSize) {
@@ -154,47 +155,74 @@ export default function CategoryPage({ categoryName, apiCategoryName, descriptio
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {/* Featured Post */}
+                {/* Featured Post Card - 50% reduced height, full-width image, writing below */}
                 {!searchTerm && activeFilter === "All" && featuredPost && !loading && !hideFeatured && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 relative group overflow-hidden rounded-3xl bg-slate-950"
-                        style={{ minHeight: "340px" }}
+                        className="mb-8"
                     >
-                        {featuredPost.image && (
-                            <img
-                                src={featuredPost.image}
-                                alt={featuredPost.title}
-                                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
-                                style={{ maxHeight: "420px", width: "100%", display: "block" }}
-                            />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-4">
-                            <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-red-400">
-                                <span className="flex h-2 w-2 rounded-full bg-red-400 animate-pulse" />
-                                Featured
-                            </span>
-                            <h2 className="text-2xl md:text-4xl font-bold text-white max-w-3xl leading-tight">
-                                {featuredPost.title}
-                            </h2>
-                            <p className="text-slate-300 line-clamp-2 max-w-2xl hidden sm:block">
-                                {featuredPost.excerpt}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-4 pt-1">
-                                <a
-                                    href={`/posts/${featuredPost.slug}`}
-                                    className="inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-blue-50 transition-colors text-sm"
-                                >
-                                    Read Full Story <ArrowRight className="w-4 h-4" />
-                                </a>
-                                <span className="flex items-center gap-1.5 text-slate-400 text-sm">
-                                    <Clock className="w-4 h-4" />
-                                    {new Date(featuredPost.createdAt).toLocaleDateString()}
-                                </span>
+                        <Link
+                            href={`/posts/${featuredPost.slug}`}
+                            className="group block rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm hover:shadow-xl transition-all duration-300"
+                        >
+                            {/* Full width image with 25% height increase */}
+                            {featuredPost.image && (
+                                <div className="relative w-full h-56 sm:h-64 md:h-72 overflow-hidden bg-slate-100">
+                                    <img
+                                        src={featuredPost.image}
+                                        alt={featuredPost.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                    />
+                                    {/* Top-left Featured Badge */}
+                                    <div className="absolute top-3.5 left-3.5 z-10">
+                                        <span className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                            Featured Story
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Text Section - Cleanly below image with comfortable spacing */}
+                            <div className="p-5 sm:p-6 md:p-7 space-y-3 bg-white">
+                                <div className="flex items-center gap-2.5 text-xs text-gray-400 flex-wrap">
+                                    <span className="bg-blue-50 text-blue-700 font-bold px-2.5 py-0.5 rounded-full text-xs">
+                                        {featuredPost.category || categoryName}
+                                    </span>
+                                    <span className="flex items-center gap-1 font-medium text-gray-500">
+                                        <Clock className="w-3.5 h-3.5 text-primary" />
+                                        {new Date(featuredPost.createdAt).toLocaleDateString("en-US", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
+                                    </span>
+                                    {featuredPost.author && (
+                                        <span className="ml-auto font-medium text-gray-600">
+                                            By {featuredPost.author}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                                    {featuredPost.title}
+                                </h2>
+
+                                {featuredPost.excerpt && (
+                                    <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed line-clamp-2">
+                                        {featuredPost.excerpt}
+                                    </p>
+                                )}
+
+                                <div className="pt-1.5">
+                                    <span className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs group-hover:bg-primary/90 transition-all">
+                                        <span>Read Full Story</span>
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </div>
                             </div>
-                        </div>
+                        </Link>
                     </motion.div>
                 )}
 

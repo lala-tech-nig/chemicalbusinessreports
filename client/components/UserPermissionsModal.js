@@ -9,6 +9,7 @@ import { toast } from "sonner";
 // All available dashboard sections
 export const ALL_DASHBOARD_SECTIONS = [
     { key: "overview", label: "Dashboard Overview", desc: "Main stats and metrics overview" },
+    { key: "youtube", label: "YouTube Videos", desc: "Publish, edit, delete YouTube video posts" },
     { key: "posts", label: "Posts Management", desc: "Create, edit, delete articles" },
     { key: "create-post", label: "Create Post", desc: "Write and publish new articles" },
     { key: "users", label: "User Management", desc: "Manage admin/staff accounts" },

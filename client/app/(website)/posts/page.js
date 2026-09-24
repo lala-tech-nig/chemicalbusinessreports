@@ -149,53 +149,56 @@ function AllPostsContent() {
                                         href={`/posts/${story.slug}`}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="group block rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 bg-white"
+                                        className="group block rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 bg-white"
                                     >
-                                        {/* Image Section */}
+                                        {/* Image Section - 25% increased height, full width */}
                                         {story.image && (
-                                            <div className="relative w-full overflow-hidden bg-slate-100" style={{ height: "360px" }}>
+                                            <div className="relative w-full h-56 sm:h-64 md:h-72 overflow-hidden bg-slate-100">
                                                 <img
                                                     src={story.image}
                                                     alt={story.title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                                 />
                                                 {/* Top left badge */}
-                                                <div className="absolute top-4 left-4">
-                                                    <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+                                                <div className="absolute top-3.5 left-3.5 z-10">
+                                                    <span className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                                                         Featured Story
                                                     </span>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {/* Text Section - clean, below image */}
-                                        <div className="p-6 md:p-8 bg-white">
-                                            <div className="flex items-center gap-3 mb-3 text-xs text-gray-400 flex-wrap">
-                                                <span className="bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded-full">
+                                        {/* Text Section - clean, below image with comfortable spacing */}
+                                        <div className="p-5 sm:p-6 md:p-7 bg-white space-y-3">
+                                            <div className="flex items-center gap-2.5 text-xs text-gray-400 flex-wrap">
+                                                <span className="bg-blue-50 text-blue-700 font-bold px-2.5 py-0.5 rounded-full text-xs">
                                                     {story.category}
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    {new Date(story.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                                                <span className="flex items-center gap-1 font-medium text-gray-500">
+                                                    <Clock className="w-3.5 h-3.5 text-primary" />
+                                                    {new Date(story.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                                                 </span>
                                                 {story.author && (
                                                     <span className="ml-auto font-medium text-gray-600">By {story.author}</span>
                                                 )}
                                             </div>
 
-                                            <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-tight mb-3 group-hover:text-blue-700 transition-colors">
+                                            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                                                 {story.title}
                                             </h2>
 
                                             {story.excerpt && (
-                                                <p className="text-gray-500 text-sm md:text-base leading-relaxed line-clamp-2 mb-5">
+                                                <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed line-clamp-2">
                                                     {story.excerpt}
                                                 </p>
                                             )}
 
-                                            <div className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full font-bold text-sm transition-colors">
-                                                Read Full Story
-                                                <ArrowRight className="w-4 h-4" />
+                                            <div className="pt-1.5">
+                                                <span className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs group-hover:bg-primary/90 transition-all">
+                                                    <span>Read Full Story</span>
+                                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                </span>
                                             </div>
                                         </div>
                                     </motion.a>
