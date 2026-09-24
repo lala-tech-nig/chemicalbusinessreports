@@ -59,6 +59,18 @@ const AdSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    launchEmailSent: {
+        type: Boolean,
+        default: false,
+    },
+    reminder48hSent: {
+        type: Boolean,
+        default: false,
+    },
+    reminder24hSent: {
+        type: Boolean,
+        default: false,
+    },
     createdAt: {
         type: Date,
         default: Date.now

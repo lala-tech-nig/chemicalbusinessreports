@@ -1,6 +1,6 @@
 const Post = require("../models/Post");
 const slugify = require("slugify");
-const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate } = require("../services/emailReportService");
+const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate, sendAdListingLaunchNotification } = require("../services/emailReportService");
 
 // Helper function to format post with populated author data
 const formatPostWithAuthor = (post) => {
@@ -185,6 +185,32 @@ exports.createPost = async (req, res) => {
                 sendPlatformUsersStoryUpdate({ post: savedPost, isUpdate: false })
                     .catch(err => console.error("Error sending platform users story update:", err));
             }
+
+            // Chemical Business Mart Listing Launch Notification
+            if (savedPost.category === 'Chemical Mart' && savedPost.email && savedPost.email.trim() && !savedPost.launchEmailSent) {
+                const clientBaseUrl = process.env.CLIENT_URL || process.env.BASE_URL || "https://chemicalbusinessreports.com";
+                const itemUrl = `${clientBaseUrl}/posts/${savedPost.slug}`;
+                sendAdListingLaunchNotification({
+                    itemType: "chemical_mart",
+                    title: savedPost.title,
+                    clientEmail: savedPost.email,
+                    clientName: savedPost.companyName || savedPost.author,
+                    companyName: savedPost.companyName,
+                    productName: savedPost.productName,
+                    category: savedPost.category,
+                    subcategory: savedPost.subcategory,
+                    adSize: savedPost.adSize,
+                    durationDays: savedPost.adDuration || 30,
+                    startDate: savedPost.createdAt,
+                    endDate: savedPost.expiryDate,
+                    itemUrl
+                }).then(async (res) => {
+                    if (res && res.success) {
+                        savedPost.launchEmailSent = true;
+                        await savedPost.save();
+                    }
+                }).catch(err => console.error("Error sending Chemical Mart launch notification:", err));
+            }
         }
 
         res.status(201).json(savedPost);
@@ -280,6 +306,32 @@ exports.updatePost = async (req, res) => {
             if (shouldNotifyUsers) {
                 sendPlatformUsersStoryUpdate({ post: updatedPost, isUpdate: true })
                     .catch(err => console.error("Error sending platform users story update:", err));
+            }
+
+            // Chemical Business Mart Launch Notification (if newly published and not yet sent)
+            if (updatedPost.category === 'Chemical Mart' && updatedPost.email && updatedPost.email.trim() && !updatedPost.launchEmailSent) {
+                const clientBaseUrl = process.env.CLIENT_URL || process.env.BASE_URL || "https://chemicalbusinessreports.com";
+                const itemUrl = `${clientBaseUrl}/posts/${updatedPost.slug}`;
+                sendAdListingLaunchNotification({
+                    itemType: "chemical_mart",
+                    title: updatedPost.title,
+                    clientEmail: updatedPost.email,
+                    clientName: updatedPost.companyName || updatedPost.author,
+                    companyName: updatedPost.companyName,
+                    productName: updatedPost.productName,
+                    category: updatedPost.category,
+                    subcategory: updatedPost.subcategory,
+                    adSize: updatedPost.adSize,
+                    durationDays: updatedPost.adDuration || 30,
+                    startDate: updatedPost.createdAt,
+                    endDate: updatedPost.expiryDate,
+                    itemUrl
+                }).then(async (res) => {
+                    if (res && res.success) {
+                        updatedPost.launchEmailSent = true;
+                        await updatedPost.save();
+                    }
+                }).catch(err => console.error("Error sending Chemical Mart launch notification on update:", err));
             }
         }
 

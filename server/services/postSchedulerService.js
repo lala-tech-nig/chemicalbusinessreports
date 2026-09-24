@@ -1,6 +1,6 @@
 const cron = require("node-cron");
 const Post = require("../models/Post");
-const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate } = require("./emailReportService");
+const { sendBrandStoryNotification, sendPlatformUsersStoryUpdate, sendAdListingLaunchNotification } = require("./emailReportService");
 
 /**
  * Starts a background cron job that runs every minute (* * * * *) to check for 
@@ -41,6 +41,32 @@ const startScheduler = () => {
                     if (post.email && post.email.trim()) {
                         sendBrandStoryNotification({ post, isUpdate: false })
                             .catch(err => console.error("[Scheduler] Error sending brand story notification:", err));
+                    }
+
+                    // Dispatch Chemical Mart launch notification if applicable
+                    if (post.category === "Chemical Mart" && post.email && post.email.trim() && !post.launchEmailSent) {
+                        const clientBaseUrl = process.env.CLIENT_URL || process.env.BASE_URL || "https://chemicalbusinessreports.com";
+                        const itemUrl = `${clientBaseUrl}/posts/${post.slug}`;
+                        sendAdListingLaunchNotification({
+                            itemType: "chemical_mart",
+                            title: post.title,
+                            clientEmail: post.email,
+                            clientName: post.companyName || post.author,
+                            companyName: post.companyName,
+                            productName: post.productName,
+                            category: post.category,
+                            subcategory: post.subcategory,
+                            adSize: post.adSize,
+                            durationDays: post.adDuration || 30,
+                            startDate: post.createdAt,
+                            endDate: post.expiryDate,
+                            itemUrl
+                        }).then(async (res) => {
+                            if (res && res.success) {
+                                post.launchEmailSent = true;
+                                await post.save();
+                            }
+                        }).catch(err => console.error("[Scheduler] Error sending Chemical Mart launch notification:", err));
                     }
                 }
             }

@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const { sendDailyReport, sendWeeklyReport } = require("./emailReportService");
+const { sendDailyReport, sendWeeklyReport, checkAndSendAdExpiryReminders } = require("./emailReportService");
 const EmailReportLog = require("../models/EmailReportLog");
 
 /**
@@ -111,11 +111,25 @@ function startReportScheduler() {
         }
     );
 
-    // 3. Self-healing heartbeat: Runs every 15 minutes to recover any missed reports
+    // 3. Self-healing heartbeat & Expiry Reminders: Runs every 15 minutes
     cron.schedule(
         "*/15 * * * *",
         async () => {
             await checkAndSendMissedReports();
+            await checkAndSendAdExpiryReminders();
+        },
+        {
+            scheduled: true,
+            timezone: "Africa/Lagos"
+        }
+    );
+
+    // 4. Hourly dedicated check for 48h and 24h campaign expiry reminders
+    cron.schedule(
+        "0 * * * *",
+        async () => {
+            console.log("⏰ Running hourly Ad & Chemical Mart campaign expiry reminder monitor...");
+            await checkAndSendAdExpiryReminders();
         },
         {
             scheduled: true,
@@ -126,9 +140,10 @@ function startReportScheduler() {
     // Also run a soft check 30 seconds after server startup
     setTimeout(() => {
         checkAndSendMissedReports();
+        checkAndSendAdExpiryReminders();
     }, 30000);
 
-    console.log("✅ Report Scheduler active: Daily at 6:00 AM WAT, Weekly Thursdays at 8:00 AM WAT, 15-min self-healing monitor.");
+    console.log("✅ Report Scheduler active: Daily at 6:00 AM WAT, Weekly Thursdays at 8:00 AM WAT, 15-min self-healing monitor, Hourly Ad Expiry Reminders.");
 }
 
 /**
@@ -143,6 +158,7 @@ async function getSchedulerStatus() {
         currentTimeWAT: `${weekday} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} (${dateKey})`,
         dailySchedule: "Every day at 6:00 AM WAT (Africa/Lagos)",
         weeklySchedule: "Every Thursday at 8:00 AM WAT (Africa/Lagos)",
+        adExpiryRemindersSchedule: "Every hour (48h & 24h warnings)",
         selfHealingEnabled: true,
         lastDailyReport: lastDaily ? {
             sentAt: lastDaily.sentAt,
@@ -164,5 +180,6 @@ async function getSchedulerStatus() {
 module.exports = {
     startReportScheduler,
     checkAndSendMissedReports,
+    checkAndSendAdExpiryReminders,
     getSchedulerStatus
 };

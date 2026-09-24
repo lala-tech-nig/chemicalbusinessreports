@@ -1,4 +1,5 @@
 const Ad = require("../models/Ad");
+const { sendAdListingLaunchNotification, checkAndSendAdExpiryReminders } = require("../services/emailReportService");
 
 // @desc    Get all ads (for admin)
 // @route   GET /api/ads/all
@@ -53,9 +54,42 @@ exports.createAd = async (req, res) => {
         });
 
         const savedAd = await newAd.save();
+
+        // Dispatch launch notification to advertiser asynchronously
+        if (savedAd.clientEmail && savedAd.clientEmail.trim()) {
+            sendAdListingLaunchNotification({
+                itemType: "ad",
+                title: savedAd.title,
+                clientEmail: savedAd.clientEmail,
+                clientName: savedAd.clientName,
+                durationDays: savedAd.durationDays,
+                startDate: savedAd.startDate,
+                endDate: savedAd.endDate,
+                category: "Banner Advertisement",
+                itemUrl: savedAd.link
+            }).then(async (result) => {
+                if (result && result.success) {
+                    savedAd.launchEmailSent = true;
+                    await savedAd.save();
+                }
+            }).catch(err => console.error("Ad launch notification error:", err));
+        }
+
         res.status(201).json(savedAd);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Trigger check for expiring ads and listings (admin manual test/trigger)
+// @route   POST /api/ads/check-expiry-reminders
+// @access  Private (Admin)
+exports.triggerExpiryCheck = async (req, res) => {
+    try {
+        const result = await checkAndSendAdExpiryReminders();
+        res.json({ message: "Ad expiry reminder check executed", result });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 

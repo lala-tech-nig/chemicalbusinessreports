@@ -1572,6 +1572,444 @@ async function sendPlatformUsersStoryUpdate({ post, isUpdate = false }) {
 }
 
 /**
+ * Auto-notification sent to advertiser/client upon successful launch of an Ad or Chemical Business Mart listing.
+ * Includes duration, start & end dates, live link, and notice that daily performance updates (reach & viewers)
+ * will be delivered automatically.
+ */
+async function sendAdListingLaunchNotification({
+    itemType = "ad", // "ad" | "chemical_mart"
+    title,
+    clientEmail,
+    clientName = "",
+    durationDays = 30,
+    startDate = new Date(),
+    endDate,
+    category = "Banner Advertisement",
+    subcategory = "",
+    adSize = "",
+    companyName = "",
+    productName = "",
+    itemUrl = ""
+}) {
+    if (!clientEmail || !clientEmail.trim()) {
+        return { success: false, message: "No client email provided" };
+    }
+
+    try {
+        const isChemicalMart = itemType === "chemical_mart";
+        const formattedStart = new Date(startDate).toLocaleDateString("en-US", {
+            timeZone: "Africa/Lagos",
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        });
+        const formattedEnd = endDate ? new Date(endDate).toLocaleDateString("en-US", {
+            timeZone: "Africa/Lagos",
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }) : "N/A";
+
+        const subject = isChemicalMart
+            ? `🎉 Your Chemical Business Mart Listing is Live: "${title}" (${durationDays} Days)`
+            : `🚀 Your Campaign is Live: "${title}" (${durationDays} Days) — Chemical Business Reports`;
+
+        const campaignTypeLabel = isChemicalMart ? "Chemical Business Mart Listing" : "Banner Advertisement";
+        const displayName = clientName || companyName || "Valued Advertiser";
+        const liveLink = itemUrl || "https://chemicalbusinessreports.com/posts/chemical-mart";
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #0f172a; }
+                    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+                    .hdr { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 32px 28px; text-align: center; color: #ffffff; }
+                    .badge-pill { display: inline-block; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 14px; border-radius: 50px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.3); }
+                    .hdr h1 { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.3; }
+                    .hdr p { margin: 8px 0 0 0; font-size: 14px; color: #bfdbfe; }
+                    .body { padding: 30px 28px; }
+                    .greeting { font-size: 16px; color: #334155; margin-bottom: 20px; line-height: 1.6; }
+                    .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0; }
+                    .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    .row:last-child { border-bottom: none; }
+                    .lbl { color: #64748b; font-weight: 600; }
+                    .val { font-weight: 700; color: #0f172a; text-align: right; }
+                    .update-promise-box { background: #eff6ff; border-left: 4px solid #2563eb; border-radius: 0 12px 12px 0; padding: 18px 20px; margin: 24px 0; }
+                    .update-promise-box h4 { margin: 0 0 6px 0; color: #1e3a8a; font-size: 15px; font-weight: 700; }
+                    .update-promise-box p { margin: 0; font-size: 13px; color: #1e40af; line-height: 1.6; }
+                    .cta-btn { display: block; text-align: center; background: #2563eb; color: #ffffff !important; padding: 14px 24px; border-radius: 10px; font-weight: 700; text-decoration: none; margin: 26px 0 10px 0; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+                    .contact-box { background: #fdfdfd; border-top: 1px solid #f1f5f9; padding: 16px; margin-top: 20px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6; }
+                    .contact-box a { color: #2563eb; font-weight: 700; text-decoration: none; }
+                    .ftr { background: #0f172a; padding: 22px; text-align: center; font-size: 11px; color: #94a3b8; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <div class="badge-pill">✅ Campaign Launched & Broadcasting</div>
+                        <h1>Your Promotion is Officially Live!</h1>
+                        <p>Chemical Business Reports — Market Intelligence & Advertising</p>
+                    </div>
+                    <div class="body">
+                        <div class="greeting">
+                            Dear <strong>${displayName}</strong>,
+                            <br><br>
+                            We are delighted to confirm that your <strong>${campaignTypeLabel}</strong> has been successfully launched across the <strong>Chemical Business Reports</strong> platform!
+                        </div>
+
+                        <div class="details-box">
+                            <div class="row">
+                                <span class="lbl">Campaign Title:</span>
+                                <span class="val" style="color: #2563eb;">${title}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Format / Placement:</span>
+                                <span class="val">${campaignTypeLabel} ${subcategory ? `(${subcategory})` : ''}</span>
+                            </div>
+                            ${productName ? `
+                            <div class="row">
+                                <span class="lbl">Product Featured:</span>
+                                <span class="val">${productName}</span>
+                            </div>` : ''}
+                            ${companyName ? `
+                            <div class="row">
+                                <span class="lbl">Company / Brand:</span>
+                                <span class="val">${companyName}</span>
+                            </div>` : ''}
+                            ${adSize ? `
+                            <div class="row">
+                                <span class="lbl">Ad Size:</span>
+                                <span class="val">${adSize}</span>
+                            </div>` : ''}
+                            <div class="row">
+                                <span class="lbl">Duration:</span>
+                                <span class="val" style="color: #059669; font-weight: 800;">${durationDays} Days</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Launch Date:</span>
+                                <span class="val">${formattedStart} (WAT)</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Expiration Date:</span>
+                                <span class="val">${formattedEnd} (WAT)</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Broadcast Status:</span>
+                                <span class="val" style="color: #16a34a;">🟢 Active & Live</span>
+                            </div>
+                        </div>
+
+                        <div class="update-promise-box">
+                            <h4>📈 Daily Performance Tracking Updates</h4>
+                            <p>
+                                Starting today, you will receive automated <strong>daily updates</strong> directly in your inbox detailing how your campaign is performing in terms of <strong>reach (buyer impressions & views)</strong> and <strong>active viewers (clicks & reader engagements)</strong>. We are committed to giving you complete transparency and verifiable return on your marketing investment.
+                            </p>
+                        </div>
+
+                        <a href="${liveLink}" class="cta-btn">
+                            🌐 View Your Live Campaign on Chemical Business Reports
+                        </a>
+
+                        <div class="contact-box">
+                            Need adjustments or want to extend your reach? Reach out to our advertising team at 
+                            <a href="mailto:coslab.media@gmail.com">coslab.media@gmail.com</a>.
+                        </div>
+                    </div>
+                    <div class="ftr">
+                        © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).<br>
+                        Connecting decision-makers across the chemical, cosmetic, food, and allied industries.
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await sendMail({
+            from: '"Chemical Business Reports Ad Desk" <coslab.media@gmail.com>',
+            replyTo: 'coslab.media@gmail.com',
+            to: clientEmail.trim().toLowerCase(),
+            subject,
+            html
+        });
+
+        console.log(`[Campaign Launch] 🚀 Launch email successfully sent to ${clientEmail} for "${title}"`);
+        return { success: true };
+    } catch (err) {
+        console.error(`[Campaign Launch] Error sending launch email to ${clientEmail}:`, err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Auto-notification sent when an ad or Chemical Mart listing is 48 hours or 24 hours from expiry.
+ * Prompts the advertiser to renew their campaign to avoid interruption in reach.
+ */
+async function sendAdExpiryReminderNotification({
+    itemType = "ad", // "ad" | "chemical_mart"
+    title,
+    clientEmail,
+    clientName = "",
+    companyName = "",
+    durationDays = 30,
+    expiryDate,
+    hoursRemaining = 48,
+    itemUrl = ""
+}) {
+    if (!clientEmail || !clientEmail.trim()) {
+        return { success: false, message: "No client email provided" };
+    }
+
+    try {
+        const is24h = hoursRemaining <= 24;
+        const isChemicalMart = itemType === "chemical_mart";
+        const campaignTypeLabel = isChemicalMart ? "Chemical Business Mart Listing" : "Advertisement Campaign";
+        const displayName = clientName || companyName || "Valued Advertiser";
+
+        const formattedExpiry = expiryDate ? new Date(expiryDate).toLocaleString("en-US", {
+            timeZone: "Africa/Lagos",
+            dateStyle: "full",
+            timeStyle: "short"
+        }) : "within the next 48 hours";
+
+        const subject = is24h
+            ? `🚨 URGENT: Your Campaign "${title}" expires in 24 hours — Renew to maintain reach`
+            : `⏳ Reminder: Your Campaign "${title}" expires in 48 hours — Chemical Business Reports`;
+
+        const headerBg = is24h
+            ? "linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)"
+            : "linear-gradient(135deg, #b45309 0%, #d97706 100%)";
+
+        const badgeText = is24h ? "🚨 EXPIRES IN 24 HOURS (FINAL REMINDER)" : "⏳ EXPIRES IN 48 HOURS";
+        const renewSubject = encodeURIComponent(`Renew Campaign: ${title} (${campaignTypeLabel})`);
+        const renewMailto = `mailto:coslab.media@gmail.com?subject=${renewSubject}&body=Hello%20CBR%20Advertising%20Team,%0D%0A%0D%0AI%20would%20like%20to%20renew%20my%20campaign:%20"${encodeURIComponent(title)}".%0D%0A%0D%0APlease%20let%20me%20know%20the%20available%20duration%20options%20and%20next%20steps.%0D%0A%0D%0AThank%20you!`;
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #0f172a; }
+                    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+                    .hdr { background: ${headerBg}; padding: 32px 28px; text-align: center; color: #ffffff; }
+                    .badge-pill { display: inline-block; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 14px; border-radius: 50px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.3); }
+                    .hdr h1 { margin: 0; font-size: 23px; font-weight: 800; line-height: 1.3; }
+                    .hdr p { margin: 8px 0 0 0; font-size: 14px; color: #fef3c7; }
+                    .body { padding: 30px 28px; }
+                    .greeting { font-size: 16px; color: #334155; margin-bottom: 20px; line-height: 1.6; }
+                    .alert-banner { background: ${is24h ? "#fef2f2" : "#fffbeb"}; border-left: 4px solid ${is24h ? "#ef4444" : "#f59e0b"}; border-radius: 0 12px 12px 0; padding: 18px 20px; margin: 20px 0; }
+                    .alert-banner h4 { margin: 0 0 6px 0; color: ${is24h ? "#991b1b" : "#92400e"}; font-size: 15px; font-weight: 700; }
+                    .alert-banner p { margin: 0; font-size: 13px; color: ${is24h ? "#b91c1c" : "#b45309"}; line-height: 1.6; }
+                    .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin: 20px 0; }
+                    .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    .row:last-child { border-bottom: none; }
+                    .lbl { color: #64748b; font-weight: 600; }
+                    .val { font-weight: 700; color: #0f172a; text-align: right; }
+                    .cta-btn { display: block; text-align: center; background: ${is24h ? "#dc2626" : "#2563eb"}; color: #ffffff !important; padding: 15px 24px; border-radius: 10px; font-weight: 800; text-decoration: none; margin: 26px 0 12px 0; font-size: 15px; box-shadow: 0 4px 15px ${is24h ? "rgba(220, 38, 38, 0.3)" : "rgba(37, 99, 235, 0.25)"}; }
+                    .contact-box { background: #fdfdfd; border-top: 1px solid #f1f5f9; padding: 16px; margin-top: 20px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6; }
+                    .contact-box a { color: #2563eb; font-weight: 700; text-decoration: none; }
+                    .ftr { background: #0f172a; padding: 22px; text-align: center; font-size: 11px; color: #94a3b8; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="hdr">
+                        <div class="badge-pill">${badgeText}</div>
+                        <h1>${is24h ? "Your Campaign Expires Tomorrow!" : "Campaign Expiration Notice"}</h1>
+                        <p>Chemical Business Reports Advertising Desk</p>
+                    </div>
+                    <div class="body">
+                        <div class="greeting">
+                            Dear <strong>${displayName}</strong>,
+                            <br><br>
+                            This is an automatic notification that your <strong>${campaignTypeLabel}</strong> is scheduled to conclude its active broadcast cycle in <strong>${hoursRemaining} hours</strong>.
+                        </div>
+
+                        <div class="alert-banner">
+                            <h4>⚠️ Keep Your Buyer Reach & Views Active</h4>
+                            <p>
+                                Once expired, your ad or listing will cease to be displayed to prospective buyers and industry decision-makers visiting Chemical Business Reports. Renew today to maintain uninterrupted exposure!
+                            </p>
+                        </div>
+
+                        <div class="details-box">
+                            <div class="row">
+                                <span class="lbl">Campaign:</span>
+                                <span class="val" style="color: #2563eb;">${title}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Type:</span>
+                                <span class="val">${campaignTypeLabel}</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Completed Duration:</span>
+                                <span class="val">${durationDays} Days</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Scheduled Expiry:</span>
+                                <span class="val" style="color: ${is24h ? '#dc2626' : '#d97706'}; font-weight: 800;">${formattedExpiry} (WAT)</span>
+                            </div>
+                            <div class="row">
+                                <span class="lbl">Time Remaining:</span>
+                                <span class="val" style="color: ${is24h ? '#dc2626' : '#d97706'}; font-weight: 800;">Approx. ${hoursRemaining} Hours</span>
+                            </div>
+                        </div>
+
+                        <a href="${renewMailto}" class="cta-btn">
+                            🔄 Click Here to Renew Your Campaign Now
+                        </a>
+
+                        ${itemUrl ? `
+                        <p style="text-align: center; margin: 10px 0 0 0; font-size: 13px;">
+                            <a href="${itemUrl}" style="color: #64748b; text-decoration: underline;">Review your live campaign before it expires →</a>
+                        </p>` : ''}
+
+                        <div class="contact-box">
+                            Prefer to speak with an account manager? Reply directly to this email or write to 
+                            <a href="mailto:coslab.media@gmail.com">coslab.media@gmail.com</a> to lock in your preferred placement.
+                        </div>
+                    </div>
+                    <div class="ftr">
+                        © ${new Date().getFullYear()} Chemical Business Reports. Published by Coslab Media Concepts (Ltd).<br>
+                        Connecting decision-makers across the chemical, cosmetic, food, and allied industries.
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await sendMail({
+            from: '"Chemical Business Reports Ad Desk" <coslab.media@gmail.com>',
+            replyTo: 'coslab.media@gmail.com',
+            to: clientEmail.trim().toLowerCase(),
+            subject,
+            html
+        });
+
+        console.log(`[Expiry Reminder] ⏰ ${hoursRemaining}h reminder email sent to ${clientEmail} for "${title}"`);
+        return { success: true };
+    } catch (err) {
+        console.error(`[Expiry Reminder] Error sending ${hoursRemaining}h reminder to ${clientEmail}:`, err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Scans active Ads and Chemical Mart posts for expiration within 48h and 24h.
+ * Dispatches automated reminder emails and updates schema flags to ensure no duplicates.
+ */
+async function checkAndSendAdExpiryReminders() {
+    try {
+        const now = new Date();
+        const clientBaseUrl = process.env.CLIENT_URL || process.env.BASE_URL || "https://chemicalbusinessreports.com";
+        let sentCount = 0;
+
+        // 1. Check Banner Ads
+        const activeAds = await Ad.find({
+            isActive: true,
+            endDate: { $exists: true, $gt: now },
+            clientEmail: { $exists: true, $ne: "" }
+        });
+
+        for (const ad of activeAds) {
+            const hoursLeft = (ad.endDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+            const itemUrl = ad.link && ad.link.startsWith("http") ? ad.link : `${clientBaseUrl}/posts/chemical-mart`;
+
+            if (hoursLeft <= 48 && hoursLeft > 24 && !ad.reminder48hSent) {
+                const res = await sendAdExpiryReminderNotification({
+                    itemType: "ad",
+                    title: ad.title,
+                    clientEmail: ad.clientEmail,
+                    clientName: ad.clientName,
+                    durationDays: ad.durationDays,
+                    expiryDate: ad.endDate,
+                    hoursRemaining: 48,
+                    itemUrl
+                });
+                if (res.success) {
+                    ad.reminder48hSent = true;
+                    await ad.save();
+                    sentCount++;
+                }
+            } else if (hoursLeft <= 24 && hoursLeft > 0 && !ad.reminder24hSent) {
+                const res = await sendAdExpiryReminderNotification({
+                    itemType: "ad",
+                    title: ad.title,
+                    clientEmail: ad.clientEmail,
+                    clientName: ad.clientName,
+                    durationDays: ad.durationDays,
+                    expiryDate: ad.endDate,
+                    hoursRemaining: 24,
+                    itemUrl
+                });
+                if (res.success) {
+                    ad.reminder24hSent = true;
+                    await ad.save();
+                    sentCount++;
+                }
+            }
+        }
+
+        // 2. Check Chemical Mart Posts
+        const activeMartPosts = await Post.find({
+            category: "Chemical Mart",
+            status: "published",
+            expiryDate: { $exists: true, $gt: now },
+            email: { $exists: true, $ne: "" }
+        });
+
+        for (const post of activeMartPosts) {
+            const hoursLeft = (post.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+            const itemUrl = `${clientBaseUrl}/posts/${post.slug || ""}`;
+
+            if (hoursLeft <= 48 && hoursLeft > 24 && !post.reminder48hSent) {
+                const res = await sendAdExpiryReminderNotification({
+                    itemType: "chemical_mart",
+                    title: post.title,
+                    clientEmail: post.email,
+                    clientName: post.companyName || post.author || "Valued Advertiser",
+                    companyName: post.companyName,
+                    durationDays: post.adDuration || 30,
+                    expiryDate: post.expiryDate,
+                    hoursRemaining: 48,
+                    itemUrl
+                });
+                if (res.success) {
+                    post.reminder48hSent = true;
+                    await post.save();
+                    sentCount++;
+                }
+            } else if (hoursLeft <= 24 && hoursLeft > 0 && !post.reminder24hSent) {
+                const res = await sendAdExpiryReminderNotification({
+                    itemType: "chemical_mart",
+                    title: post.title,
+                    clientEmail: post.email,
+                    clientName: post.companyName || post.author || "Valued Advertiser",
+                    companyName: post.companyName,
+                    durationDays: post.adDuration || 30,
+                    expiryDate: post.expiryDate,
+                    hoursRemaining: 24,
+                    itemUrl
+                });
+                if (res.success) {
+                    post.reminder24hSent = true;
+                    await post.save();
+                    sentCount++;
+                }
+            }
+        }
+
+        return { success: true, sentCount };
+    } catch (err) {
+        console.error("Error checking ad expiry reminders:", err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
  * Fetch past report execution logs for Admin Dashboard.
  */
 async function getRecentReportLogs(limit = 20) {
@@ -1594,6 +2032,9 @@ module.exports = {
     sendArticleReadClientNotification,
     sendBrandStoryNotification,
     sendPlatformUsersStoryUpdate,
+    sendAdListingLaunchNotification,
+    sendAdExpiryReminderNotification,
+    checkAndSendAdExpiryReminders,
     extractEmailList,
     getRecentReportLogs,
     gatherDailyMetrics,
@@ -1602,3 +2043,4 @@ module.exports = {
     getAllRecipientEmails,
     getAdminAlertEmails
 };
+

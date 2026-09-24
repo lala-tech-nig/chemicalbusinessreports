@@ -41,6 +41,18 @@ const PostSchema = new mongoose.Schema({
     expiryDate: {
         type: Date,
     },
+    launchEmailSent: {
+        type: Boolean,
+        default: false,
+    },
+    reminder48hSent: {
+        type: Boolean,
+        default: false,
+    },
+    reminder24hSent: {
+        type: Boolean,
+        default: false,
+    },
     author: {
         type: String,
         default: "Admin",
