@@ -12,7 +12,7 @@ const allNavLinks = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
     { name: "News Roundup", href: "/posts/news-roundup" },
-    { name: "Chemical Mart", href: "/posts/chemical-mart" },
+    { name: "Chemical Business Mart", href: "/posts/chemical-mart" },
     { name: "ChemTalk", href: "/chemtalk" },
     { name: "Awards & Partners", href: "/awards" },
     { name: "Research & Reports", href: "/posts/research-reports" },
@@ -74,7 +74,7 @@ export default function Navbar() {
                     </Link>
 
                     {/* Desktop Navigation - All links inline */}
-                    <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-end ml-4">
+                    <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center ml-4">
                         {allNavLinks.map((link) => {
                             const active = isActive(link);
                             return (
