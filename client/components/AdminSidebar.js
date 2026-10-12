@@ -39,6 +39,7 @@ const sidebarLinks = [
     { name: "Create Post", href: "/admin/create-post", icon: PlusCircle, permissionKey: "create-post" },
     { name: "Auto Scraper", href: "/admin/scraper", icon: Globe, permissionKey: "scraper" },
     { name: "Ads", href: "/admin/ads", icon: Megaphone, permissionKey: "ads" },
+    { name: "Marquee Banner", href: "/admin/marquee", icon: Megaphone, permissionKey: "marquee" },
     { name: "ChemTalk Moderation", href: "/admin/chemtalk", icon: MessageSquare, permissionKey: "chemtalk" },
     { name: "Comments", href: "/admin/comments", icon: FileText, permissionKey: "comments" },
     { name: "Submissions", href: "/admin/submissions", icon: FileText, permissionKey: "submissions" },

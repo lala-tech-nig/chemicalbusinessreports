@@ -17,6 +17,7 @@ export const ALL_DASHBOARD_SECTIONS = [
     { key: "finances", label: "Finances", desc: "Financial transactions & records" },
     { key: "petty-cash", label: "Petty Cash", desc: "Petty cash log and tracking" },
     { key: "ads", label: "Advertisements", desc: "Manage platform ads" },
+    { key: "marquee", label: "Marquee Banner", desc: "Top breaking news & announcement ticker above navbar" },
     { key: "comments", label: "Comments", desc: "Moderate user comments" },
     { key: "submissions", label: "Submissions", desc: "Article & media submissions" },
     { key: "meetings", label: "Meetings", desc: "Staff meeting scheduler" },

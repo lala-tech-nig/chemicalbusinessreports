@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import TopMarquee from "@/components/TopMarquee";
 
 const allNavLinks = [
     { name: "Home", href: "/" },
@@ -43,14 +44,17 @@ export default function Navbar() {
     };
 
     return (
-        <nav
+        <header
             className={cn(
                 "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white border-b border-gray-100 max-w-full overflow-x-clip",
                 scrolled ? "shadow-md" : ""
             )}
         >
+            {/* Continuous Ticker Marquee Bar Above Navigation */}
+            <TopMarquee />
+
             {/* Top bar: Logo + mobile menu button */}
-            <div className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6">
+            <nav className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6">
                 <div className="flex justify-between items-center h-14 lg:h-12">
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
@@ -154,6 +158,7 @@ export default function Navbar() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </nav>
+            </nav>
+        </header>
     );
 }

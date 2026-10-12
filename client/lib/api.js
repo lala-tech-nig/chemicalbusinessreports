@@ -1155,3 +1155,66 @@ export async function deleteYouTubeVideo(id) {
     return res.json();
 }
 
+// ==========================================
+// MARQUEE TICKER API
+// ==========================================
+export async function fetchMarqueeSettings() {
+    try {
+        const res = await fetch(`${API_URL}/marquee`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) throw new Error("Failed to fetch marquee settings");
+        const json = await res.json();
+        return json.data;
+    } catch (error) {
+        console.warn("fetchMarqueeSettings error:", error);
+        // Fallback default marquee data if server is offline
+        return {
+            isEnabled: true,
+            label: "BREAKING NEWS",
+            labelBg: "red",
+            theme: "dark",
+            speed: 35,
+            pauseOnHover: true,
+            includeLatestPosts: true,
+            items: [
+                {
+                    _id: "default-1",
+                    text: "Welcome to Chemical Business Reports — Africa & Global Chemical Market Intelligence.",
+                    link: "/",
+                    badge: "WELCOME",
+                    isActive: true,
+                },
+                {
+                    _id: "default-2",
+                    text: "Global Petrochemical & Industrial Trends 2026: Supply chain dynamics, pricing analysis, and policy briefs.",
+                    link: "/posts/research-reports",
+                    badge: "MARKET INSIGHT",
+                    isActive: true,
+                },
+                {
+                    _id: "default-3",
+                    text: "Explore Chemical Business Mart: Verified suppliers, chemicals, and laboratory equipment directory.",
+                    link: "/posts/chemical-mart",
+                    badge: "DIRECTORY",
+                    isActive: true,
+                }
+            ],
+            latestPosts: []
+        };
+    }
+}
+
+export async function updateMarqueeSettings(data) {
+    const res = await fetch(`${API_URL}/marquee`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update marquee settings");
+    }
+    return res.json();
+}
+

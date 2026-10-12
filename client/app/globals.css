@@ -147,3 +147,28 @@ body {
   line-height: 1.6;
 }
 
+/* ==========================================================================
+   Continuous Autoscrolling Marquee Animation
+   ========================================================================== */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker {
+  display: inline-flex;
+  width: max-content;
+  white-space: nowrap;
+  will-change: transform;
+  animation: marquee-scroll var(--ticker-duration, 35s) linear infinite;
+}
+
+.animate-ticker-paused:hover,
+.ticker-container:hover .animate-ticker.pause-on-hover {
+  animation-play-state: paused;
+}
+

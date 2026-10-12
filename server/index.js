@@ -56,6 +56,7 @@ app.use("/api/finances", require("./routes/finances"));
 app.use("/api/meetings", require("./routes/meetings"));
 app.use("/api/backup", require("./routes/backup"));
 app.use("/api/youtube", require("./routes/youtube"));
+app.use("/api/marquee", require("./routes/marquee"));
 
 // Health Check
 app.get("/", (req, res) => {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Megaphone, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
@@ -40,7 +41,30 @@ export default function SettingsPage() {
 
     return (
         <div className="max-w-2xl mx-auto space-y-8">
-            <h1 className="text-3xl font-bold tracking-tight">Site Settings</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold tracking-tight">Site Settings</h1>
+            </div>
+
+            {/* Quick Link to Top Marquee Banner Controls */}
+            <Link
+                href="/admin/marquee"
+                className="flex items-center justify-between p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 transition-colors group"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-blue-600 text-white shrink-0">
+                        <Megaphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                            Top Marquee & Ticker Banner
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                            Configure breaking news and autoscrolling announcements above navbar.
+                        </p>
+                    </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+            </Link>
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-xl border border-border shadow-sm">
                 <div className="space-y-4">
