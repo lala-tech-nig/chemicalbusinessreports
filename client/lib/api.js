@@ -1172,8 +1172,8 @@ export async function fetchMarqueeSettings() {
         return {
             isEnabled: true,
             label: "BREAKING NEWS",
-            labelBg: "red",
-            theme: "dark",
+            labelBg: "dark",
+            theme: "blue",
             speed: 35,
             pauseOnHover: true,
             includeLatestPosts: true,

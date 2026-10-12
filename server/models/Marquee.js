@@ -38,11 +38,11 @@ const MarqueeSchema = new mongoose.Schema({
     },
     labelBg: {
         type: String,
-        default: "red", // red, blue, amber, emerald, purple
+        default: "dark", // dark, blue, red, amber, emerald, purple
     },
     theme: {
         type: String,
-        default: "dark", // dark, blue, slate, light
+        default: "blue", // blue (exact Concepts Ltd Hero blue-400), dark, slate, light
     },
     speed: {
         type: Number,

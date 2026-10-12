@@ -26,15 +26,16 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const THEME_OPTIONS = [
+    { id: "blue", label: "Concepts Blue (Hero)", bgClass: "bg-blue-400 text-slate-950 font-semibold", borderClass: "border-blue-500 shadow-xs" },
     { id: "dark", label: "Midnight Dark", bgClass: "bg-slate-950 text-slate-100", borderClass: "border-slate-800" },
-    { id: "blue", label: "Sapphire Blue", bgClass: "bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-blue-100", borderClass: "border-blue-800" },
     { id: "slate", label: "Slate Zinc", bgClass: "bg-zinc-900 text-zinc-100", borderClass: "border-zinc-800" },
     { id: "light", label: "Minimal Light", bgClass: "bg-slate-100 text-slate-900", borderClass: "border-slate-300" },
 ];
 
 const BADGE_COLORS = [
+    { id: "dark", label: "Midnight Black", class: "bg-slate-950 text-white ring-slate-400" },
+    { id: "blue", label: "Navy Blue", class: "bg-blue-950 text-white ring-blue-400" },
     { id: "red", label: "Crimson Red", class: "bg-red-600 text-white ring-red-400" },
-    { id: "blue", label: "Cobalt Blue", class: "bg-blue-600 text-white ring-blue-400" },
     { id: "amber", label: "Amber Gold", class: "bg-amber-500 text-slate-950 ring-amber-400" },
     { id: "emerald", label: "Forest Emerald", class: "bg-emerald-600 text-white ring-emerald-400" },
     { id: "purple", label: "Royal Purple", class: "bg-purple-600 text-white ring-purple-400" },
@@ -47,8 +48,8 @@ export default function AdminMarqueePage() {
     // Form settings
     const [isEnabled, setIsEnabled] = useState(true);
     const [label, setLabel] = useState("BREAKING NEWS");
-    const [labelBg, setLabelBg] = useState("red");
-    const [theme, setTheme] = useState("dark");
+    const [labelBg, setLabelBg] = useState("dark");
+    const [theme, setTheme] = useState("blue");
     const [speed, setSpeed] = useState(35);
     const [pauseOnHover, setPauseOnHover] = useState(true);
     const [includeLatestPosts, setIncludeLatestPosts] = useState(true);
@@ -170,8 +171,8 @@ export default function AdminMarqueePage() {
         if (!confirm("Reset all marquee configurations to standard factory defaults?")) return;
         setIsEnabled(true);
         setLabel("BREAKING NEWS");
-        setLabelBg("red");
-        setTheme("dark");
+        setLabelBg("dark");
+        setTheme("blue");
         setSpeed(35);
         setPauseOnHover(true);
         setIncludeLatestPosts(true);
@@ -281,23 +282,18 @@ export default function AdminMarqueePage() {
                     {isEnabled ? (
                         <div
                             className={cn(
-                                "relative w-full border-b text-xs overflow-hidden select-none ticker-container py-1.5 px-3 transition-colors",
+                                "relative w-full border-b overflow-hidden select-none ticker-container h-10 sm:h-11 px-3.5 flex items-center transition-colors",
                                 selectedThemeStyle.bgClass,
                                 selectedThemeStyle.borderClass
                             )}
                         >
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0",
-                                        selectedBadgeStyle.class
-                                    )}
-                                >
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            <div className="flex items-center gap-3 w-full">
+                                {/* Simple Red Dot Indicator to signal importance */}
+                                <div className="flex items-center shrink-0 pr-1">
+                                    <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3" title="Important updates">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-80"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-600 ring-2 ring-red-400/40 shadow-xs"></span>
                                     </span>
-                                    <span>{label || "BREAKING"}</span>
                                 </div>
 
                                 <div className="flex-1 overflow-hidden relative">
@@ -308,12 +304,12 @@ export default function AdminMarqueePage() {
                                         {(activeItems.length > 0 ? activeItems : [{ text: "Add custom announcements below to display them here..." }]).map((item, idx) => (
                                             <span key={idx} className="inline-flex items-center gap-2">
                                                 {item.badge && (
-                                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-white/20 text-white">
+                                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white shadow-xs">
                                                         {item.badge}
                                                     </span>
                                                 )}
-                                                <span className="whitespace-nowrap font-medium">{item.text}</span>
-                                                <span className="opacity-40 text-[10px]">◆</span>
+                                                <span className="whitespace-nowrap font-bold sm:font-extrabold text-xs sm:text-[13px]">{item.text}</span>
+                                                <span className="opacity-50 text-xs font-black">◆</span>
                                             </span>
                                         ))}
                                     </div>

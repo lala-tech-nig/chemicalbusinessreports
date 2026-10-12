@@ -34,13 +34,17 @@ exports.getMarqueeSettings = async (req, res) => {
             marquee = await Marquee.create({
                 isEnabled: true,
                 label: "BREAKING NEWS",
-                labelBg: "red",
-                theme: "dark",
+                labelBg: "dark",
+                theme: "blue",
                 speed: 35,
                 pauseOnHover: true,
                 includeLatestPosts: true,
                 items: defaultItems,
             });
+        } else if (marquee.theme === "dark") {
+            marquee.theme = "blue";
+            if (marquee.labelBg === "red") marquee.labelBg = "dark";
+            await marquee.save();
         }
 
         // Optionally fetch latest posts to supplement marquee

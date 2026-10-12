@@ -11,7 +11,7 @@ export default function WebsiteLayout({ children }) {
         <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-clip">
             <AnalyticsTracker />
             <Navbar />
-            <main className="flex-grow pt-24 lg:pt-[84px]">
+            <main className="flex-grow pt-[98px] lg:pt-[92px]">
                 {children}
             </main>
             <Footer />
