@@ -53,9 +53,10 @@ export default function Navbar() {
             {/* Continuous Ticker Marquee Bar Above Navigation */}
             <TopMarquee />
 
-            {/* Top bar: Logo + mobile menu button */}
-            <nav className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6">
-                <div className="flex justify-between items-center h-14 lg:h-12">
+            <nav className="w-full">
+                {/* Top bar: Logo + mobile menu button */}
+                <div className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6">
+                    <div className="flex justify-between items-center h-14 lg:h-12">
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
                         <div className="relative w-9 h-9 bg-white rounded-lg p-0.5 overflow-hidden group-hover:scale-105 transition-transform">
